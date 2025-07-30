@@ -6,6 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { AUTH_VALIDATION } from '../auth.constants';
+import { Optional } from '@nestjs/common';
 
 export class RegisterBodyDto {
   @IsEmail()

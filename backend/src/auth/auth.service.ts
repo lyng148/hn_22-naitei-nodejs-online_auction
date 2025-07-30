@@ -72,6 +72,7 @@ export class AuthService {
     const payload = {
       id: user.userId,
       email: user.email,
+      role: user.role,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -83,6 +84,7 @@ export class AuthService {
       user: {
         id: user.userId,
         email: user.email,
+        role: user.role,
         accessToken,
         refreshToken,
       },
