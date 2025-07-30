@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { AUTH_VALIDATION } from '../auth.constants';
 
-export class RegisterDTO {
+export class RegisterBodyDto {
   @IsEmail()
   @IsNotEmpty()
   email!: string;
