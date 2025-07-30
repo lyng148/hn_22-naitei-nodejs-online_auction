@@ -399,6 +399,3 @@ dist
 .webpack
 .serverless/**/*.zip
 /generated/prisma
-/generated/prisma
-
-/generated/prisma
