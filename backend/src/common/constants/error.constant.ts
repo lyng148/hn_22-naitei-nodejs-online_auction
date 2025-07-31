@@ -89,6 +89,17 @@ export const ERROR_INCORRECT_CURRENT_PASSWORD = {
 export const ERROR_CHANGE_PASSWORD_FAILED = {
   code: 'CHANGE_PASSWORD_FAILED',
   message: 'Failed to change password',
+
+};
+
+export const ERROR_UNAUTHENTICATED = {
+  code: 'UNAUTHENTICATED',
+  message: 'User not authenticated',
+}
+
+export const ERROR_UNAUTHORIZED = {
+  code: 'UNAUTHORIZED',
+  message: 'You are not authorized to perform this action',
 };
 
 export const ERROR_ONLY_BIDDERS_CAN_FOLLOW = {

@@ -6,6 +6,7 @@ import { CommonModule } from '@common/common.module';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { FollowsModule } from './follows/follows.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FollowsModule } from './follows/follows.module';
     AuthModule,
     UsersModule,
     FollowsModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
