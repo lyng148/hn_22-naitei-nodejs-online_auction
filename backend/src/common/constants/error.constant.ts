@@ -52,3 +52,28 @@ export const ERROR_INVALID_CREDENTIALS = {
   code: 'INVALID_CREDENTIALS',
   message: 'Email or password is incorrect',
 };
+
+export const ERROR_USER_NOT_FOUND = {
+  code: 'USER_NOT_FOUND',
+  message: 'User not found',
+};
+
+export const ERROR_FORBIDDEN_ACCESS = {
+  code: 'FORBIDDEN_ACCESS',
+  message: 'You do not have permission to access this resource',
+};
+
+export const ERROR_FORBIDDEN_UPDATE_PROFILE = {
+  code: 'FORBIDDEN_UPDATE_PROFILE',
+  message: 'You can only update your own profile information',
+};
+
+export const ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO = {
+  code: 'FORBIDDEN_ACCESS_ACCOUNT_INFO',
+  message: 'You can only access your own account information',
+};
+
+export const ERROR_UPDATE_PROFILE_FAILED = {
+  code: 'UPDATE_PROFILE_FAILED',
+  message: 'Failed to update user profile',
+};
