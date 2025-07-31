@@ -1,4 +1,0 @@
-- Tránh prop drilling: Không cần truyền props qua nhiều level
-- Global state: Chia sẻ state giữa components xa nhau
-- Clean code: Component chỉ nhận data cần thiết
-- Performance: Chỉ re-render khi context value thay đổi
