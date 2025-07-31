@@ -18,8 +18,8 @@ export const Header = () => {
               <img src="../../../public/images/common/header-logo.png" alt="LogoImg" className="h-11" />
               <div className="hidden lg:flex items-center justify-between gap-8">
                 {menulists.map((list) => (
-                  (list.id !== 7 || user.role === "SELLER") &&
-                  (list.id !== 8 || user.role === "ADMIN") &&
+                  (list.id !== 7 || user?.role === "SELLER") &&
+                  (list.id !== 8 || user?.role === "ADMIN") &&
                   (
                     <li key={list.id} className="capitalize list-none">
                       <CustomNavLinkList href={list.path} isActive={location.pathname === list.path} className={`${!isHomePage ? "text-black" : "text-white"}`}>
@@ -34,13 +34,13 @@ export const Header = () => {
             <div className="flex items-center gap-8 icons">
               <div className="hidden lg:flex lg:items-center lg:gap-8">
                 <IoSearchOutline size={23} className={`${!isHomePage ? "text-black" : "text-white"}`} />
-                {user.role === "BIDDER" && (
+                {user?.role === "BIDDER" && (
                   <CustomNavLink href="/seller/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
                     Become a Seller
                   </CustomNavLink>
                 )}
 
-                {user.role === null ? (
+                {!user?.role ? (
                   <div className="flex items-center gap-8">
                     <CustomNavLink href="/auth/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
                       Sign in

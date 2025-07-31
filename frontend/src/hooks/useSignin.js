@@ -17,7 +17,6 @@ export const useSignin = () => {
     setError("");
     try {
       const response = await authService.login({email, password});
-      console.log(response)
       login({
         id: response.id,
         email: response.email,
@@ -28,9 +27,8 @@ export const useSignin = () => {
       showToastNotification('Login successful!', 'info');
       navigate('/');
     } catch (err) {
-      const statusCode = err?.response?.status;
-      const message = err?.response?.data?.message || "An error occurred during login";
-
+      console.log(err);
+      const {statusCode, message} = err;
       if (statusCode === 401) {
         setError(message);
       } else {
