@@ -2,24 +2,23 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
-  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ERROR_INTERNAL_SERVER } from '@common/constants/error.constant';
 
-@Catch(HttpException)
-export default class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost): void {
+@Catch()
+export default class AllExceptionsFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status = exception.getStatus();
-    const exceptionResponse = exception.getResponse();
-
+    const status = HttpStatus.INTERNAL_SERVER_ERROR;
     const errorMessage =
-      typeof exceptionResponse === 'object'
-        ? exceptionResponse
-        : { message: exceptionResponse };
+      typeof response === 'object'
+        ? response
+        : { message: ERROR_INTERNAL_SERVER.message };
 
     response.status(status).json({
       ...errorMessage,

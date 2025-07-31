@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types"],
+    "typeRoots": ["./node_modules/@types", "src/common/types/express.d.ts"],
     "paths": {
       "@modules/*": ["src/modules/*"],
       "@common/*": ["src/common/*"],
