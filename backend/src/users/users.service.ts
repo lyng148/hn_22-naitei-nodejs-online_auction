@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import PrismaService from '../common/services/prisma.service';
 import { UserAccountInfoDto } from './dtos/profile.response.dto';
+import { SellerAccountInfoDto } from './dtos/seller-profile.response.dto';
 import { UpdateProfileDto } from './dtos/update-profile.body.dto';
 import {
   ERROR_USER_NOT_FOUND,
@@ -20,11 +21,7 @@ export class UsersService {
   async getUserAccountInfo(
     userId: string,
     currentUser: { id: string; email: string },
-  ): Promise<UserAccountInfoDto> {
-    if (currentUser.id !== userId) {
-      throw new ForbiddenException(ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO);
-    }
-
+  ): Promise<UserAccountInfoDto | SellerAccountInfoDto> {
     const user = await this.prisma.user.findUnique({
       where: { userId },
       include: {
@@ -37,40 +34,100 @@ export class UsersService {
       throw new NotFoundException(ERROR_USER_NOT_FOUND);
     }
 
-    return {
-      userId: user.userId,
-      email: user.email,
-      role: user.role,
-      isBanned: user.isBanned,
-      isVerified: user.isVerified,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      profile: user.profile
-        ? [
-            {
-              fullName: user.profile.fullName || undefined,
-              phoneNumber: user.profile.phoneNumber || undefined,
-              profileImageUrl: user.profile.profileImageUrl || undefined,
-              createdAt: user.profile.createdAt || undefined,
-              updatedAt: user.profile.updatedAt || undefined,
-            },
-          ]
-        : [],
-      addresses:
-        user.addresses?.length > 0
-          ? user.addresses.map((address) => ({
-              addressId: address.addressId || undefined,
-              streetAddress: address.streetAddress || undefined,
-              city: address.city || undefined,
-              state: address.state || undefined,
-              postalCode: address.postalCode || undefined,
-              country: address.country || undefined,
-              addressType: address.addressType || undefined,
-              createdAt: address.createdAt || undefined,
-              updatedAt: address.updatedAt || undefined,
-            }))
+    if (currentUser.id === userId) {
+      return {
+        userId: user.userId,
+        email: user.email,
+        role: user.role,
+        isBanned: user.isBanned,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        profile: user.profile
+          ? [
+              {
+                fullName: user.profile.fullName || undefined,
+                phoneNumber: user.profile.phoneNumber || undefined,
+                profileImageUrl: user.profile.profileImageUrl || undefined,
+                createdAt: user.profile.createdAt || undefined,
+                updatedAt: user.profile.updatedAt || undefined,
+              },
+            ]
           : [],
-    };
+        addresses:
+          user.addresses?.length > 0
+            ? user.addresses.map((address) => ({
+                addressId: address.addressId || undefined,
+                streetAddress: address.streetAddress || undefined,
+                city: address.city || undefined,
+                state: address.state || undefined,
+                postalCode: address.postalCode || undefined,
+                country: address.country || undefined,
+                addressType: address.addressType || undefined,
+                createdAt: address.createdAt || undefined,
+                updatedAt: address.updatedAt || undefined,
+              }))
+            : [],
+      };
+    }
+
+    if (user.role === 'SELLER') {
+      const [totalProductsSold, followerCount, isFollowedByCurrentUser] =
+        await Promise.all([
+          this.prisma.product.count({
+            where: {
+              sellerId: userId,
+              status: 'SOLD',
+            },
+          }),
+          this.prisma.follow.count({
+            where: {
+              sellerId: userId,
+            },
+          }),
+          this.prisma.follow
+            .findFirst({
+              where: {
+                followerId: currentUser.id,
+                sellerId: userId,
+              },
+            })
+            .then((follow) => !!follow),
+        ]);
+
+      return {
+        userId: user.userId,
+        role: user.role,
+        profile: user.profile
+          ? [
+              {
+                fullName: user.profile.fullName || undefined,
+                phoneNumber: user.profile.phoneNumber || undefined,
+                profileImageUrl: user.profile.profileImageUrl || undefined,
+              },
+            ]
+          : [],
+        addresses:
+          user.addresses?.length > 0
+            ? user.addresses.map((address) => ({
+                streetAddress: address.streetAddress || undefined,
+                city: address.city || undefined,
+                state: address.state || undefined,
+                postalCode: address.postalCode || undefined,
+                country: address.country || undefined,
+                addressType: address.addressType || undefined,
+              }))
+            : [],
+        stats: {
+          totalProductsSold,
+          averageRating: undefined, // TODO: implement later when rating system is added
+          followerCount,
+        },
+        isFollowedByCurrentUser,
+      };
+    }
+
+    throw new ForbiddenException(ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO);
   }
 
   async updateProfile(

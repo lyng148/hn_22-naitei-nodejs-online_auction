@@ -2,6 +2,7 @@ import { Controller, Get, Param, Put, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import { UserAccountInfoDto } from './dtos/profile.response.dto';
+import { SellerAccountInfoDto } from './dtos/seller-profile.response.dto';
 import { UpdateProfileDto } from './dtos/update-profile.body.dto';
 import { AuthType } from '@common/types/auth-type.enum';
 import { Auth } from '@common/decorators/auth.decorator';
@@ -15,7 +16,7 @@ export class UsersController {
   async getUserAccountInfo(
     @Param('id') userId: string,
     @CurrentUser() currentUser: { id: string; email: string },
-  ): Promise<UserAccountInfoDto> {
+  ): Promise<UserAccountInfoDto | SellerAccountInfoDto> {
     return this.usersService.getUserAccountInfo(userId, currentUser);
   }
 
