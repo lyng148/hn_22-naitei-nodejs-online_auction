@@ -21,6 +21,8 @@ import { LoginResponseDto } from './dtos/login.response.dto';
 import { LoginBodyDto } from './dtos/login.body.dto';
 import { ChangePasswordBodyDto } from './dtos/changePassword.dto';
 import { ChangePasswordResponseDto } from './dtos/changePasswordResponse.dto';
+import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
+import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -117,6 +119,31 @@ export class AuthService {
       throw new BadRequestException(ERROR_CHANGE_PASSWORD_FAILED);
     }
   }
+
+  async refreshToken(data: RefreshTokenDto): Promise<RefreshTokenResponseDto> {
+    const payload = await this.tokenService.verifyRefreshToken(data.refreshToken);
+    if (!payload) throw new UnauthorizedException(ERROR_INVALID_CREDENTIALS);
+
+    const user = await this.prisma.user.findUnique({
+      where: { userId: payload.id },
+    });
+
+    if (!user) throw new UnauthorizedException(ERROR_USER_NOT_FOUND);
+
+    const newPayload = {
+      id: user.userId,
+      email: user.email,
+      role: user.role,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.generateAccessToken(newPayload),
+      this.tokenService.generateRefreshToken(newPayload),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
   private async buildUserResponse(user: User): Promise<RegisterResponseDto> {
     const payload = {
       id: user.userId,
