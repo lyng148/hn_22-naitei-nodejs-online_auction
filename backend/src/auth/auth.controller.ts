@@ -10,6 +10,8 @@ import { ChangePasswordResponseDto } from './dtos/changePasswordResponse.dto';
 import { Auth } from '@common/decorators/auth.decorator';
 import { AuthType } from '@common/types/auth-type.enum';
 import { CurrentUser } from '@common/decorators/user.decorator';
+import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
+import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
 
 
 @Controller('users')
@@ -34,5 +36,13 @@ export class AuthController {
   @Put('changePassword')
   async changePassword(@Body() changePasswordDTO: ChangePasswordBodyDto, @CurrentUser() currentUser: { id: string, email: string }): Promise<ChangePasswordResponseDto> {
     return this.authService.changePassword(currentUser.id, changePasswordDTO);
+  }
+
+  @Public()
+  @Post('refresh-token')
+  async refreshToken(
+    @Body() data: RefreshTokenDto,
+  ): Promise<RefreshTokenResponseDto> {
+    return this.authService.refreshToken(data);
   }
 }
