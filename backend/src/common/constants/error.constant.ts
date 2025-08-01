@@ -90,3 +90,28 @@ export const ERROR_CHANGE_PASSWORD_FAILED = {
   code: 'CHANGE_PASSWORD_FAILED',
   message: 'Failed to change password',
 };
+
+export const ERROR_ONLY_BIDDERS_CAN_FOLLOW = {
+  code: 'ONLY_BIDDERS_CAN_FOLLOW',
+  message: 'Only bidders can follow sellers',
+};
+
+export const ERROR_SELLER_NOT_FOUND = {
+  code: 'SELLER_NOT_FOUND',
+  message: 'Seller not found',
+};
+
+export const ERROR_ALREADY_FOLLOWING = {
+  code: 'ALREADY_FOLLOWING',
+  message: 'You are already following this seller',
+};
+
+export const ERROR_CANNOT_FOLLOW_YOURSELF = {
+  code: 'CANNOT_FOLLOW_YOURSELF',
+  message: 'You cannot follow yourself',
+};
+
+export const ERROR_FOLLOW_FAILED = {
+  code: 'FOLLOW_FAILED',
+  message: 'Failed to follow seller',
+};
