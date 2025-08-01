@@ -15,7 +15,6 @@ export class FollowsController {
 
   @Get(':sellerId/isFollowing')
   @Auth(AuthType.ACCESS_TOKEN)
-  @Roles(Role.BIDDER)
   async getFollowStatus(
     @Param('sellerId') sellerId: string,
   ): Promise<{ followerCount: number }> {
