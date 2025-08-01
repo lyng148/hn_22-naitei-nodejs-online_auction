@@ -70,7 +70,8 @@ export const ERROR_FORBIDDEN_UPDATE_PROFILE = {
 
 export const ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO = {
   code: 'FORBIDDEN_ACCESS_ACCOUNT_INFO',
-  message: 'You can only access your own account information',
+  message:
+    'You can only access your own account information or view seller public profiles',
 };
 
 export const ERROR_UPDATE_PROFILE_FAILED = {
