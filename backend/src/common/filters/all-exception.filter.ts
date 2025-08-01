@@ -15,10 +15,19 @@ export default class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
-    const errorMessage =
-      typeof response === 'object'
-        ? response
-        : { message: ERROR_INTERNAL_SERVER.message };
+    
+    // Safely extract error information
+    let errorMessage: any = { message: ERROR_INTERNAL_SERVER.message };
+    
+    if (exception && typeof exception === 'object') {
+      const ex = exception as any;
+      errorMessage = {
+        message: ex.message || ERROR_INTERNAL_SERVER.message,
+        ...(ex.name && { name: ex.name }),
+        ...(ex.code && { code: ex.code }),
+        ...(ex.stack && process.env.NODE_ENV === 'development' && { stack: ex.stack }),
+      };
+    }
 
     response.status(status).json({
       ...errorMessage,

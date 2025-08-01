@@ -7,8 +7,10 @@ import JwtAuthGuard from '@common/guards/jwt.guard';
 import PrismaService from '@common/services/prisma.service';
 import ValidationPipe from '@common/pipes/validation.pipe';
 import PasswordService from '@common/services/password.service';
+import { RoleGuard } from './guards/role.guard';
+import { UploadFileServiceS3 } from './services/file.service';
 
-const service = [TokenService, PrismaService, PasswordService];
+const service = [TokenService, PrismaService, PasswordService, UploadFileServiceS3];
 
 @Global()
 @Module({
@@ -26,6 +28,10 @@ const service = [TokenService, PrismaService, PasswordService];
     {
       provide: 'APP_GUARD',
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: 'APP_GUARD',
+      useClass: RoleGuard,
     },
     {
       provide: 'APP_PIPE',
