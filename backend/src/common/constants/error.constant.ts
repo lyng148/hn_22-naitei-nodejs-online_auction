@@ -91,6 +91,11 @@ export const ERROR_CHANGE_PASSWORD_FAILED = {
   message: 'Failed to change password',
 };
 
+export const ERROR_ONLY_BIDDERS_CAN_FOLLOW = {
+  code: 'ONLY_BIDDERS_CAN_FOLLOW',
+  message: 'Only bidders can follow sellers',
+};
+
 export const ERROR_SELLER_NOT_FOUND = {
   code: 'SELLER_NOT_FOUND',
   message: 'Seller not found',

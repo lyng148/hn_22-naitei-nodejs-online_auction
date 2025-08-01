@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import PrismaService from '@common/services/prisma.service';
 import { FollowResponseDto } from './dtos/follow.response.dto';
@@ -12,6 +13,7 @@ import {
   ERROR_ALREADY_FOLLOWING,
   ERROR_CANNOT_FOLLOW_YOURSELF,
   ERROR_FOLLOW_FAILED,
+  ERROR_ONLY_BIDDERS_CAN_FOLLOW,
 } from '@common/constants/error.constant';
 
 @Injectable()
@@ -22,6 +24,15 @@ export class FollowsService {
     sellerId: string,
     currentUser: { id: string; email: string },
   ): Promise<FollowResponseDto> {
+    const currentUserData = await this.prisma.user.findUnique({
+      where: { userId: currentUser.id },
+      select: { role: true },
+    });
+
+    if (!currentUserData || currentUserData.role !== Role.BIDDER) {
+      throw new ForbiddenException(ERROR_ONLY_BIDDERS_CAN_FOLLOW);
+    }
+
     if (sellerId === currentUser.id) {
       throw new BadRequestException(ERROR_CANNOT_FOLLOW_YOURSELF);
     }
@@ -69,5 +80,21 @@ export class FollowsService {
     } catch {
       throw new BadRequestException(ERROR_FOLLOW_FAILED);
     }
+  }
+
+  async isFollowedByCurrentUser(
+    sellerId: string,
+    currentUser: { id: string; email: string },
+  ): Promise<{ isFollowedByCurrentUser: boolean }> {
+    const follow = await this.prisma.follow.findFirst({
+      where: {
+        followerId: currentUser.id,
+        sellerId: sellerId,
+      },
+    });
+
+    return {
+      isFollowedByCurrentUser: !!follow,
+    };
   }
 }
