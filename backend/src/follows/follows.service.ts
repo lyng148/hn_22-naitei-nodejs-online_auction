@@ -1,0 +1,73 @@
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import PrismaService from '@common/services/prisma.service';
+import { FollowResponseDto } from './dtos/follow.response.dto';
+import { Role } from '@prisma/client';
+import {
+  ERROR_SELLER_NOT_FOUND,
+  ERROR_ALREADY_FOLLOWING,
+  ERROR_CANNOT_FOLLOW_YOURSELF,
+  ERROR_FOLLOW_FAILED,
+} from '@common/constants/error.constant';
+
+@Injectable()
+export class FollowsService {
+  constructor(private prisma: PrismaService) {}
+
+  async followSeller(
+    sellerId: string,
+    currentUser: { id: string; email: string },
+  ): Promise<FollowResponseDto> {
+    if (sellerId === currentUser.id) {
+      throw new BadRequestException(ERROR_CANNOT_FOLLOW_YOURSELF);
+    }
+
+    const seller = await this.prisma.user.findUnique({
+      where: { userId: sellerId },
+      select: { userId: true, role: true },
+    });
+
+    if (!seller) {
+      throw new NotFoundException(ERROR_SELLER_NOT_FOUND);
+    }
+
+    if (seller.role !== Role.SELLER) {
+      throw new BadRequestException(ERROR_SELLER_NOT_FOUND);
+    }
+
+    const existingFollow = await this.prisma.follow.findUnique({
+      where: {
+        followerId_sellerId: {
+          followerId: currentUser.id,
+          sellerId: sellerId,
+        },
+      },
+    });
+
+    if (existingFollow) {
+      throw new ConflictException(ERROR_ALREADY_FOLLOWING);
+    }
+
+    try {
+      const follow = await this.prisma.follow.create({
+        data: {
+          followerId: currentUser.id,
+          sellerId: sellerId,
+        },
+      });
+
+      return {
+        followId: follow.followId,
+        followerId: follow.followerId,
+        sellerId: follow.sellerId,
+        followedAt: follow.followedAt,
+      };
+    } catch {
+      throw new BadRequestException(ERROR_FOLLOW_FAILED);
+    }
+  }
+}

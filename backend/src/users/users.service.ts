@@ -187,7 +187,6 @@ export class UsersService {
 
       if (updateProfileDto.address) {
         const addressData = updateProfileDto.address;
-        // Only create address if required fields are provided
         if (
           addressData.streetAddress &&
           addressData.city &&
