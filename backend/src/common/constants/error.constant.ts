@@ -145,4 +145,7 @@ export const ERROR_ACCESS_DENIED = {
 export const ERROR_WARNING_NOT_FOUND = {
   code: 'WARNING_NOT_FOUND',
   message: 'Warning not found',
+export const ERROR_NO_PRODUCTS_PROVIDED = {
+  code: 'NO_PRODUCTS_PROVIDED',
+  message: 'No products were provided',
 };
