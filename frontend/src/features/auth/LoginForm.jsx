@@ -5,14 +5,14 @@ import {
   PrimaryButton,
   Title,
   commonClassNameOfInput,
-} from "@/components/ui";
+} from "@/components/ui/index.js";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNotification } from "@/notifications/NotificationContext.jsx";
+import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useUser } from "@/contexts/UserContext.jsx";
-import { useSignin } from "@/hooks/useSignin";
+import { useSignin } from "@/hooks/useSignin.js";
 
-export const Login = () => {
+export const LoginForm = () => {
   const { user, loading } = useUser();
   const { showToastNotification } = useNotification();
   const navigate = useNavigate();

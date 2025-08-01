@@ -42,7 +42,7 @@ export const authService = {
       const { message, code } = err?.response?.data || {};
       return Promise.reject({
         statusCode: statusCode || 500,
-        message: message || 'Login failed',
+        message: message || 'LoginForm failed',
         errorCode: code || 'INTERNAL_SERVER_ERROR',
       });
     }

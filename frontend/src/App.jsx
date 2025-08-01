@@ -1,34 +1,21 @@
-import AppRouter from './router/AppRouter'
+import AppRouter from './routers/AppRouter'
 import { Toaster } from 'react-hot-toast'
-import './App.css'
+import {UserProvider} from "@/contexts/UserContext.jsx";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {NotificationProvider} from "@/contexts/NotificationContext.jsx";
+import {AuthRoute} from "@/routers/AuthRoutes.jsx";
 
 function App() {
   return (
-    <div className="App">
-      <AppRouter />
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            style: {
-              background: '#4caf50',
-            },
-          },
-          error: {
-            duration: 5000,
-            style: {
-              background: '#f44336',
-            },
-          },
-        }}
-      />
-    </div>
+    <BrowserRouter>
+      <UserProvider>
+          <NotificationProvider>
+            <Routes>
+              <Route path="/auth/*" element={<AuthRoute />}/>
+            </Routes>
+          </NotificationProvider>
+        </UserProvider>
+    </BrowserRouter>
   )
 }
 

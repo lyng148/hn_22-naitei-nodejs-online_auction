@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { authService } from "@/services/auth.service";
-import { useNotification } from "@/notifications/NotificationContext.jsx";
+import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useNavigate } from "react-router-dom";
 import {useUser} from "@/contexts/UserContext.jsx";
 
@@ -24,7 +24,7 @@ export const useSignin = () => {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       });
-      showToastNotification('Login successful!', 'info');
+      showToastNotification('LoginForm successful!', 'info');
       navigate('/');
     } catch (err) {
       console.log(err);

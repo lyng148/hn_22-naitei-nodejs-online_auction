@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Register from '../screens/Register';
+import Register from '../screens/auth/Register';
 
 const AppRouter = () => {
   return (
