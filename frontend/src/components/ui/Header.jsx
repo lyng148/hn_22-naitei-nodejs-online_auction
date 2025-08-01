@@ -40,6 +40,7 @@ export const Header = () => {
                 {menulists.map((list) => (
                   (list.id !== 7 || user?.role === "SELLER") &&
                   (list.id !== 8 || user?.role === "ADMIN") &&
+                  (list.id !== 9 || user?.role === "SELLER") &&
                   (
                     <li key={list.id} className="capitalize list-none">
                       <CustomNavLinkList href={list.path} isActive={location.pathname === list.path} className={`${!isHomePage ? "text-black" : "text-white"}`}>
