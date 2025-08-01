@@ -1,3 +1,4 @@
+// token
 export const ERROR_ACCESS_TOKEN_EXPIRED = {
   code: 'ACCESS_TOKEN_EXPIRED',
   message: 'Access token has expired',
@@ -28,6 +29,7 @@ export const ERROR_UNKNOWN_REFRESH_TOKEN = {
   message: 'Unknown error occurred while verifying refresh token',
 };
 
+// general errors
 export const ERROR_INTERNAL_SERVER = {
   code: 'INTERNAL_SERVER_ERROR',
   message: 'An internal server error occurred',
@@ -77,4 +79,14 @@ export const ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO = {
 export const ERROR_UPDATE_PROFILE_FAILED = {
   code: 'UPDATE_PROFILE_FAILED',
   message: 'Failed to update user profile',
+};
+
+export const ERROR_INCORRECT_CURRENT_PASSWORD = {
+  code: 'INCORRECT_CURRENT_PASSWORD',
+  message: 'Current password is incorrect',
+}
+
+export const ERROR_CHANGE_PASSWORD_FAILED = {
+  code: 'CHANGE_PASSWORD_FAILED',
+  message: 'Failed to change password',
 };

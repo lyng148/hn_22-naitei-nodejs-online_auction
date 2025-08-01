@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import PrismaService from '@common/services/prisma.service';
 import { RegisterBodyDto } from './dtos/register.body.dto';
@@ -10,11 +11,16 @@ import TokenService from '@common/services/token.service';
 import PasswordService from '@common/services/password.service';
 import { RegisterResponseDto } from './dtos/register.response.dto';
 import {
+  ERROR_CHANGE_PASSWORD_FAILED,
   ERROR_EMAIL_ALREADY_EXISTS,
+  ERROR_INCORRECT_CURRENT_PASSWORD,
   ERROR_INVALID_CREDENTIALS,
+  ERROR_USER_NOT_FOUND,
 } from '@common/constants/error.constant';
 import { LoginResponseDto } from './dtos/login.response.dto';
 import { LoginBodyDto } from './dtos/login.body.dto';
+import { ChangePasswordBodyDto } from './dtos/changePassword.dto';
+import { ChangePasswordResponseDto } from './dtos/changePasswordResponse.dto';
 
 @Injectable()
 export class AuthService {
@@ -68,6 +74,49 @@ export class AuthService {
     return this.buildUserResponse(user);
   }
 
+  async changePassword(
+    userId: string,
+    data: ChangePasswordBodyDto,
+  ): Promise<ChangePasswordResponseDto> {
+
+    const user = await this.prisma.user.findUnique({
+      where: { userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException(ERROR_USER_NOT_FOUND);
+    }
+
+    const isCurrentPasswordValid = await this.passwordService.comparePassword(
+      data.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException(ERROR_INCORRECT_CURRENT_PASSWORD);
+    }
+
+    const hashedNewPassword = await this.passwordService.hashPassword(
+      data.newPassword,
+    );
+
+    try {
+      await this.prisma.user.update({
+        where: { userId },
+        data: {
+          password: hashedNewPassword,
+          updatedAt: new Date(),
+        },
+      });
+
+      return {
+        userId: userId,
+        message: 'Password changed successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException(ERROR_CHANGE_PASSWORD_FAILED);
+    }
+  }
   private async buildUserResponse(user: User): Promise<RegisterResponseDto> {
     const payload = {
       id: user.userId,
