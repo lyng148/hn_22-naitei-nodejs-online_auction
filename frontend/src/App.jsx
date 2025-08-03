@@ -4,6 +4,7 @@ import {NotificationProvider} from "@/contexts/NotificationContext.jsx";
 import {AuthRoute} from "@/routers/AuthRoutes.jsx";
 import {ProductRoutes} from "@/routers/ProductRoutes.jsx";
 import Dashboard from "@/screens/Dashboard/index.jsx";
+import SellerHub from "@/screens/SellerHub/index.jsx";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
               <Route path="/auth/*" element={<AuthRoute />}/>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products/*" element={<ProductRoutes />} />
+              <Route path="/seller-hub/*" element={<SellerHub />} />
             </Routes>
           </NotificationProvider>
         </UserProvider>

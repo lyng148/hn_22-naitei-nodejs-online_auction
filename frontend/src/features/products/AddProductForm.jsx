@@ -67,7 +67,7 @@ export const AddProductForm = () => {
               Create your product
             </Title>
             <div className="flex items-center gap-3">
-              <Title level={5} className="text-green font-normal text-xl">Dashboard</Title>
+              <Title level={5} className="text-green font-normal text-xl">Seller Hub</Title>
               <Title level={5} className="text-white font-normal text-xl">/</Title>
               <Title level={5} className="text-white font-normal text-xl">Add Product</Title>
             </div>
@@ -249,7 +249,7 @@ export const AddProductForm = () => {
               
               <button
                 type="button"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/seller-hub/listings/product")}
                 className="px-8 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
