@@ -17,7 +17,6 @@ import {
 } from '@common/constants/error.constant';
 import { CreateWarningDto } from './dtos/create.warning.dto';
 import { UserWarningStatusDto } from './dtos/warning.response.dto';
-import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {

@@ -9,7 +9,8 @@ import {
   UseInterceptors, 
   UploadedFile, 
   Body,
-  BadRequestException
+  BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
@@ -26,6 +27,7 @@ import { ERROR_NO_PRODUCTS_PROVIDED } from '@common/constants/error.constant';
 import { AuthType } from '@common/types/auth-type.enum';
 import { Auth } from '@common/decorators/auth.decorator';
 import { MultipleProductOwnerGuard } from '@common/guards/products-owner.guard';
+import { GetProductResponseDto } from './dtos/get-product.response.dto';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard, RoleGuard)
@@ -81,5 +83,12 @@ export class ProductsController {
       throw new BadRequestException(ERROR_NO_PRODUCTS_PROVIDED);
     }
     return this.productsService.deleteMultipleProducts(ids);
+  }
+
+  @Get(':id')
+  async getProductById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<GetProductResponseDto> {
+    return this.productsService.getProductById(id);
   }
 }
