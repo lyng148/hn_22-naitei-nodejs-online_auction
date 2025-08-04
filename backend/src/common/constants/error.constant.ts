@@ -84,18 +84,17 @@ export const ERROR_UPDATE_PROFILE_FAILED = {
 export const ERROR_INCORRECT_CURRENT_PASSWORD = {
   code: 'INCORRECT_CURRENT_PASSWORD',
   message: 'Current password is incorrect',
-}
+};
 
 export const ERROR_CHANGE_PASSWORD_FAILED = {
   code: 'CHANGE_PASSWORD_FAILED',
   message: 'Failed to change password',
-
 };
 
 export const ERROR_UNAUTHENTICATED = {
   code: 'UNAUTHENTICATED',
   message: 'User not authenticated',
-}
+};
 
 export const ERROR_UNAUTHORIZED = {
   code: 'UNAUTHORIZED',
@@ -148,4 +147,14 @@ export const ERROR_WARNING_NOT_FOUND = {
 export const ERROR_NO_PRODUCTS_PROVIDED = {
   code: 'NO_PRODUCTS_PROVIDED',
   message: 'No products were provided',
+};
+
+export const ERROR_NOT_FOLLOWING = {
+  code: 'NOT_FOLLOWING',
+  message: 'You are not following this seller',
+};
+
+export const ERROR_UNFOLLOW_FAILED = {
+  code: 'UNFOLLOW_FAILED',
+  message: 'Failed to unfollow seller',
 };
