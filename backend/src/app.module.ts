@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { FollowsModule } from './follows/follows.module';
 import { ProductsModule } from './products/products.module';
+import { AuctionModule } from './auctions/auction.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ProductsModule } from './products/products.module';
     UsersModule,
     FollowsModule,
     ProductsModule,
+    AuctionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
