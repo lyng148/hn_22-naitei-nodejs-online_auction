@@ -144,6 +144,14 @@ export const ERROR_ACCESS_DENIED = {
 export const ERROR_WARNING_NOT_FOUND = {
   code: 'WARNING_NOT_FOUND',
   message: 'Warning not found',
+export const ERROR_NOT_FOLLOWING = {
+  code: 'NOT_FOLLOWING',
+  message: 'You are not following this seller',
+};
+
+export const ERROR_UNFOLLOW_FAILED = {
+  code: 'UNFOLLOW_FAILED',
+  message: 'Failed to unfollow seller',
 };
 
 export const ERROR_NO_PRODUCTS_PROVIDED = {
