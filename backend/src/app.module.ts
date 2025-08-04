@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '@common/common.module';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { ProfileModule } from './profile/profile.module';
 import { FollowsModule } from './follows/follows.module';
 import { ProductsModule } from './products/products.module';
 
@@ -14,6 +15,7 @@ import { ProductsModule } from './products/products.module';
     CommonModule,
     AuthModule,
     UsersModule,
+    ProfileModule,
     FollowsModule,
     ProductsModule,
   ],
