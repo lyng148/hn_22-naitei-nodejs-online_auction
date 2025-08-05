@@ -38,5 +38,10 @@ export const menulists = [
     id: 8,
     path : "/features",
     link : "Admin",
+  },
+  {
+    id: 9,
+    path: "/products/add",
+    link: "Add Product",
   }
 ];
