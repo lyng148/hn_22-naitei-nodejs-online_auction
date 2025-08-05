@@ -7,6 +7,7 @@ import {
   setRefreshToken,
   setUserToStorage
 } from "@/utils/token-storage.js";
+
 const UserContext = createContext(null);
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/128/6997/6997662.png";
 

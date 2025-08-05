@@ -5,6 +5,7 @@ import {AuthRoute} from "@/routers/AuthRoutes.jsx";
 import {ProductRoutes} from "@/routers/ProductRoutes.jsx";
 import Dashboard from "@/screens/Dashboard/index.jsx";
 import SellerHub from "@/screens/SellerHub/index.jsx";
+import UserProfileScreen from "@/screens/profile/UserProfileScreen.jsx";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products/*" element={<ProductRoutes />} />
               <Route path="/seller-hub/*" element={<SellerHub />} />
+              <Route path="/profile" element={<UserProfileScreen />} />
             </Routes>
           </NotificationProvider>
         </UserProvider>
