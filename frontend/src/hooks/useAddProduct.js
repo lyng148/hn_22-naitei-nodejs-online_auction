@@ -90,7 +90,7 @@ export const useAddProduct = () => {
         setDescription("");
         setStockQuantity("");
         setUploadedImages([]);
-        navigate('/dashboard/products');
+        navigate('/seller-hub/listings/product');
       }
     } catch (err) {
       console.error('Product creation error:', err);
