@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
 import { FollowsModule } from './follows/follows.module';
 import { ProductsModule } from './products/products.module';
+import { AuctionModule } from './auctions/auction.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ProductsModule } from './products/products.module';
     ProfileModule,
     FollowsModule,
     ProductsModule,
+    AuctionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
