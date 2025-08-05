@@ -5,6 +5,8 @@ const AUTH_API = {
   LOGIN: '/api/users/login',
   REFRESH_TOKEN: 'api/users/refresh-token',
   CHANGE_PASSWORD: '/api/users/changePassword',
+  FORGOT_PASSWORD: '/api/users/forgot-password',
+  RESET_PASSWORD: '/api/users/reset-password',
 };
 
 export const authService = {
@@ -67,6 +69,42 @@ export const authService = {
         message: message || 'Failed to change password',
         statusCode: err?.response?.status || 500,
       };
+    }
+  },
+  
+  forgotPassword: async (email) => {
+    try {
+      const response = await axiosClient.post(
+        AUTH_API.FORGOT_PASSWORD,
+        { email }
+      );
+      return response.data;
+    } catch (err) {
+      const statusCode = err?.status;
+      const { message, code } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || 500,
+        message: message || 'Failed to send reset email',
+        errorCode: code || 'INTERNAL_SERVER_ERROR',
+      });
+    }
+  },
+
+  resetPassword: async (resetData) => {
+    try {
+      const response = await axiosClient.post(
+        AUTH_API.RESET_PASSWORD,
+        resetData
+      );
+      return response.data;
+    } catch (err) {
+      const statusCode = err?.status;
+      const { message, code } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || 500,
+        message: message || 'Failed to reset password',
+        errorCode: code || 'INTERNAL_SERVER_ERROR',
+      });
     }
   }
 };

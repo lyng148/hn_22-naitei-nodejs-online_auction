@@ -13,6 +13,7 @@ import { CurrentUser } from '@common/decorators/user.decorator';
 import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
 import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
 import { ForgotPasswordResponseDto } from './dtos/forgot-password.response.dto';
+import { ResetPasswordBodyDto } from './dtos/reset-password.body.dto';
 
 
 @Controller('users')
@@ -51,5 +52,11 @@ export class AuthController {
   @Post('forgot-password')
   async forgotPassword(@Body('email') email: string): Promise<ForgotPasswordResponseDto> {
     return this.authService.forgotPassword(email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDTO: ResetPasswordBodyDto): Promise<ForgotPasswordResponseDto> {
+    return this.authService.resetPassword(resetPasswordDTO.token, resetPasswordDTO.newPassword);
   }
 }

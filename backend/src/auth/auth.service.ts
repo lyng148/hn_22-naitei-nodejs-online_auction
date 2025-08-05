@@ -194,10 +194,10 @@ export class AuthService {
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Reset password',
-      template: 'reset', // nếu dùng template
+      template: 'reset',
       context: {
         url: 'http://localhost:5173/reset?token=' + resetToken,
-        userName: user.email, // hoặc user.profile?.fullName nếu có
+        userName: user.email, 
       },
     });
 

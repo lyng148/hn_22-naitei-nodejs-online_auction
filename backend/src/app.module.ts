@@ -27,7 +27,7 @@ import { join } from 'path';
         },
       },
       defaults: {
-        from: `"YourApp" <${process.env.GMAIL_USER}>`,
+        from: `"Bid Market" <${process.env.GMAIL_USER}>`,
       },
       template: {
         dir: join(process.cwd(), 'src', 'templates'),
