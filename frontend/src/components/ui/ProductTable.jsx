@@ -1,8 +1,8 @@
 import React from "react";
-import { IoCreateOutline, IoTrashOutline } from "react-icons/io5";
+import { IoCreateOutline, IoTrashOutline, IoToggleOutline, IoCheckmarkCircleOutline, IoCloseCircleOutline } from "react-icons/io5";
 import { PRODUCT_STATUS, getProductStatusConfig } from "@/constants/productStatus.js";
 
-export const ProductTable = ({ products, onEdit, onDelete }) => {
+export const ProductTable = ({ products, onEdit, onDelete, onToggleStatus, toggleLoading }) => {
   const getStatusBadge = (status) => {
     const config = getProductStatusConfig(status);
     const IconComponent = config.icon;
@@ -107,6 +107,41 @@ export const ProductTable = ({ products, onEdit, onDelete }) => {
               {/* Actions */}
               <div className="col-span-1">
                 <div className="flex items-center space-x-2">
+                  {/* Toggle Status Button */}
+                  <button
+                    onClick={() => onToggleStatus && onToggleStatus(product)}
+                    className={`p-1 transition-colors duration-200 ${
+                      product.status === PRODUCT_STATUS.DELETING || product.status === PRODUCT_STATUS.REMOVED || product.status === PRODUCT_STATUS.SOLD || toggleLoading === product.productId
+                        ? 'text-gray-300 cursor-not-allowed' 
+                        : product.status === PRODUCT_STATUS.ACTIVE
+                        ? 'text-green-600 hover:text-green-700'
+                        : 'text-red-600 hover:text-red-700'
+                    }`}
+                    title={
+                      toggleLoading === product.productId
+                        ? 'Updating status...'
+                        : product.status === PRODUCT_STATUS.DELETING 
+                        ? 'Cannot change status while deleting' 
+                        : product.status === PRODUCT_STATUS.REMOVED
+                        ? 'Cannot change status of removed product'
+                        : product.status === PRODUCT_STATUS.SOLD
+                        ? 'Cannot change status of sold product'
+                        : product.status === PRODUCT_STATUS.ACTIVE
+                        ? 'Deactivate Product'
+                        : 'Activate Product'
+                    }
+                    disabled={product.status === PRODUCT_STATUS.DELETING || product.status === PRODUCT_STATUS.REMOVED || product.status === PRODUCT_STATUS.SOLD || toggleLoading === product.productId}
+                  >
+                    {toggleLoading === product.productId ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                    ) : product.status === PRODUCT_STATUS.ACTIVE ? (
+                      <IoCheckmarkCircleOutline size={16} />
+                    ) : (
+                      <IoCloseCircleOutline size={16} />
+                    )}
+                  </button>
+                  
+                  {/* Edit Button */}
                   <button
                     onClick={() => onEdit && onEdit(product)}
                     className={`p-1 transition-colors duration-200 ${
@@ -119,6 +154,8 @@ export const ProductTable = ({ products, onEdit, onDelete }) => {
                   >
                     <IoCreateOutline size={16} />
                   </button>
+                  
+                  {/* Delete Button */}
                   <button
                     onClick={() => onDelete && onDelete(product)}
                     className={`p-1 transition-colors duration-200 ${

@@ -3,15 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { productService } from "@/services/product.service.js";
+import { PRODUCT_STATUS } from "@/constants/productStatus.js";
 import { Title, PrimaryButton } from "@/components/ui/index.js";
 import { ProductFilters } from "@/components/ui/ProductFilters";
 import { ProductTable } from "@/components/ui/ProductTable";
+import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { IoAddOutline, IoChevronDownOutline } from "react-icons/io5";
 
 const ProductListing = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null });
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(null); // Track which product is being toggled
   
   const { user } = useUser();
   const { showToastNotification } = useNotification();
@@ -39,19 +45,65 @@ const ProductListing = () => {
 
   const handleEditProduct = (product) => {
     // Navigate to edit product page
-    navigate(`/products/edit/${product.productId}`);
+    navigate(`/seller-hub/listings/product/edit/${product.productId}`);
   };
 
   const handleDeleteProduct = async (product) => {
-    if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
-      try {
-        // Implement delete functionality when API is available
-        showToastNotification('Product deleted successfully', 'success');
-        fetchMyProducts(); // Refresh the list
-      } catch (err) {
-        showToastNotification(err.message || 'Failed to delete product', 'error');
-      }
+    setDeleteModal({ isOpen: true, product });
+  };
+
+  const handleToggleStatus = async (product) => {
+    if (toggleLoading === product.productId) return; // Prevent multiple clicks
+    
+    try {
+      setToggleLoading(product.productId);
+      
+      // Determine new status
+      const newStatus = product.status === PRODUCT_STATUS.ACTIVE 
+        ? PRODUCT_STATUS.INACTIVE 
+        : PRODUCT_STATUS.ACTIVE;
+      
+      // Update product status
+      const updatedProduct = {
+        productId: product.productId,
+        name: product.name,
+        description: product.description,
+        stockQuantity: product.stockQuantity,
+        status: newStatus,
+        imageUrls: product.images?.map(img => img.imageUrl) || []
+      };
+      
+      await productService.updateProducts([updatedProduct]);
+      
+      const statusText = newStatus === PRODUCT_STATUS.ACTIVE ? 'activated' : 'deactivated';
+      showToastNotification(`Product ${statusText} successfully`, 'success');
+      
+      fetchMyProducts(); // Refresh the list
+    } catch (err) {
+      showToastNotification(err.message || 'Failed to update product status', 'error');
+    } finally {
+      setToggleLoading(null);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.product) return;
+    
+    try {
+      setDeleteLoading(true);
+      await productService.deleteProducts([deleteModal.product.productId]);
+      showToastNotification('Product deleted successfully', 'success');
+      setDeleteModal({ isOpen: false, product: null });
+      fetchMyProducts(); // Refresh the list
+    } catch (err) {
+      showToastNotification(err.message || 'Failed to delete product', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, product: null });
   };
 
   const handleCreateProduct = () => {
@@ -59,14 +111,7 @@ const ProductListing = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading products...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading products..." />;
   }
 
   return (
@@ -103,6 +148,8 @@ const ProductListing = () => {
         products={products}
         onEdit={handleEditProduct}
         onDelete={handleDeleteProduct}
+        onToggleStatus={handleToggleStatus}
+        toggleLoading={toggleLoading}
       />
 
       {/* Empty State */}
@@ -125,6 +172,15 @@ const ProductListing = () => {
           </PrimaryButton>
         </div>
       )}
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        productName={deleteModal.product?.name || ""}
+        isLoading={deleteLoading}
+      />
     </div>
   );
 };
