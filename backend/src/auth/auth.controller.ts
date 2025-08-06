@@ -12,6 +12,7 @@ import { AuthType } from '@common/types/auth-type.enum';
 import { CurrentUser } from '@common/decorators/user.decorator';
 import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
 import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
+import { ForgotPasswordResponseDto } from './dtos/forgot-password.response.dto';
 
 
 @Controller('users')
@@ -44,5 +45,11 @@ export class AuthController {
     @Body() data: RefreshTokenDto,
   ): Promise<RefreshTokenResponseDto> {
     return this.authService.refreshToken(data);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string): Promise<ForgotPasswordResponseDto> {
+    return this.authService.forgotPassword(email);
   }
 }
