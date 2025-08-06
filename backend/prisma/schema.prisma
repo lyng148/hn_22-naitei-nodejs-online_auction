@@ -3,7 +3,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "windows"]
 }
 
@@ -28,9 +28,9 @@ model User {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
-  warnings     Warning[] @relation("UserWarnings")
+  warnings      Warning[] @relation("UserWarnings")
   adminWarnings Warning[] @relation("AdminWarnings")
-  warningCount Int       @default(0)
+  warningCount  Int       @default(0)
 
   followings Follow[] @relation("Users_Follow_Sellers")
   followers  Follow[] @relation("Sellers_FollowedBy_Users")
@@ -51,15 +51,15 @@ model User {
 }
 
 model Warning {
-  warningId    String   @id @default(uuid())
-  userId       String
-  adminId      String
-  reason       String
-  description  String?
-  createdAt    DateTime @default(now())
+  warningId   String   @id @default(uuid())
+  userId      String
+  adminId     String
+  reason      String
+  description String?
+  createdAt   DateTime @default(now())
 
-  user         User     @relation("UserWarnings", fields: [userId], references: [userId], onDelete: Cascade)
-  admin        User     @relation("AdminWarnings", fields: [adminId], references: [userId])
+  user  User @relation("UserWarnings", fields: [userId], references: [userId], onDelete: Cascade)
+  admin User @relation("AdminWarnings", fields: [adminId], references: [userId])
 
   @@map("warnings")
 }
@@ -141,8 +141,7 @@ model Product {
 
   images ProductImage[] @relation("Product_Has_Images")
 
-  auctionId String?  @map("auction_id") @db.Char(36)
-  auction   Auction? @relation("Auction_Has_Products", fields: [auctionId], references: [auctionId], onDelete: SetNull)
+  auctionProducts AuctionProduct[] @relation("Product_In_Auctions")
 
   @@map("products")
 }
@@ -214,7 +213,7 @@ model Auction {
   auctionId String @id @default(uuid()) @map("auction_id") @db.Char(36)
   title     String @db.VarChar(255)
 
-  products Product[] @relation("Auction_Has_Products")
+  auctionProducts AuctionProduct[] @relation("Auction_Has_Products")
 
   startTime     DateTime @map("start_time") @db.Timestamp(0)
   endTime       DateTime @map("end_time") @db.Timestamp(0)
@@ -236,6 +235,24 @@ model Auction {
   payment Payment? @relation("Auction_Has_Payment")
 
   @@map("auctions")
+}
+
+model AuctionProduct {
+  id String @id @default(uuid()) @map("auction_product_id") @db.Char(36)
+
+  auctionId String  @map("auction_id") @db.Char(36)
+  auction   Auction @relation("Auction_Has_Products", fields: [auctionId], references: [auctionId], onDelete: Cascade)
+
+  productId String  @map("product_id") @db.Char(36)
+  product   Product @relation("Product_In_Auctions", fields: [productId], references: [productId], onDelete: Cascade)
+
+  quantity Int @default(1) @db.Int
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@unique([auctionId, productId])
+  @@map("auction_products")
 }
 
 enum BidStatus {

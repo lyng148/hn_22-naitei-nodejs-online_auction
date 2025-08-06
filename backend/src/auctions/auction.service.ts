@@ -83,11 +83,15 @@ export class AuctionService {
           minimumBidIncrement,
           lastBidTime: new Date(startTime),
           status: AuctionStatus.PENDING,
-          products: {
-            connect: productIds.map((id) => ({ productId: id })),
-          },
         },
-        include: { products: true },
+      });
+
+      await tx.auctionProduct.createMany({
+        data: products.map(({ productId, quantity }) => ({
+          auctionId: auction.auctionId,
+          productId,
+          quantity,
+        })),
       });
 
       return auction;
