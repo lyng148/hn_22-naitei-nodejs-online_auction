@@ -1,9 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { CreateAuctionDto } from './dtos/create-auction.body.dto';
 import { CreateAuctionResponseDto } from './dtos/create-auction.response.dto';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/enums/role.enum';
+import { SearchAuctionQueryDto } from './dtos/search-auction.query.dto';
+import { SearchAuctionResponseDto } from './dtos/search-auction.response.dto';
+import { Public } from '@common/decorators/public.decorator';
 
 @Controller('auctions')
 export class AuctionController {
@@ -16,5 +27,14 @@ export class AuctionController {
     @Body() createAuctionDto: CreateAuctionDto,
   ): Promise<CreateAuctionResponseDto> {
     return this.auctionService.createAuction(createAuctionDto);
+  }
+
+  @Get()
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async searchAuctions(
+    @Query() query: SearchAuctionQueryDto,
+  ): Promise<SearchAuctionResponseDto> {
+    return this.auctionService.searchAuctions(query);
   }
 }

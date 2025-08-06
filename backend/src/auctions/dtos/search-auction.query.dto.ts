@@ -51,10 +51,6 @@ export class SearchAuctionQueryDto {
   endTime?: string;
 
   @IsOptional()
-  @IsUUID()
-  hasNotId?: string;
-
-  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
