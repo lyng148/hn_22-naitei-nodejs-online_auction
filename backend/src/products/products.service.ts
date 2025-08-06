@@ -8,10 +8,11 @@ import { CreateMultipleProductsResponseDto, CreateProductResponseDto } from './d
 import { UpdateProductDto } from './dtos/update-product.body.dto';
 import { MultipleProductsResponseDto } from './dtos/product.response.dto';
 import { GetProductResponseDto } from './dtos/get-product.response.dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly uploadFileService: UploadFileServiceS3, private prisma: PrismaService) {}
+  constructor(private readonly uploadFileService: UploadFileServiceS3, private prisma: PrismaService) { }
 
   async uploadProductImage(
     file: Express.Multer.File,
@@ -34,7 +35,7 @@ export class ProductsService {
     }
 
     try {
-      const fileName = uploadImageDto?.fileName || file.originalname;
+      const fileName = randomUUID();
       const imageUrl = await this.uploadFileService.uploadFileToPublicBucket(
         'products',
         {
@@ -82,24 +83,24 @@ export class ProductsService {
   async createMultipleProducts(currUser: User, products: CreateProductDto[]): Promise<CreateMultipleProductsResponseDto> {
     const createdProducts: CreateProductResponseDto[] = [];
     for (const product of products) {
-        const createdProd = await this.prisma.product.create({
-          data: {
-            name: product.name,
-            description: product.description,
-            stockQuantity: product.stockQuantity,
-            status: 'INACTIVE',
-            seller: {
-                connect: { userId: (currUser as any).id || currUser.userId }, 
-            }, 
+      const createdProd = await this.prisma.product.create({
+        data: {
+          name: product.name,
+          description: product.description,
+          stockQuantity: product.stockQuantity,
+          status: 'INACTIVE',
+          seller: {
+            connect: { userId: (currUser as any).id || currUser.userId },
           },
-        });
+        },
+      });
 
-        if (product.imageUrls && product.imageUrls.length > 0) {
-          const imageData = product.imageUrls.map((url, index) => ({
-            productId: createdProd.productId,
-            imageUrl: url,
-            isPrimary: index === 0, // Ảnh đầu tiên làm primary
-          }));
+      if (product.imageUrls && product.imageUrls.length > 0) {
+        const imageData = product.imageUrls.map((url, index) => ({
+          productId: createdProd.productId,
+          imageUrl: url,
+          isPrimary: index === 0, // Ảnh đầu tiên làm primary
+        }));
 
         await this.prisma.productImage.createMany({
           data: imageData,
@@ -156,6 +157,11 @@ export class ProductsService {
           isPrimary: index === 0, // Ảnh đầu tiên làm primary
         }));
 
+        // Xoá các ảnh cũ trước khi thêm ảnh mới
+        await this.prisma.productImage.deleteMany({
+          where: { productId: product.productId },
+        });
+        // Thêm ảnh mới
         await this.prisma.productImage.createMany({
           data: imageData,
         });
