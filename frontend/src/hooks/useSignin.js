@@ -16,13 +16,13 @@ export const useSignin = () => {
     e.preventDefault();
     setError("");
     try {
-      const response = await authService.login({email, password});
+      const { user } = await authService.login({email, password});
       login({
-        id: response.id,
-        email: response.email,
-        role: response.role,
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        accessToken: user.accessToken,
+        refreshToken: user.refreshToken,
       });
       showToastNotification('LoginForm successful!', 'info');
       navigate('/');
