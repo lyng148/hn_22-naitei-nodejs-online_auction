@@ -14,6 +14,7 @@ export { ProductFilters } from "./ProductFilters";
 export { ProductTable } from "./ProductTable";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { DeleteConfirmModal } from "./DeleteConfirmModal";
+export { default as UserAvatarDropdown } from "./UserAvatarDropdown";
 
 export const commonClassNameOfInput =
   "w-full p-4 text-sm text-gray-900 border border-gray-200 focus:ring-green focus:border-green outline-none";
