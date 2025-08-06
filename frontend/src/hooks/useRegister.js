@@ -58,7 +58,8 @@ export const useRegister = () => {
       const response = await registerUser({
         email: email.trim(),
         password: password.trim(),
-        isSeller: isSeller
+        isSeller: isSeller,
+        fullName: fullName.trim()
       });
 
       if (response?.user) {

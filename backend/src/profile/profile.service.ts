@@ -2,11 +2,15 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import PrismaService from '../common/services/prisma.service';
+import { UploadFileServiceS3 } from '../common/services/file.service';
 import { UserAccountInfoDto } from './dtos/profile.response.dto';
 import { SellerAccountInfoDto } from './dtos/seller-profile.response.dto';
 import { UpdateProfileDto } from './dtos/update-profile.body.dto';
+import { UploadImageResponseDto } from '../products/dtos/upload-image.dto';
 import {
   ERROR_USER_NOT_FOUND,
   ERROR_FORBIDDEN_ACCESS_ACCOUNT_INFO,
@@ -17,7 +21,10 @@ import {
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadFileService: UploadFileServiceS3,
+  ) {}
 
   async getUserAccountInfo(
     userId: string,
@@ -302,5 +309,63 @@ export class ProfileService {
             }))
           : [],
     };
+  }
+
+  async uploadAvatar(
+    userId: string,
+    file: Express.Multer.File,
+    currentUser: { id: string; email: string },
+  ): Promise<UploadImageResponseDto> {
+    if (currentUser.id !== userId) {
+      throw new ForbiddenException(ERROR_FORBIDDEN_UPDATE_PROFILE);
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+    ];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException('Only image files are allowed');
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size must be less than 5MB');
+    }
+
+    try {
+      const fileName = randomUUID();
+      const imageUrl = await this.uploadFileService.uploadFileToPublicBucket(
+        'avatars',
+        {
+          file,
+          file_name: fileName,
+        },
+      );
+
+      await this.prisma.profile.upsert({
+        where: { userId },
+        update: {
+          profileImageUrl: imageUrl,
+        },
+        create: {
+          userId,
+          profileImageUrl: imageUrl,
+        },
+      });
+
+      return {
+        imageUrl,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new BadRequestException(`Failed to upload avatar: ${errorMessage}`);
+    }
   }
 }

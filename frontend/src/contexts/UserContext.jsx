@@ -19,7 +19,7 @@ export const UserProvider = ({ children }) => {
   });
 
   const [loading, setLoading] = useState(true);
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState(null);
 
   const login = ({ id, email, role, accessToken, refreshToken }) => {
     const userData = { id, email, role };

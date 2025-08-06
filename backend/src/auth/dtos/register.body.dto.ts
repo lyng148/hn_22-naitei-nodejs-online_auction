@@ -4,9 +4,9 @@ import {
   IsNotEmpty,
   IsString,
   MinLength,
+  IsOptional,
 } from 'class-validator';
 import { AUTH_VALIDATION } from '../auth.constants';
-import { Optional } from '@nestjs/common';
 
 export class RegisterBodyDto {
   @IsEmail()
@@ -23,4 +23,8 @@ export class RegisterBodyDto {
   @IsBoolean()
   @IsNotEmpty()
   isSeller!: boolean;
+
+  @IsOptional()
+  @IsString()
+  fullName?: string;
 }

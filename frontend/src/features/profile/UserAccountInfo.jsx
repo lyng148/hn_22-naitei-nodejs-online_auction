@@ -8,11 +8,12 @@ import { useUserProfile } from "@/hooks/useUserProfile.js";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { userService } from "@/services/user.service.js";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FaEdit } from "react-icons/fa";
+import { IoCloseOutline } from "react-icons/io5";
 
 export const UserAccountInfo = () => {
-  const { user } = useUser();
+  const { user, avatarUrl, setAvatarUrl } = useUser();
   const { showToastNotification } = useNotification();
   const {
     userAccountInfo,
@@ -23,6 +24,8 @@ export const UserAccountInfo = () => {
 
   const [editingField, setEditingField] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   if (loading && !userAccountInfo) {
     return (
@@ -102,6 +105,75 @@ export const UserAccountInfo = () => {
     }
   };
 
+  const handleRemoveAvatar = async () => {
+    try {
+      const updateData = {
+        profile: {
+          profileImageUrl: ""
+        }
+      };
+      await updateUserProfile(user.id, updateData);
+      setAvatarUrl(null); // Reset to default avatar in header
+      showToastNotification('Avatar removed successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to remove avatar:', err);
+      showToastNotification('Failed to remove avatar', 'error');
+    }
+  };
+
+  const handleAvatarUpload = async (file) => {
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      showToastNotification('Only image files (JPEG, PNG, WebP, GIF) are allowed', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToastNotification('File size must be less than 5MB', 'error');
+      return;
+    }
+
+    setAvatarUploading(true);
+
+    try {
+      const response = await userService.uploadAvatar(user.id, file);
+      const imageUrl = response.imageUrl;
+      
+      // Update the profile with the new avatar URL
+      const updateData = {
+        profile: {
+          profileImageUrl: imageUrl
+        }
+      };
+      await updateUserProfile(user.id, updateData);
+      setAvatarUrl(imageUrl); // Update avatar in header
+      showToastNotification('Avatar uploaded successfully!', 'success');
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      showToastNotification(err.message || 'Avatar upload failed', 'error');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleAvatarUpload(file);
+    }
+    // Reset input
+    e.target.value = '';
+  };
+
   const InfoRow = ({ label, value, field, placeholder, type = "text", showVerify = false }) => (
     <div className="group">
       <div className="flex items-center justify-between">
@@ -173,7 +245,7 @@ export const UserAccountInfo = () => {
                 {/* Full Name */}
                 <InfoRow
                   label="Full Name"
-                  value={profile.fullName || user?.fullName}
+                  value={profile.fullName}
                   field="fullName"
                   placeholder="Enter full name"
                 />
@@ -187,7 +259,7 @@ export const UserAccountInfo = () => {
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                           userAccountInfo?.role === 'SELLER' ? 'bg-blue-100 text-blue-700' :
                           userAccountInfo?.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
-                          userAccountInfo?.role === 'BIDDER' ? 'bg-green-100 text-green-700' :
+                          userAccountInfo?.role === 'BIDDER' ? 'bg-green text-white' :
                           'bg-gray-100 text-gray-700'
                         }`}>
                           {userAccountInfo?.role || 'BIDDER'}
@@ -204,60 +276,80 @@ export const UserAccountInfo = () => {
               <Title level={4} className="text-gray-800 font-semibold mb-6">Profile Avatar</Title>
               
               <div className="flex flex-col items-center gap-4">
-                {/* Avatar Display - Square with Hover Overlay */}
+                {/* Avatar Display - Square with Hover Overlay and Remove Icon */}
                 <div className="relative group cursor-pointer">
                   <div className="w-32 h-32 rounded-lg overflow-hidden border-4 border-gray-200 bg-gray-100 flex items-center justify-center">
-                    {profile.profileImageUrl ? (
+                    {(profile.profileImageUrl || avatarUrl) ? (
                       <img 
-                        src={profile.profileImageUrl} 
+                        src={profile.profileImageUrl || avatarUrl} 
                         alt="Profile Avatar" 
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${avatarUploading ? 'opacity-50' : ''}`}
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
                         }}
                       />
                     ) : null}
-                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 ${profile.profileImageUrl ? 'hidden' : 'flex'}`}>
+                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 ${(profile.profileImageUrl || avatarUrl) ? 'hidden' : 'flex'} ${avatarUploading ? 'opacity-50' : ''}`}>
                       {(profile.fullName || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
+                    
+                    {/* Loading overlay */}
+                    {avatarUploading && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                          <span className="text-sm font-medium">Uploading...</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Hover Overlay */}
-                  <div 
-                    className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                    onClick={() => {
-                      // TODO: Implement upload avatar logic
-                      alert('Upload avatar feature will be implemented soon');
-                    }}
-                  >
-                    <div className="text-white text-center">
-                      <FaEdit size={20} className="mx-auto mb-2" />
-                      <span className="text-sm font-medium">Update Avatar</span>
+                  {/* Remove Avatar X Icon - Top Right Corner */}
+                  {(profile.profileImageUrl || avatarUrl) && !avatarUploading && (
+                    <button
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-200 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveAvatar();
+                      }}
+                      title="Remove Avatar"
+                    >
+                      <IoCloseOutline size={16} />
+                    </button>
+                  )}
+                  
+                  {/* Hover Overlay for Upload */}
+                  {!avatarUploading && (
+                    <div 
+                      className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      onClick={handleAvatarClick}
+                    >
+                      <div className="text-white text-center">
+                        <FaEdit size={20} className="mx-auto mb-2" />
+                        <span className="text-sm font-medium">Update Avatar</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
+                
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 
                 {/* Avatar Info */}
                 <div className="text-center w-full">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     {profile.fullName || user?.email || 'User'}
                   </h3>
-                  <p className="text-gray-600 text-sm">
-                    {profile.profileImageUrl ? 'Custom avatar' : 'Default avatar'}
-                  </p>
-                  
-                  {profile.profileImageUrl && (
-                    <button 
-                      className="mt-3 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
-                      onClick={() => {
-                        // TODO: Implement remove avatar logic
-                        alert('Remove avatar feature will be implemented soon');
-                      }}
-                    >
-                      Remove Avatar
-                    </button>
-                  )}
+                  {/* <p className="text-gray-600 text-sm">
+                    {(profile.profileImageUrl || avatarUrl) ? 'Custom avatar' : 'Default avatar'}
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -292,13 +384,13 @@ export const UserAccountInfo = () => {
 
           {/* Address Information Card */}
           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <Title level={4} className="text-gray-800 font-semibold mb-6">Address Information</Title>
+            <Title level={4} className="text-gray-800 font-semibold mb-2">Address Information</Title>
               
             {/* Combined Address Information */}
             <div className="group">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Caption className="text-gray-600 mb-2 font-medium">Complete Address</Caption>
+                  {/* <Caption className="text-gray-600 mb-2 font-medium">Complete Address</Caption> */}
                   {editingField === 'address' ? (
                     <div className="space-y-3">
                       <input
