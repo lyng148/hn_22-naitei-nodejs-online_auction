@@ -27,3 +27,9 @@ export const ERROR_AUCTION_NOT_FOUND = {
   message: 'Auction not found',
   errorCode: 'AUCTION_NOT_FOUND',
 };
+
+export const ERROR_AUCTION_NOT_PENDING = {
+  statusCode: 400,
+  message: 'Only auctions in PENDING status can be evaluated for opening.',
+  errorCode: 'AUCTION_NOT_PENDING',
+};

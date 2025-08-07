@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Post,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { CreateAuctionDto } from './dtos/create-auction.body.dto';
@@ -52,5 +53,12 @@ export class AuctionController {
       throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
     }
     return auction;
+  }
+
+  @Patch('open/:auctionId')
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async confirmAuction(@Param('auctionId') auctionId: string): Promise<void> {
+    await this.auctionService.confirmAuction(auctionId);
   }
 }

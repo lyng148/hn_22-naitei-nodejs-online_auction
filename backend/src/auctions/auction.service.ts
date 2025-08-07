@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  ERROR_AUCTION_NOT_FOUND,
+  ERROR_AUCTION_NOT_FOUND, ERROR_AUCTION_NOT_PENDING,
   ERROR_AUCTION_START_TIME_IN_PAST,
   ERROR_INVALID_AUCTION_TIME,
   ERROR_PRODUCT_NOT_FOUND,
@@ -280,5 +280,30 @@ export class AuctionService {
         }),
       ),
     };
+  }
+  async confirmAuction(auctionId: string): Promise<void> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+    });
+
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+    }
+
+    if (auction.status !== AuctionStatus.PENDING) {
+      throw new BadRequestException(ERROR_AUCTION_NOT_PENDING);
+    }
+
+    const now = new Date();
+    const newStatus =
+      now < auction.startTime ? AuctionStatus.READY : AuctionStatus.OPEN;
+
+    await this.prisma.auction.update({
+      where: { auctionId },
+      data: {
+        status: newStatus,
+        lastBidTime: now,
+      },
+    });
   }
 }
