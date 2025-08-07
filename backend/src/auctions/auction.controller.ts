@@ -68,4 +68,11 @@ export class AuctionController {
   async cancelAuction(@Param('auctionId') auctionId: string): Promise<void> {
     await this.auctionService.cancelAuction(auctionId);
   }
+
+  @Patch('close/:auctionId')
+  @Roles(Role.ADMIN, Role.SELLER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async closeAuction(@Param('auctionId') auctionId: string): Promise<void> {
+    await this.auctionService.closeAuction(auctionId);
+  }
 }

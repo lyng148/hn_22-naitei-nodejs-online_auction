@@ -39,3 +39,9 @@ export const ERROR_AUCTION_NOT_CANCELLABLE = {
   message: 'Only auctions in PENDING or READY status can be canceled.',
   errorCode: 'AUCTION_NOT_CANCELLABLE',
 };
+
+export const ERROR_AUCTION_NOT_CLOSABLE = {
+  statusCode: 400,
+  message: 'Only auctions in OPEN or EXTENDED status can be closed.',
+  errorCode: 'AUCTION_NOT_CLOSABLE',
+};

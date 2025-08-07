@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   ERROR_AUCTION_NOT_CANCELLABLE,
+  ERROR_AUCTION_NOT_CLOSABLE,
   ERROR_AUCTION_NOT_FOUND,
   ERROR_AUCTION_NOT_PENDING,
   ERROR_AUCTION_START_TIME_IN_PAST,
@@ -329,6 +330,30 @@ export class AuctionService {
       where: { auctionId },
       data: {
         status: AuctionStatus.CANCELED,
+      },
+    });
+  }
+
+  async closeAuction(auctionId: string): Promise<void> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+    });
+
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+    }
+
+    if (
+      auction.status !== AuctionStatus.OPEN &&
+      auction.status !== AuctionStatus.EXTENDED
+    ) {
+      throw new BadRequestException(ERROR_AUCTION_NOT_CLOSABLE);
+    }
+
+    await this.prisma.auction.update({
+      where: { auctionId },
+      data: {
+        status: AuctionStatus.CLOSED,
       },
     });
   }
