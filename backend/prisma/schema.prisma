@@ -47,6 +47,10 @@ model User {
 
   payment Payment[] @relation("User_Has_Payments")
 
+  sentMessages      Message[]  @relation("UserSentMessages")
+  chatRoomsAsUser1  ChatRoom[] @relation("User1ChatRooms")
+  chatRoomsAsUser2  ChatRoom[] @relation("User2ChatRooms")
+
   @@map("users")
 }
 
@@ -303,4 +307,56 @@ model Payment {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
 
   @@map("payments")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+model ChatRoom {
+  chatRoomId String @id @default(uuid()) @map("chat_room_id") @db.Char(36)
+
+  user1Id String @map("user1_id") @db.Char(36)
+  user1   User   @relation("User1ChatRooms", fields: [user1Id], references: [userId], onDelete: Cascade)
+
+  user2Id String @map("user2_id") @db.Char(36)
+  user2   User   @relation("User2ChatRooms", fields: [user2Id], references: [userId], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  messages Message[] @relation("ChatRoom_Has_Messages")
+
+  @@unique([user1Id, user2Id])
+  @@map("chat_rooms")
+}
+
+model Message {
+  messageId String @id @default(uuid()) @map("message_id") @db.Char(36)
+
+  chatRoomId String   @map("chat_room_id") @db.Char(36)
+  chatRoom   ChatRoom @relation("ChatRoom_Has_Messages", fields: [chatRoomId], references: [chatRoomId], onDelete: Cascade)
+
+  senderId String @map("sender_id") @db.Char(36)
+  sender   User   @relation("UserSentMessages", fields: [senderId], references: [userId], onDelete: Cascade)
+
+  content String? @db.Text
+  fileUrl String? @map("file_url") @db.VarChar(255)
+
+  type   MessageType   @default(TEXT)
+  status MessageStatus @default(SENT)
+
+  timestamp DateTime @default(now()) @db.Timestamp(0)
+  version   Int      @default(0)
+
+  @@map("messages")
 }

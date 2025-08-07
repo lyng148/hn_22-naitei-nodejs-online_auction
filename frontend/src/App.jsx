@@ -7,6 +7,7 @@ import Dashboard from "@/screens/Dashboard/index.jsx";
 import SellerHub from "@/screens/SellerHub/index.jsx";
 import UserProfileScreen from "@/screens/profile/UserProfileScreen.jsx";
 import ResetPasswordPage from "@/screens/auth/ResetPassword/index.jsx";
+import ChatPage from '@/screens/chat/index.jsx';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/products/*" element={<ProductRoutes />} />
               <Route path="/seller-hub/*" element={<SellerHub />} />
               <Route path="/profile" element={<UserProfileScreen />} />
+              <Route path="/chat" element={<ChatPage />} />
             </Routes>
           </NotificationProvider>
         </UserProvider>
