@@ -33,3 +33,9 @@ export const ERROR_AUCTION_NOT_PENDING = {
   message: 'Only auctions in PENDING status can be evaluated for opening.',
   errorCode: 'AUCTION_NOT_PENDING',
 };
+
+export const ERROR_AUCTION_NOT_CANCELLABLE = {
+  statusCode: 400,
+  message: 'Only auctions in PENDING or READY status can be canceled.',
+  errorCode: 'AUCTION_NOT_CANCELLABLE',
+};
