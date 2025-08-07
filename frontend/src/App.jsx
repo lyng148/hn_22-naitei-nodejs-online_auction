@@ -6,6 +6,7 @@ import {ProductRoutes} from "@/routers/ProductRoutes.jsx";
 import Dashboard from "@/screens/Dashboard/index.jsx";
 import SellerHub from "@/screens/SellerHub/index.jsx";
 import UserProfileScreen from "@/screens/profile/UserProfileScreen.jsx";
+import ResetPasswordPage from "@/screens/auth/ResetPassword/index.jsx";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/auth/login" replace />} />
               <Route path="/auth/*" element={<AuthRoute />}/>
+              <Route path="/reset" element={<ResetPasswordPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products/*" element={<ProductRoutes />} />
               <Route path="/seller-hub/*" element={<SellerHub />} />

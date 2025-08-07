@@ -4,6 +4,8 @@ export const API_CONFIG = {
     AUTH: {
       REGISTER: '/users/signup',
       LOGIN: '/users/login',
+      FORGOT_PASSWORD: '/users/forgot-password',
+      RESET_PASSWORD: '/users/reset-password',
     },
     USER: {
       PROFILE: '/users/profile',
