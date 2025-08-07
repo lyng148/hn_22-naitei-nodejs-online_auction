@@ -224,6 +224,7 @@ export class AuctionService {
             startTime: true,
             endTime: true,
             startingPrice: true,
+            currentPrice: true,
             minimumBidIncrement: true,
             status: true,
             auctionProducts: {
@@ -267,5 +268,53 @@ export class AuctionService {
       throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
     }
     return { message: 'Auction removed from watchlist successfully' };
+  }
+
+  async getWatchlist(currUser: any): Promise<SearchAuctionResponseDto> {
+    const watchlist = await this.prisma.watchlist.findMany({
+      where: { userId: currUser.id },
+      include: {
+        auction: {
+          select: {
+            auctionId: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            startingPrice: true,
+            currentPrice: true,
+            minimumBidIncrement: true,
+            status: true,
+            auctionProducts: {
+              select: {
+                product: {
+                  select: {
+                    productId: true,
+                    name: true,
+                    stockQuantity: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    const data = watchlist.map(item => ({
+      auctionId: item.auction.auctionId,
+      title: item.auction.title,
+      startTime: item.auction.startTime,
+      endTime: item.auction.endTime,
+      startingPrice: item.auction.startingPrice.toString(),
+      currentPrice: item.auction.currentPrice.toString(),
+      minimumBidIncrement: item.auction.minimumBidIncrement.toString(),
+      status: item.auction.status,
+    }));
+    return {
+      total: data.length,
+      page: 0,
+      size: data.length,
+      data,
+    };
   }
 }

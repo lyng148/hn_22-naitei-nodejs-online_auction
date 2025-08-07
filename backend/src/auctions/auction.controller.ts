@@ -59,4 +59,12 @@ export class AuctionController {
   ): Promise<RemoveFromWatchlistResponseDto> {
     return this.auctionService.removeFromWatchlist(user, removeFromWatchlistDto);
   }
+
+  @Roles(Role.BIDDER)
+  @Post('watchlist')
+  async getWatchlist(
+    @CurrentUser() user: any,
+  ): Promise<SearchAuctionResponseDto> {
+    return this.auctionService.getWatchlist(user);
+  }
 }
