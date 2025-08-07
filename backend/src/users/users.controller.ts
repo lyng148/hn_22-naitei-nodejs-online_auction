@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Body,
+  Query,
   ForbiddenException,
   UseGuards,
 } from '@nestjs/common';
@@ -15,13 +16,33 @@ import { Auth } from '@common/decorators/auth.decorator';
 import { CreateWarningDto } from './dtos/create.warning.dto';
 import { ERROR_ACCESS_DENIED } from '@common/constants/error.constant';
 import { UserWarningStatusDto } from './dtos/warning.response.dto';
+import { ListUsersQueryDto } from './dtos/list-users.dto';
+import { ListUsersResponseDto } from './dtos/list-users-response.dto';
 import { RoleGuard } from '../common/guards/role.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from '@common/constants/pagination.constant';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @Auth(AuthType.ACCESS_TOKEN)
+  @Roles(Role.ADMIN)
+  @UseGuards(RoleGuard)
+  async listUsers(
+    @Query() query: ListUsersQueryDto,
+  ): Promise<ListUsersResponseDto> {
+    return this.usersService.listUsers(
+      query.role,
+      query.page || DEFAULT_PAGE,
+      query.limit || DEFAULT_LIMIT,
+    );
+  }
 
   @Post('warnings/:id')
   @Auth(AuthType.ACCESS_TOKEN)

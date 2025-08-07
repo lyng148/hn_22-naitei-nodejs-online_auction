@@ -11,7 +11,12 @@ import {
 } from '@common/constants/error.constant';
 import { CreateWarningDto } from './dtos/create.warning.dto';
 import { UserWarningStatusDto } from './dtos/warning.response.dto';
-import { User } from '@prisma/client';
+import { ListUsersResponseDto } from './dtos/list-users-response.dto';
+import { User, Role } from '@prisma/client';
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from '@common/constants/pagination.constant';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +32,68 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { email },
     });
+  }
+
+  async listUsers(
+    role?: Role,
+    page: number = DEFAULT_PAGE,
+    limit: number = DEFAULT_LIMIT,
+  ): Promise<ListUsersResponseDto> {
+    const whereClause = role ? { role } : {};
+    const skip = (page - 1) * limit;
+
+    const total = await this.prisma.user.count({
+      where: whereClause,
+    });
+
+    const users = await this.prisma.user.findMany({
+      where: whereClause,
+      include: {
+        profile: {
+          select: {
+            fullName: true,
+            phoneNumber: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      users: users.map((user) => ({
+        userId: user.userId,
+        email: user.email,
+        role: user.role,
+        isBanned: user.isBanned,
+        isVerified: user.isVerified,
+        warningCount: user.warningCount,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        profile: user.profile
+          ? {
+              fullName: user.profile.fullName || undefined,
+              phoneNumber: user.profile.phoneNumber || undefined,
+              profileImageUrl: user.profile.profileImageUrl || undefined,
+            }
+          : undefined,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrevious: page > 1,
+      },
+      filteredByRole: role || undefined,
+    };
   }
 
   async createWarning(
