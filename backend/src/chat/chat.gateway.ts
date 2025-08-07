@@ -1,29 +1,29 @@
+import { UseGuards } from '@nestjs/common';
 import {
-  WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
-  WebSocketServer,
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { ChatService } from './chat.service';
-import { UseGuards } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
+import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
-import { CreateMessageDto } from './dtos/create-message.dto';
 import {
-  WS_EVENTS,
   ERROR_FAILED_TO_JOIN_ROOM,
   ERROR_FAILED_TO_SEND_MESSAGE,
-  SUCCESS_ROOM_JOINED,
+  ERROR_NO_ACCESS_TO_CHAT_ROOM,
   LIMIT_DEFAULT,
   OFFSET_DEFAULT,
-  ERROR_NO_ACCESS_TO_CHAT_ROOM,
+  SUCCESS_ROOM_JOINED,
+  WS_EVENTS,
 } from './chat-constants';
+import { ChatService } from './chat.service';
+import { CreateMessageDto } from './dtos/create-message.dto';
 import { ListMessageQueryDto } from './dtos/list-message-query.dto';
-import { validate } from 'class-validator';
 
 @WebSocketGateway({
   cors: {
