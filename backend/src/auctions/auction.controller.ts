@@ -67,4 +67,9 @@ export class AuctionController {
   ): Promise<SearchAuctionResponseDto> {
     return this.auctionService.getWatchlist(user);
   }
+
+  @Post('list-open')
+  async listOpenAuctions(@Query() query: SearchAuctionQueryDto): Promise<SearchAuctionResponseDto> {
+    return this.auctionService.listOpenAuctions(query);
+  }
 }

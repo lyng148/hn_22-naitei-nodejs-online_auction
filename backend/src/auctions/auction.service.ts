@@ -317,4 +317,12 @@ export class AuctionService {
       data,
     };
   }
+
+  listOpenAuctions(query: SearchAuctionQueryDto): Promise<SearchAuctionResponseDto> {
+    const openQuery: SearchAuctionQueryDto = {
+      ...query,
+      status: AuctionStatus.OPEN,
+    };
+    return this.searchAuctions(openQuery);
+  }
 }
