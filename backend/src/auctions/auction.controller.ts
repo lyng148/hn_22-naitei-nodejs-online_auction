@@ -15,6 +15,9 @@ import { Role } from '@common/enums/role.enum';
 import { SearchAuctionQueryDto } from './dtos/search-auction.query.dto';
 import { SearchAuctionResponseDto } from './dtos/search-auction.response.dto';
 import { Public } from '@common/decorators/public.decorator';
+import { CurrentUser } from '@common/decorators/user.decorator';
+import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
+import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 
 @Controller('auctions')
 export class AuctionController {
@@ -36,5 +39,14 @@ export class AuctionController {
     @Query() query: SearchAuctionQueryDto,
   ): Promise<SearchAuctionResponseDto> {
     return this.auctionService.searchAuctions(query);
+  }
+  
+  @Roles(Role.BIDDER)
+  @Post('add-to-watchlist')
+  async addToWatchlist(
+    @CurrentUser() user: any,
+    @Body() addToWatchlistDto: AddToWatchlistDto,
+  ): Promise<AddToWatchlistResponseDto> {
+    return this.auctionService.addToWatchlist(user, addToWatchlistDto);
   }
 }
