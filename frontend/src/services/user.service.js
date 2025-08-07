@@ -5,6 +5,7 @@ const USER_API = {
   UPDATE_PROFILE: (userId) => `/api/profile/${userId}`,
   VERIFY_EMAIL: (userId) => `/api/profile/${userId}/verify-email`,
   VERIFY_PHONE: (userId) => `/api/profile/${userId}/verify-phone`,
+  UPLOAD_AVATAR: (userId) => `/api/profile/${userId}/upload-avatar`,
 };
 
 export const userService = {
@@ -82,6 +83,36 @@ export const userService = {
           }
         },
         message: message || 'Failed to verify phone',
+        statusCode: err?.response?.status || 500,
+      };
+    }
+  },
+
+  // Upload avatar
+  uploadAvatar: async (userId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await axiosClient.post(
+        USER_API.UPLOAD_AVATAR(userId),
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      const { message } = err?.response?.data || {};
+      throw {
+        response: {
+          data: {
+            message: message || 'Failed to upload avatar'
+          }
+        },
+        message: message || 'Failed to upload avatar',
         statusCode: err?.response?.status || 500,
       };
     }

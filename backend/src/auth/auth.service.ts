@@ -51,12 +51,26 @@ export class AuthService {
     if (data.isSeller) {
       role = Role.SELLER;
     }
-    const user = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-        role: role,
-      },
+
+    const user = await this.prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: {
+          email: data.email,
+          password: hashedPassword,
+          role: role,
+        },
+      });
+
+      if (data.fullName && data.fullName.trim()) {
+        await prisma.profile.create({
+          data: {
+            userId: newUser.userId,
+            fullName: data.fullName.trim(),
+          },
+        });
+      }
+
+      return newUser;
     });
 
     return this.buildUserResponse(user);

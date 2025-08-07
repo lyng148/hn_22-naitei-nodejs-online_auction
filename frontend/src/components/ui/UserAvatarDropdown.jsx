@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext.jsx";
+import { useUserProfile } from "@/hooks/useUserProfile.js";
 import { FaUser, FaKey, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 
 export const UserAvatarDropdown = ({ isHomePage }) => {
@@ -9,6 +10,7 @@ export const UserAvatarDropdown = ({ isHomePage }) => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { user, logout, avatarUrl } = useUser();
+  const { userAccountInfo } = useUserProfile();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -50,10 +52,17 @@ export const UserAvatarDropdown = ({ isHomePage }) => {
   };
 
   // Get user initials for fallback avatar
-  const getUserInitials = (email) => {
+  const getUserInitials = (email, fullName) => {
+    if (fullName) return fullName.charAt(0).toUpperCase();
     if (!email) return 'U';
     return email.charAt(0).toUpperCase();
   };
+
+  // Get the profile data
+  const profile = userAccountInfo?.profile?.[0] || {};
+  
+  // Determine the avatar to display (prioritize profile image, then context avatar, then fallback)
+  const displayAvatar = profile.profileImageUrl || avatarUrl;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -64,10 +73,10 @@ export const UserAvatarDropdown = ({ isHomePage }) => {
         disabled={isLoggingOut}
       >
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-gray-200">
-          {avatarUrl ? (
+        <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-gray-200">
+          {displayAvatar ? (
             <img 
-              src={avatarUrl} 
+              src={displayAvatar} 
               alt="Avatar" 
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -77,16 +86,16 @@ export const UserAvatarDropdown = ({ isHomePage }) => {
             />
           ) : null}
           <div 
-            className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-600 ${avatarUrl ? 'hidden' : 'flex'}`}
+            className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-600 ${displayAvatar ? 'hidden' : 'flex'}`}
           >
-            {getUserInitials(user.email)}
+            {getUserInitials(user.email, profile.fullName)}
           </div>
         </div>
 
         {/* User Info */}
         <div className="flex items-center gap-1">
           <span className={`${!isHomePage ? "text-black" : "text-white"} font-medium text-sm hidden sm:block`}>
-            Hello, {user.email}
+            Hello, {profile.fullName || user.email}
           </span>
           <FaChevronDown 
             className={`${!isHomePage ? "text-black" : "text-white"} transition-transform duration-200 ${

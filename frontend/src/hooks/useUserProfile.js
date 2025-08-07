@@ -9,7 +9,7 @@ export const useUserProfile = () => {
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   
-  const { user } = useUser();
+  const { user, setAvatarUrl } = useUser();
   const { showToastNotification } = useNotification();
 
   // Form states for editing
@@ -41,13 +41,19 @@ export const useUserProfile = () => {
       const data = await userService.getUserAccountInfo(userId);
       setUserAccountInfo(data);
       
+      // Sync avatar URL with UserContext
+      const profileImageUrl = data.profile?.[0]?.profileImageUrl;
+      if (profileImageUrl) {
+        setAvatarUrl(profileImageUrl);
+      }
+      
       // Initialize form data with current user info
       setFormData({
         email: data.email || "",
         profile: {
           fullName: data.profile?.[0]?.fullName || "",
           phoneNumber: data.profile?.[0]?.phoneNumber || "",
-          profileImageUrl: data.profile?.[0]?.profileImageUrl || ""
+          profileImageUrl: profileImageUrl || ""
         },
         address: {
           streetAddress: data.addresses?.[0]?.streetAddress || "",
@@ -65,7 +71,7 @@ export const useUserProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [showToastNotification]);
+  }, [showToastNotification, setAvatarUrl]);
 
   // Update user profile
   const updateUserProfile = async (userId, updateData) => {
@@ -75,6 +81,16 @@ export const useUserProfile = () => {
     try {
       const data = await userService.updateProfile(userId, updateData);
       setUserAccountInfo(data);
+      
+      // Sync avatar URL with UserContext when profile image is updated
+      const profileImageUrl = data.profile?.[0]?.profileImageUrl;
+      if (profileImageUrl !== undefined) {
+        // If profileImageUrl is empty/null, keep current avatar; if it has value, update it
+        if (profileImageUrl) {
+          setAvatarUrl(profileImageUrl);
+        }
+      }
+      
       showToastNotification('Profile updated successfully!', 'success');
       setIsEditing(false);
       return data;
