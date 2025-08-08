@@ -99,7 +99,7 @@ export const useChat = () => {
       await loadMessages(room.chatRoomId);
 
       if (connected && chatService.isConnected) {
-        chatService.joinRoomById(room.chatRoomId);
+        chatService.joinRoom(room.chatRoomId);
       }
 
       setTimeout(() => {
@@ -115,11 +115,9 @@ export const useChat = () => {
     if (!currentRoom?.chatRoomId || !content.trim()) return;
 
     try {
-      // ✅ Use WebSocket instead of REST API
       if (connected && chatService.isConnected) {
         chatService.sendMessageWS(currentRoom.chatRoomId, content.trim(), type);
       } else {
-        // Fallback to REST API if WebSocket not connected
         const response = await chatService.sendMessage(currentRoom.chatRoomId, {
           content: content.trim(),
           type
@@ -143,20 +141,6 @@ export const useChat = () => {
       showToastNotification('Failed to send message', 'error');
     }
   }, [currentRoom?.chatRoomId, connected, fetchRooms, showToastNotification]);
-
-  const handleTyping = useCallback((roomId) => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    if (connected && chatService.isConnected) {
-      chatService.sendTyping(roomId);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setTyping(false);
-    }, 2000);
-  }, [connected]);
 
   const createChatRoom = useCallback(async (otherUserId) => {
     try {
@@ -201,7 +185,7 @@ export const useChat = () => {
       showToastNotification(error.message || 'Chat connection error', 'error');
     };
 
-    const handleRoomMessage = (message) => {
+    const handleMessage = (message) => {
       if (currentRoom &&
         (message.roomId === currentRoom.chatRoomId ||
           message.chatRoomId === currentRoom.chatRoomId)) {
@@ -215,42 +199,11 @@ export const useChat = () => {
             return prev;
           });
         }
-      }
-      fetchRooms();
-      fetchUnreadCount();
-    };
-
-    const handlePrivateMessage = (message) => {
-      if (currentRoom &&
-        (message.roomId === currentRoom.chatRoomId ||
-          message.chatRoomId === currentRoom.chatRoomId)) {
-
-        if (message.senderId !== user.id) {
-          setMessages(prev => {
-            const exists = prev.some(m => m.messageId === message.messageId);
-            if (!exists) {
-              return [...prev, message];
-            }
-            return prev;
-          });
-        }
-      } else {
+      } else if (message.notificationText) {
         showToastNotification(
           message.notificationText || `New message from ${message.sender?.email || 'Unknown'}`,
           'info'
         );
-      }
-      fetchRooms();
-      fetchUnreadCount();
-    };
-
-    const handleNewMessage = (message) => {
-      if (currentRoom && message.chatRoomId === currentRoom.chatRoomId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.messageId === message.messageId);
-          if (exists) return prev;
-          return [...prev, message];
-        });
       }
       fetchRooms();
       fetchUnreadCount();
@@ -299,13 +252,12 @@ export const useChat = () => {
       }
     };
 
-    // ✅ Enhanced event listeners
     chatService.on('connected', handleConnected);
     chatService.on('disconnected', handleDisconnected);
     chatService.on('error', handleError);
-    chatService.on('room_message', handleRoomMessage);
-    chatService.on('private_message', handlePrivateMessage);
-    chatService.on('new_message', handleNewMessage);
+    chatService.on('room_message', handleMessage);
+    chatService.on('private_message', handleMessage);
+    chatService.on('new_message', handleMessage);
     chatService.on('message_sent', handleMessageSent);
     chatService.on('room_joined', handleRoomJoined);
     chatService.on('user_typing', handleUserTyping);
@@ -315,9 +267,9 @@ export const useChat = () => {
       chatService.off('connected', handleConnected);
       chatService.off('disconnected', handleDisconnected);
       chatService.off('error', handleError);
-      chatService.off('room_message', handleRoomMessage);
-      chatService.off('private_message', handlePrivateMessage);
-      chatService.off('new_message', handleNewMessage);
+      chatService.off('room_message', handleMessage);
+      chatService.off('private_message', handleMessage);
+      chatService.off('new_message', handleMessage);
       chatService.off('message_sent', handleMessageSent);
       chatService.off('room_joined', handleRoomJoined);
       chatService.off('user_typing', handleUserTyping);
@@ -342,11 +294,9 @@ export const useChat = () => {
     selectRoom,
     sendMessage,
     createChatRoom,
-    handleTyping,
     fetchRooms,
     loadMessages,
     markMessagesAsRead,
     fetchUnreadCount,
-    joinRoom: selectRoom,
   };
 };
