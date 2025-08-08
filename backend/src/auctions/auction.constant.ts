@@ -21,3 +21,9 @@ export const ERROR_AUCTION_START_TIME_IN_PAST = (minDate: Date) => ({
   message: `Start time must be in the future (>= ${minDate.toString()})`,
   errorCode: 'INVALID_AUCTION_START_TIME',
 });
+
+export const ERROR_AUCTION_NOT_FOUND = {
+  statusCode: 404,
+  message: 'Auction not found',
+  errorCode: 'AUCTION_NOT_FOUND',
+};

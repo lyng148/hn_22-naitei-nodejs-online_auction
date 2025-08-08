@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  ERROR_AUCTION_NOT_FOUND,
   ERROR_AUCTION_START_TIME_IN_PAST,
   ERROR_INVALID_AUCTION_TIME,
   ERROR_PRODUCT_NOT_FOUND,
@@ -18,6 +19,10 @@ import {
   AuctionItemDto,
   SearchAuctionResponseDto,
 } from './dtos/search-auction.response.dto';
+import {
+  GetAuctionDetailResponseDto,
+  AuctionProductDetailDto,
+} from './dtos/get-auction-detail.response.dto';
 
 @Injectable()
 export class AuctionService {
@@ -179,5 +184,101 @@ export class AuctionService {
     }));
 
     return { total, page: query.page, size: query.size, data: auctions };
+  }
+
+  async getAuctionById(
+    auctionId: string,
+  ): Promise<GetAuctionDetailResponseDto> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+      include: {
+        winner: {
+          select: {
+            userId: true,
+            profile: { select: { fullName: true } },
+          },
+        },
+        auctionProducts: {
+          include: {
+            product: {
+              select: {
+                productId: true,
+                name: true,
+                description: true,
+                seller: {
+                  select: {
+                    userId: true,
+                    profile: { select: { fullName: true } },
+                  },
+                },
+                images: { select: { imageUrl: true, imageId: true } },
+                productCategories: {
+                  select: {
+                    category: { select: { name: true, categoryId: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        bids: {
+          select: {
+            bidId: true,
+            bidAmount: true,
+            status: true,
+            createdAt: true,
+            user: {
+              select: {
+                userId: true,
+                profile: { select: { fullName: true } },
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+    }
+
+    return {
+      auctionId: auction.auctionId,
+      title: auction.title,
+      startTime: auction.startTime,
+      endTime: auction.endTime,
+      startingPrice: auction.startingPrice.toString(),
+      currentPrice: auction.currentPrice.toString(),
+      minimumBidIncrement: auction.minimumBidIncrement.toString(),
+      status: auction.status,
+      sellerId: auction.auctionProducts?.[0]?.product?.seller?.userId ?? null,
+      sellerName:
+        auction.auctionProducts?.[0]?.product?.seller?.profile?.fullName ?? '',
+      lastBidTime: auction.bids?.[0]?.createdAt ?? null,
+      winnerId: auction.winner?.userId ?? undefined,
+      winnerName: auction.winner?.profile?.fullName ?? undefined,
+      createdAt: auction.createdAt,
+      bids: auction.bids.map((bid) => ({
+        bidId: bid.bidId,
+        bidAmount: bid.bidAmount.toString(),
+        status: bid.status,
+        createdAt: bid.createdAt,
+        bidderId: bid.user.userId,
+        bidderName: bid.user.profile?.fullName ?? '',
+      })),
+      products: auction.auctionProducts.map(
+        (ap): AuctionProductDetailDto => ({
+          productId: ap.product.productId,
+          name: ap.product.name,
+          description: ap.product.description || '',
+          quantity: ap.quantity,
+          categories: ap.product.productCategories.map(
+            (pc) => pc.category.name,
+          ),
+          images: ap.product.images.map((img) => img.imageUrl),
+        }),
+      ),
+    };
   }
 }

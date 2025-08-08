@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  NotFoundException,
   Post,
   Query,
 } from '@nestjs/common';
@@ -15,6 +17,8 @@ import { Role } from '@common/enums/role.enum';
 import { SearchAuctionQueryDto } from './dtos/search-auction.query.dto';
 import { SearchAuctionResponseDto } from './dtos/search-auction.response.dto';
 import { Public } from '@common/decorators/public.decorator';
+import { GetAuctionDetailResponseDto } from './dtos/get-auction-detail.response.dto';
+import { ERROR_AUCTION_NOT_FOUND } from './auction.constant';
 
 @Controller('auctions')
 export class AuctionController {
@@ -36,5 +40,17 @@ export class AuctionController {
     @Query() query: SearchAuctionQueryDto,
   ): Promise<SearchAuctionResponseDto> {
     return this.auctionService.searchAuctions(query);
+  }
+
+  @Get(':auctionId')
+  @Public()
+  async getAuctionById(
+    @Param('auctionId') auctionId: string,
+  ): Promise<GetAuctionDetailResponseDto> {
+    const auction = await this.auctionService.getAuctionById(auctionId);
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+    }
+    return auction;
   }
 }
