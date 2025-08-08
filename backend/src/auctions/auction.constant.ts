@@ -27,3 +27,21 @@ export const ERROR_AUCTION_NOT_FOUND = {
   message: 'Auction not found',
   errorCode: 'AUCTION_NOT_FOUND',
 };
+
+export const ERROR_AUCTION_NOT_PENDING = {
+  statusCode: 400,
+  message: 'Only auctions in PENDING status can be evaluated for opening.',
+  errorCode: 'AUCTION_NOT_PENDING',
+};
+
+export const ERROR_AUCTION_NOT_CANCELLABLE = {
+  statusCode: 400,
+  message: 'Only auctions in PENDING or READY status can be canceled.',
+  errorCode: 'AUCTION_NOT_CANCELLABLE',
+};
+
+export const ERROR_AUCTION_NOT_CLOSABLE = {
+  statusCode: 400,
+  message: 'Only auctions in OPEN or EXTENDED status can be closed.',
+  errorCode: 'AUCTION_NOT_CLOSABLE',
+};
