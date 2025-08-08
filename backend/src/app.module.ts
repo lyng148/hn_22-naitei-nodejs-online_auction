@@ -12,6 +12,7 @@ import { FollowsModule } from './follows/follows.module';
 import { ProductsModule } from './products/products.module';
 import { AuctionModule } from './auctions/auction.module';
 import { join } from 'path';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { join } from 'path';
     FollowsModule,
     ProductsModule,
     AuctionModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
