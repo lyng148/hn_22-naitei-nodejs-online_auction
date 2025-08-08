@@ -23,6 +23,7 @@ import { ERROR_AUCTION_NOT_FOUND } from './auction.constant';
 import { CurrentUser } from '@common/decorators/user.decorator';
 import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
 import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
+import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
 
 @Controller('auctions')
 export class AuctionController {
@@ -86,5 +87,14 @@ export class AuctionController {
     @Body() addToWatchlistDto: AddToWatchlistDto,
   ): Promise<AddToWatchlistResponseDto> {
     return this.auctionService.addToWatchlist(user, addToWatchlistDto);
+  }
+
+  @Roles(Role.BIDDER)
+  @Post('remove-from-watchlist')
+  async removeFromWatchlist(
+    @CurrentUser() user: any,
+    @Body() removeFromWatchlistDto: RemoveFromWatchlistDto,
+  ): Promise<RemoveFromWatchlistResponseDto> {
+    return this.auctionService.removeFromWatchlist(user, removeFromWatchlistDto);
   }
 }
