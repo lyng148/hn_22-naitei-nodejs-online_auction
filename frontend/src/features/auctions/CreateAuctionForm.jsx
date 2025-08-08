@@ -128,7 +128,7 @@ export const CreateAuctionForm = () => {
                                     onClick={() => setShowProductSelector(!showProductSelector)}
                                     className="px-6 py-2 bg-green text-white rounded-full font-medium hover:bg-green-600 transition-colors"
                                 >
-                                    Select available products
+                                    Select active products
                                 </button>
                             </div>
 
@@ -155,7 +155,10 @@ export const CreateAuctionForm = () => {
                                 <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto m-4">
                                     <div className="p-6 border-b border-gray-200">
                                         <div className="flex justify-between items-center">
-                                            <Title level={4}>Select Products for Auction</Title>
+                                            <div>
+                                                <Title level={4}>Select Active Products for Auction</Title>
+                                                <Caption className="text-gray-500 mt-1">Only products with ACTIVE status and available stock are shown</Caption>
+                                            </div>
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     type="button"
@@ -181,8 +184,9 @@ export const CreateAuctionForm = () => {
                                             <div className="text-center py-8">Loading products...</div>
                                         ) : availableProducts.length === 0 ? (
                                             <div className="text-center py-8">
-                                                <p className="text-gray-500">No products available</p>
-                                                <p className="text-sm text-gray-400 mt-2">Create some products first to add them to auctions</p>
+                                                <p className="text-gray-500">No active products available</p>
+                                                <p className="text-sm text-gray-400 mt-2">Only products with ACTIVE status and stock are shown here</p>
+                                                <p className="text-sm text-gray-400">Make sure your products are active and have stock before creating auctions</p>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +211,6 @@ export const CreateAuctionForm = () => {
                                                                 <div className="flex-1 min-w-0">
                                                                     <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                                                                     <p className="text-sm text-gray-500 mt-1">Stock: {product.stockQuantity}</p>
-                                                                    <p className="text-xs text-gray-400 mt-1">Status: {product.status}</p>
                                                                 </div>
                                                                 <div className="flex-shrink-0">
                                                                     {isSelected ? (

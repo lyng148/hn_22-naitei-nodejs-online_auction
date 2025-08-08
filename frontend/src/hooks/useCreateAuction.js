@@ -28,7 +28,7 @@ export const useCreateAuction = () => {
         setLoadingProducts(true);
         setError('');
         try {
-            const response = await productService.getMyProducts();
+            const response = await productService.getMyActiveProducts();
             // Handle the correct response structure: response.data.products
             setAvailableProducts(response.data?.products || response.products || []);
         } catch (err) {
