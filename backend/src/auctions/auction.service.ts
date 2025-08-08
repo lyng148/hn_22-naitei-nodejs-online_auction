@@ -29,6 +29,7 @@ import {
 import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
 import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
+import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
 
 @Injectable()
 export class AuctionService {
@@ -361,6 +362,7 @@ export class AuctionService {
     });
   }
   
+
   async addToWatchlist(currUser: any, addToWatchlistDto: AddToWatchlistDto): Promise<AddToWatchlistResponseDto> {
     const auctionId = addToWatchlistDto.auctionId;
     const auction = await this.prisma.auction.findUnique({
@@ -427,12 +429,21 @@ export class AuctionService {
       startingPrice: watchlistItem.auction.startingPrice,
       minimumBidIncrement: watchlistItem.auction.minimumBidIncrement,
       status: watchlistItem.auction.status,
-      products: watchlistItem.auction.auctionProducts.map(ap => ({
-        productId: ap.product.productId,
-        name: ap.product.name,
-        stockQuantity: ap.product.stockQuantity,
-        status: ap.product.status,
-      })),
+      products: watchlistItem.auction.auctionProducts.map(ap => ap.product),
     };
+  }
+
+  async removeFromWatchlist(currUser: any, removeFromWatchlistDto: RemoveFromWatchlistDto): Promise<RemoveFromWatchlistResponseDto> {
+    const auctionId = removeFromWatchlistDto.auctionId;
+    const result = await this.prisma.watchlist.deleteMany({
+      where: {
+        userId: currUser.id,
+        auctionId,
+      },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
+    }
+    return { message: 'Auction removed from watchlist successfully' };
   }
 }
