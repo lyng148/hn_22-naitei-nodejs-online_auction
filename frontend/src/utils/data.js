@@ -36,8 +36,8 @@ export const menulists = [
   },
   {
     id: 8,
-    path : "/features",
-    link : "Admin",
+    path : "/admin-hub",
+    link : "Admin Hub",
   },
   {
     id: 9,
