@@ -20,6 +20,9 @@ import { SearchAuctionResponseDto } from './dtos/search-auction.response.dto';
 import { Public } from '@common/decorators/public.decorator';
 import { GetAuctionDetailResponseDto } from './dtos/get-auction-detail.response.dto';
 import { ERROR_AUCTION_NOT_FOUND } from './auction.constant';
+import { CurrentUser } from '@common/decorators/user.decorator';
+import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
+import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 
 @Controller('auctions')
 export class AuctionController {
@@ -74,5 +77,14 @@ export class AuctionController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async closeAuction(@Param('auctionId') auctionId: string): Promise<void> {
     await this.auctionService.closeAuction(auctionId);
+  }
+  
+  @Roles(Role.BIDDER)
+  @Post('add-to-watchlist')
+  async addToWatchlist(
+    @CurrentUser() user: any,
+    @Body() addToWatchlistDto: AddToWatchlistDto,
+  ): Promise<AddToWatchlistResponseDto> {
+    return this.auctionService.addToWatchlist(user, addToWatchlistDto);
   }
 }

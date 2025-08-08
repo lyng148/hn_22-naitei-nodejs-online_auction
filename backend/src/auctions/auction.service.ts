@@ -26,10 +26,13 @@ import {
   GetAuctionDetailResponseDto,
   AuctionProductDetailDto,
 } from './dtos/get-auction-detail.response.dto';
+import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
+import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
+import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
 
 @Injectable()
 export class AuctionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createAuction(
     dto: CreateAuctionDto,
@@ -356,5 +359,80 @@ export class AuctionService {
         status: AuctionStatus.CLOSED,
       },
     });
+  }
+  
+  async addToWatchlist(currUser: any, addToWatchlistDto: AddToWatchlistDto): Promise<AddToWatchlistResponseDto> {
+    const auctionId = addToWatchlistDto.auctionId;
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+    });
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
+    }
+
+    if (auction.status !== AuctionStatus.OPEN && auction.status !== AuctionStatus.READY) {
+      throw new BadRequestException(ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST);
+    }
+
+    const userId = currUser.id;
+    const existingWatchlist = await this.prisma.watchlist.findFirst({
+      where: {
+        userId,
+        auctionId,
+      },
+    });
+
+    if (existingWatchlist) {
+      throw new BadRequestException(ERROR_AUTION_ALREADY_IN_WATCHLIST);
+    }
+
+    const watchlistItem = await this.prisma.watchlist.create({
+      data: {
+        userId,
+        auctionId,
+      },
+      select: {
+        watchlistId: true,
+        auction: {
+          select: {
+            auctionId: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            startingPrice: true,
+            minimumBidIncrement: true,
+            status: true,
+            auctionProducts: {
+              select: {
+                product: {
+                  select: {
+                    productId: true,
+                    name: true,
+                    stockQuantity: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      auctionId: watchlistItem.auction.auctionId,
+      title: watchlistItem.auction.title,
+      startTime: watchlistItem.auction.startTime,
+      endTime: watchlistItem.auction.endTime,
+      startingPrice: watchlistItem.auction.startingPrice,
+      minimumBidIncrement: watchlistItem.auction.minimumBidIncrement,
+      status: watchlistItem.auction.status,
+      products: watchlistItem.auction.auctionProducts.map(ap => ({
+        productId: ap.product.productId,
+        name: ap.product.name,
+        stockQuantity: ap.product.stockQuantity,
+        status: ap.product.status,
+      })),
+    };
   }
 }

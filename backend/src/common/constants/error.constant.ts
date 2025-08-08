@@ -160,3 +160,18 @@ export const ERROR_UNFOLLOW_FAILED = {
   code: 'UNFOLLOW_FAILED',
   message: 'Failed to unfollow seller',
 };
+
+export const ERROR_AUTION_NOT_FOUND = {
+  code: 'AUCTION_NOT_FOUND',
+  message: 'Auction not found',
+};
+
+export const ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST = {
+  code: 'AUCTION_CANT_BE_ADDED_TO_WATCHLIST', 
+  message: 'Auction cannot be added to watchlist',
+};
+
+export const ERROR_AUTION_ALREADY_IN_WATCHLIST = {
+  code: 'AUCTION_ALREADY_IN_WATCHLIST',
+  message: 'Auction is already in your watchlist',
+};
