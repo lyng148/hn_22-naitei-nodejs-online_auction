@@ -6,6 +6,7 @@ const USER_API = {
   VERIFY_EMAIL: (userId) => `/api/profile/${userId}/verify-email`,
   VERIFY_PHONE: (userId) => `/api/profile/${userId}/verify-phone`,
   UPLOAD_AVATAR: (userId) => `/api/profile/${userId}/upload-avatar`,
+  GET_USER_WARNINGS: (userId) => `/api/users/warnings/${userId}`,
 };
 
 export const userService = {
@@ -113,6 +114,25 @@ export const userService = {
           }
         },
         message: message || 'Failed to upload avatar',
+        statusCode: err?.response?.status || 500,
+      };
+    }
+  },
+
+  // Get user warnings
+  getUserWarnings: async (userId) => {
+    try {
+      const response = await axiosClient.get(USER_API.GET_USER_WARNINGS(userId));
+      return response.data;
+    } catch (err) {
+      const { message } = err?.response?.data || {};
+      throw {
+        response: {
+          data: {
+            message: message || 'Failed to get user warnings'
+          }
+        },
+        message: message || 'Failed to get user warnings',
         statusCode: err?.response?.status || 500,
       };
     }

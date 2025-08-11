@@ -8,13 +8,16 @@ import { useUserProfile } from "@/hooks/useUserProfile.js";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { userService } from "@/services/user.service.js";
+import { UserWarningModal } from "@/features/profile/UserWarningModal";
+import { useUserWarnings } from "@/hooks/useUserWarnings.js";
 import { useState, useRef } from "react";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaExclamationTriangle } from "react-icons/fa";
 import { IoCloseOutline } from "react-icons/io5";
 
 export const UserAccountInfo = () => {
   const { user, avatarUrl, setAvatarUrl } = useUser();
   const { showToastNotification } = useNotification();
+  const { warnings, warningStatus } = useUserWarnings();
   const {
     userAccountInfo,
     loading,
@@ -25,6 +28,7 @@ export const UserAccountInfo = () => {
   const [editingField, setEditingField] = useState(null);
   const [editValues, setEditValues] = useState({});
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const fileInputRef = useRef(null);
 
   if (loading && !userAccountInfo) {
@@ -237,9 +241,45 @@ export const UserAccountInfo = () => {
           {/* Personal Information & Profile Avatar Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            {/* Personal Information Card - Takes 2/3 of the width */}
+            {/* Personal Information Card*/}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border border-gray-100">
-              <Title level={4} className="text-gray-800 font-semibold mb-6">Personal Information</Title>
+              <div className="flex items-center justify-between mb-6">
+                <Title level={4} className="text-gray-800 font-semibold">Personal Information</Title>
+                
+                {/* Warning Status*/}
+                {warningStatus && (
+                  <div 
+                    className="cursor-pointer group flex items-center"
+                    onClick={() => setShowWarningModal(true)}
+                    title="Click to view account status"
+                  >
+                    {(warningStatus.warningCount > 0 || warningStatus.isBanned) ? (
+                      // Warning/Banned Status
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 group-hover:shadow-md ${
+                        warningStatus.isBanned 
+                          ? 'bg-red-100 text-red-700 border border-red-200' 
+                          : warningStatus.warningCount >= 2
+                          ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                          : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                      }`}>
+                        <FaExclamationTriangle size={14} />
+                        <span>
+                          {warningStatus.isBanned 
+                            ? 'Banned'
+                            : `${warningStatus.warningCount} Warning${warningStatus.warningCount > 1 ? 's' : ''}`
+                          }
+                        </span>
+                      </div>
+                    ) : (
+                      // Good Standing Status (Optional - subtle)
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 border border-green-200 opacity-70 group-hover:opacity-100 transition-all duration-200">
+                        <span className="text-xs font-bold">✓</span>
+                        <span>Good Standing</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               
               <div className="space-y-4">
                 {/* Full Name */}
@@ -347,9 +387,6 @@ export const UserAccountInfo = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     {profile.fullName || user?.email || 'User'}
                   </h3>
-                  {/* <p className="text-gray-600 text-sm">
-                    {(profile.profileImageUrl || avatarUrl) ? 'Custom avatar' : 'Default avatar'}
-                  </p> */}
                 </div>
               </div>
             </div>
@@ -508,6 +545,14 @@ export const UserAccountInfo = () => {
           </div>
         </div>
       </div>
+
+      {/* Warning Details Modal */}
+      <UserWarningModal 
+        isOpen={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+        warnings={warnings}
+        warningStatus={warningStatus}
+      />
     </Container>
   );
 };

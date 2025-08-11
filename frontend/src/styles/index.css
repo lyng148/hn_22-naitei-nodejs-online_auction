@@ -38,7 +38,7 @@ body {
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   animation: fadeInDown 0.5s ease;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .active-link {
@@ -54,6 +54,24 @@ body {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Modal styles */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+.modal-content {
+  max-height: calc(100vh - 6rem);
+}
+
+/* Profile tab styles */
+.profile-tab-navigation {
+  z-index: 10;
+}
+
+.profile-tab-content {
+  z-index: 20;
 }
 
 /* Up Down animation effect  */
