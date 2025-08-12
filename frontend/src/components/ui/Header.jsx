@@ -37,7 +37,6 @@ export const Header = () => {
                 <IoSearchOutline size={23} className={`${!isHomePage ? "text-black" : "text-white"}`} />
                 {user?.role === "BIDDER" && (
                   <CustomNavLink href="/seller/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
-                    Become a Seller
                   </CustomNavLink>
                 )}
 

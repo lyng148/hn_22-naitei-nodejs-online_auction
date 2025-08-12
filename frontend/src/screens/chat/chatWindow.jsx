@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useChat } from '@/hooks/useChat.js';
 import ChatRoomList from './chatRoomList.jsx';
 import Message from './message.jsx';
-import MessageInput from './input.jsx';
+import Input from './input.jsx';
 import { Container } from '@/components/ui/Design.jsx';
 
 const ChatWindow = () => {
@@ -12,11 +12,12 @@ const ChatWindow = () => {
     currentRoom,
     loading,
     connected,
-    typing,
+    uploading,
     sendMessage,
     selectRoom,
     createChatRoom,
     deleteChatRoom,
+    uploadFileAndSendMessage,
   } = useChat();
 
   const messagesEndRef = useRef(null);
@@ -54,6 +55,7 @@ const ChatWindow = () => {
     }, behavior === 'smooth' ? 100 : 10);
   }, []);
 
+  // Auto-scroll when new messages arrive
   useEffect(() => {
     const currentMessageCount = messages.length;
     const previousMessageCount = lastMessageCountRef.current;
@@ -69,6 +71,7 @@ const ChatWindow = () => {
     lastMessageCountRef.current = currentMessageCount;
   }, [messages.length]);
 
+  // Auto-scroll when room changes or loading completes
   useEffect(() => {
     if (currentRoom && messages.length > 0 && !loading) {
       setTimeout(() => {
@@ -97,6 +100,7 @@ const ChatWindow = () => {
     }
   }, [currentRoom?.chatRoomId, messages.length, loading]);
 
+  // Handle initial load state
   useEffect(() => {
     if (!loading && currentRoom && messages.length > 0) {
       setTimeout(() => {
@@ -132,6 +136,7 @@ const ChatWindow = () => {
         setDeleteModal({ isOpen: false, room: null });
       }
     } catch (error) {
+      // Error handled by useChat hook
     } finally {
       setIsDeleting(false);
     }
@@ -146,15 +151,12 @@ const ChatWindow = () => {
   const handleSendMessage = useCallback(async (content, type = 'TEXT') => {
     await sendMessage(content, type);
 
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-
+    // Auto-scroll after sending message
     setTimeout(() => {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
-    }, 10);
+    }, 0);
 
     setTimeout(() => {
       if (messagesContainerRef.current) {
@@ -163,13 +165,28 @@ const ChatWindow = () => {
     }, 50);
   }, [sendMessage]);
 
+  const handleUploadFileAndSendMessage = useCallback(async (file, content = '') => {
+    const result = await uploadFileAndSendMessage(file, content);
+
+    // Auto-scroll after uploading file
+    setTimeout(() => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    }, 100);
+
+    return result;
+  }, [uploadFileAndSendMessage]);
+
   return (
     <Container className="max-w-6xl mx-auto py-8">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Header */}
         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Chat</h1>
             <div className="flex items-center space-x-4">
+              {/* Connection status */}
               <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
                 <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 <span className="text-sm font-medium">
@@ -177,13 +194,27 @@ const ChatWindow = () => {
                 </span>
               </div>
 
+              {/* Rooms count */}
               <div className="text-sm text-gray-500">
                 Rooms: {rooms.length}
               </div>
 
+              {/* Upload status */}
+              {uploading && (
+                <div className="flex items-center space-x-2 text-sm text-blue-600">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Uploading...</span>
+                </div>
+              )}
+
+              {/* Start new chat button */}
               <button
                 onClick={startChatwithOtherUser}
-                className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                disabled={uploading}
+                className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Start New Chat
               </button>
@@ -191,7 +222,9 @@ const ChatWindow = () => {
           </div>
         </div>
 
+        {/* Main chat area */}
         <div className="flex h-[600px]">
+          {/* Sidebar - Chat rooms list */}
           <div className="w-1/3 border-r border-gray-200 overflow-y-auto bg-gray-50">
             <div className="p-4 border-b border-gray-200 bg-white">
               <h2 className="font-medium text-gray-900">Conversations</h2>
@@ -205,12 +238,15 @@ const ChatWindow = () => {
             />
           </div>
 
+          {/* Main chat area */}
           <div className="flex-1 flex flex-col bg-white">
             {currentRoom ? (
               <>
+                {/* Chat header */}
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
+                      {/* Avatar */}
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                         {currentRoom.otherUser?.profile?.profileImageUrl ? (
                           <img
@@ -225,25 +261,27 @@ const ChatWindow = () => {
                           </span>
                         )}
                       </div>
+
+                      {/* User info */}
                       <div>
                         <h3 className="font-medium text-gray-900">
                           {currentRoom.otherUser?.profile?.fullName ||
                             currentRoom.otherUser?.email || 'Unknown User'}
                         </h3>
-                        {typing && (
-                          <p className="text-sm text-gray-500">Typing...</p>
-                        )}
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-4">
+                      {/* Room ID */}
                       <div className="text-sm text-gray-500">
                         Room: {currentRoom.chatRoomId.substring(0, 8)}...
                       </div>
 
+                      {/* Delete button */}
                       <button
                         onClick={() => handleDeleteRoom(currentRoom)}
-                        className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 transition-colors"
+                        disabled={uploading}
+                        className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         title="Delete this chat room"
                       >
                         🗑️ Delete
@@ -252,12 +290,13 @@ const ChatWindow = () => {
                   </div>
                 </div>
 
+                {/* Messages area */}
                 <div
                   ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-2"
+                  className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50"
                   style={{ scrollBehavior: 'auto' }}
                 >
-                  {/* ✅ Only show loading on initial load or when no messages */}
+                  {/* Loading state - only show on initial load or when no messages */}
                   {loading && (isInitialLoad || messages.length === 0) ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
@@ -267,12 +306,13 @@ const ChatWindow = () => {
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-gray-500 mt-8">
-                      <p className="text-lg">No messages yet</p>
+                      <div className="text-4xl mb-4">💬</div>
+                      <p className="text-lg font-medium">No messages yet</p>
                       <p className="text-sm">Start the conversation!</p>
                     </div>
                   ) : (
                     <>
-                      {/* ✅ Always show messages even during background loading */}
+                      {/* Messages list */}
                       {messages.map((message, index) => (
                         <Message
                           key={`${message.messageId}-${index}`}
@@ -280,13 +320,14 @@ const ChatWindow = () => {
                         />
                       ))}
 
-                      {/* ✅ Show subtle loading indicator at bottom for new messages */}
+                      {/* Subtle loading indicator for background loading */}
                       {loading && !isInitialLoad && messages.length > 0 && (
                         <div className="flex justify-center py-2">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 opacity-50"></div>
                         </div>
                       )}
 
+                      {/* Scroll anchor */}
                       <div
                         ref={messagesEndRef}
                         className="h-1 w-full"
@@ -296,13 +337,19 @@ const ChatWindow = () => {
                   )}
                 </div>
 
-                <MessageInput
+                {/* Message input */}
+                <Input
                   onSendMessage={handleSendMessage}
+                  onUploadFileAndSendMessage={handleUploadFileAndSendMessage}
+                  currentRoom={currentRoom}
                   disabled={!connected}
+                  uploading={uploading}
+                  placeholder={uploading ? "Uploading file..." : "Type a message..."}
                 />
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500">
+              /* No room selected state */
+              <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -321,6 +368,7 @@ const ChatWindow = () => {
         </div>
       </div>
 
+      {/* Delete confirmation modal */}
       {deleteModal.isOpen && (
         <div
           className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
@@ -328,6 +376,7 @@ const ChatWindow = () => {
         >
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
+              {/* Modal header */}
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
                   Delete Conversation
@@ -343,6 +392,7 @@ const ChatWindow = () => {
                 </button>
               </div>
 
+              {/* Modal content */}
               {deleteModal.room && (
                 <div className="mb-4">
                   <div className="flex items-center space-x-3 mb-3">
@@ -379,6 +429,7 @@ const ChatWindow = () => {
                 </div>
               )}
 
+              {/* Modal actions */}
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"

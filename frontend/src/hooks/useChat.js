@@ -20,6 +20,9 @@ export const useChat = () => {
   const { showToastNotification } = useNotification();
   const typingTimeoutRef = useRef(null);
 
+  const [uploading, setUploading] = useState(false);
+
+
   const fetchRooms = useCallback(async () => {
     if (!user?.id) return;
 
@@ -129,16 +132,18 @@ export const useChat = () => {
     }
   }, [connected, loadMessages, showToastNotification, markMessagesAsRead]);
 
-  const sendMessage = useCallback(async (content, type = 'TEXT') => {
-    if (!currentRoom?.chatRoomId || !content.trim()) return;
+  const sendMessage = useCallback(async (content, type = 'TEXT', fileUrl = null) => {
+    if (!currentRoom?.chatRoomId) return;
+    if (!content.trim() && !fileUrl) return;
 
     try {
       if (connected && chatWebSocketService.getConnectionStatus().isConnected) {
-        chatWebSocketService.sendMessageWS(currentRoom.chatRoomId, content.trim(), type);
+        chatWebSocketService.sendMessageWS(currentRoom.chatRoomId, content.trim(), type, fileUrl);
       } else {
         const response = await chatApiService.sendMessage(currentRoom.chatRoomId, {
           content: content.trim(),
-          type
+          type,
+          fileUrl
         });
 
         if (response.success) {
@@ -150,7 +155,6 @@ export const useChat = () => {
             }];
 
             setMessages(updatedMessages);
-            // ✅ Update cache
             messagesCache.current.set(currentRoom.chatRoomId, updatedMessages);
           }
         }
@@ -221,6 +225,44 @@ export const useChat = () => {
       setLoading(false);
     }
   }, [currentRoom, fetchUnreadCount, showToastNotification]);
+
+  const uploadFileAndSendMessage = useCallback(async (file, content = '') => {
+    if (!currentRoom?.chatRoomId || !file) return;
+
+    try {
+      setUploading(true);
+      const response = await chatApiService.uploadFileAndSendMessage(
+        currentRoom.chatRoomId,
+        file,
+        content
+      );
+
+      if (response.success) {
+        const newMessage = response.data;
+        if (newMessage) {
+          const updatedMessages = [...messages, {
+            ...newMessage,
+            tempId: Date.now()
+          }];
+
+          setMessages(updatedMessages);
+          messagesCache.current.set(currentRoom.chatRoomId, updatedMessages);
+        }
+
+        fetchRooms();
+
+        return response;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      const errorMessage = error.message || 'Failed to send file';
+      showToastNotification(errorMessage, 'error');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  }, [currentRoom?.chatRoomId, messages, showToastNotification, fetchRooms]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -357,6 +399,7 @@ export const useChat = () => {
     loading,
     typing,
     unreadCount,
+    uploading,
     selectRoom,
     sendMessage,
     createChatRoom,
@@ -365,5 +408,6 @@ export const useChat = () => {
     loadMessages,
     markMessagesAsRead,
     fetchUnreadCount,
+    uploadFileAndSendMessage,
   };
 };
