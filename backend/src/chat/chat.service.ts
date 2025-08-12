@@ -41,6 +41,8 @@ import {
 import { ERROR_USER_NOT_FOUND } from '../common/constants/error.constant';
 import TokenService from '../common/services/token.service';
 import e from 'express';
+import { randomUUID } from 'crypto';
+import { UploadFileServiceS3 } from '../common/services/file.service';
 
 @Injectable()
 export class ChatService {
@@ -49,6 +51,8 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
+    private readonly uploadFileService: UploadFileServiceS3,
+
   ) { }
 
   setGateway(gateway: any) {
@@ -513,6 +517,117 @@ export class ChatService {
     }
   }
 
+  async handleUploadFileAndSendMessage(
+  file: Express.Multer.File,
+  chatRoomId: string,
+  userId: string,
+  content?: string
+) {
+  if (!file) {
+    throw new BadRequestException('No file provided');
+  }
+
+  const hasAccess = await this.validateUserRoomAccess(chatRoomId, userId);
+  if (!hasAccess) {
+    throw new ForbiddenException({
+      success: false,
+      message: ERROR_NOT_ROOM_MEMBER.message,
+    });
+  }
+
+  const validationResult = this.validateUploadedFile(file);
+  if (!validationResult.isValid) {
+    throw new BadRequestException(validationResult.error);
+  }
+
+  try {
+    const fileName = `${userId}-${randomUUID()}-${file.originalname}`;
+    const fileUrl = await this.uploadFileService.uploadFileToPublicBucket(
+      `chat-files/${userId}`,
+      {
+        file,
+        file_name: fileName,
+      },
+    );
+
+    const messageType = this.getMessageTypeFromFile(file.mimetype);
+
+    const messageData: CreateMessageDto = {
+      content: content || this.getDefaultMessageContent(messageType, file.originalname),
+      type: messageType,
+      fileUrl,
+    };
+
+    const result = await this.handleSendMessage(chatRoomId, messageData, userId);
+
+    return {
+      ...result,
+      fileInfo: {
+        fileName: file.originalname,
+        fileSize: file.size,
+        fileType: file.mimetype,
+        fileUrl,
+        uploadedAt: new Date().toISOString(),
+      },
+    };
+
+  } catch (error) {
+    if (error instanceof ForbiddenException || error instanceof BadRequestException) {
+      throw error;
+    }
+    throw new BadRequestException(`Failed to upload file and send message: ${error}`);
+  }
+}
+
+  private validateUploadedFile(file: Express.Multer.File): { isValid: boolean; error?: string } {
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const allowedDocTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+    const allowedTypes = [...allowedImageTypes, ...allowedDocTypes];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      return {
+        isValid: false,
+        error: 'Only image files (JPEG, PNG, WebP, GIF) and documents (PDF, DOC, DOCX, TXT, XLS, XLSX) are allowed'
+      };
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return {
+        isValid: false,
+        error: 'File size must be less than 10MB'
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  private getMessageTypeFromFile(mimeType: string): MessageType {
+    if (mimeType.startsWith('image/')) {
+      return MessageType.IMAGE;
+    }
+    return MessageType.FILE;
+  }
+
+  private getDefaultMessageContent(messageType: MessageType, fileName: string): string {
+    switch (messageType) {
+      case MessageType.IMAGE:
+        return `📷 Sent an image: ${fileName}`;
+      case MessageType.FILE:
+        return `📎 Sent a file: ${fileName}`;
+      default:
+        return `📄 Sent: ${fileName}`;
+    }
+  }
+
   private async broadcastToRoom(
     message: any,
     chatRoomId: string,
@@ -671,11 +786,11 @@ export class ChatService {
 
       const message = await this.prisma.message.create({
         data: {
-          content: data.content,
+          content: data.content || '',
           senderId: data.senderId,
           chatRoomId: data.chatRoomId,
           type: data.type || MessageType.TEXT,
-          fileUrl: data.fileUrl,
+          fileUrl: data.fileUrl || null,
         },
         include: {
           sender: {
