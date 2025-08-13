@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { UserAccountInfo } from "@/features/profile/UserAccountInfo";
-import { Container, Title } from "@/components/ui/index.js";
-import { useUser } from "@/contexts/UserContext.jsx";
-import { useUserProfile } from "@/hooks/useUserProfile.js";
+import { Container } from "@/components/ui/index.js";
 
 const ProfileTabs = {
   ACCOUNT: 'Account',
@@ -14,8 +12,6 @@ const ProfileTabs = {
 
 export const UserProfileLayout = () => {
   const [activeTab, setActiveTab] = useState(ProfileTabs.ACCOUNT);
-  const { user } = useUser();
-  const { userAccountInfo } = useUserProfile();
 
   const tabComponents = {
     [ProfileTabs.ACCOUNT]: <UserAccountInfo />,
@@ -44,7 +40,7 @@ export const UserProfileLayout = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="relative -mt-16 z-20">
+      <div className="relative -mt-16 profile-tab-navigation">
         <Container>
           <div className="bg-white rounded-lg shadow-lg p-2 inline-flex mb-4">
             {Object.values(ProfileTabs).map((tab) => (
@@ -56,7 +52,6 @@ export const UserProfileLayout = () => {
                     ? 'bg-green text-white shadow-lg'
                     : 'text-gray-600 hover:text-green hover:bg-green-50'
                 }`}
-                style={activeTab === tab ? { zIndex: 25 } : {}}
               >
                 {tab}
               </button>
@@ -66,7 +61,7 @@ export const UserProfileLayout = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="relative z-10">
+      <div className="relative profile-tab-content">
         {tabComponents[activeTab]}
       </div>
     </section>
