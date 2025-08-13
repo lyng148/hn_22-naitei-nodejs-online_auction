@@ -388,7 +388,7 @@ export class AuctionService {
         throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
       }
 
-      if (auction.sellerId !== user.userId) {
+      if (auction.sellerId !== user.id) {
         throw new ForbiddenException(ERROR_AUCTION_NOT_SELLER);
       }
 
@@ -396,46 +396,71 @@ export class AuctionService {
         throw new BadRequestException(ERROR_AUCTION_NOT_PENDING);
       }
 
-      const oldQuantities = new Map(
+      const oldProductsMap = new Map(
         auction.auctionProducts.map((ap) => [ap.productId, ap.quantity]),
       );
 
-      if (dto.products && dto.products.length > 0) {
-        const productIds = dto.products.map((p) => p.productId);
-        const products = await tx.product.findMany({
-          where: { productId: { in: productIds } },
-        });
+      const incomingProductIds = dto.products?.map((p) => p.productId) || [];
 
-        if (products.length !== productIds.length) {
+      const products = await tx.product.findMany({
+        where: { productId: { in: incomingProductIds } },
+      });
+
+      const productMap = new Map(products.map((p) => [p.productId, p]));
+
+      for (const oldProduct of auction.auctionProducts) {
+        if (!incomingProductIds.includes(oldProduct.productId)) {
+          await tx.product.update({
+            where: { productId: oldProduct.productId },
+            data: { stockQuantity: { increment: oldProduct.quantity } },
+          });
+
+          await tx.auctionProduct.delete({
+            where: {
+              auctionId_productId: {
+                auctionId,
+                productId: oldProduct.productId,
+              },
+            },
+          });
+        }
+      }
+
+      for (const { productId, quantity } of dto.products || []) {
+        const product = productMap.get(productId);
+        if (!product) {
           throw new NotFoundException(ERROR_PRODUCT_NOT_FOUND);
         }
 
-        const productMap = new Map(products.map((p) => [p.productId, p]));
+        const oldQty = oldProductsMap.get(productId) ?? 0;
+        const diff = quantity - oldQty;
 
-        for (const { productId, quantity } of dto.products) {
-          const product = productMap.get(productId);
-          if (!product) continue;
-
-          // Calculate quantity difference and update
-          const oldQty = oldQuantities.get(productId) ?? 0;
-          const diff = quantity - oldQty;
-          if (diff > 0) {
-            if (product.stockQuantity < diff) {
-              throw new BadRequestException(
-                ERROR_PRODUCT_STOCK_INSUFFICIENT(productId),
-              );
-            }
-            await tx.product.update({
-              where: { productId },
-              data: { stockQuantity: { decrement: diff } },
-            });
-          } else if (diff < 0) {
-            await tx.product.update({
-              where: { productId },
-              data: { stockQuantity: { increment: Math.abs(diff) } },
-            });
+        if (diff > 0) {
+          if (product.stockQuantity < diff) {
+            throw new BadRequestException(
+              ERROR_PRODUCT_STOCK_INSUFFICIENT(productId),
+            );
           }
+          await tx.product.update({
+            where: { productId },
+            data: { stockQuantity: { decrement: diff } },
+          });
+        } else if (diff < 0) {
+          await tx.product.update({
+            where: { productId },
+            data: { stockQuantity: { increment: Math.abs(diff) } },
+          });
+        }
 
+        if (oldQty == 0) {
+          await tx.auctionProduct.create({
+            data: {
+              auctionId,
+              productId,
+              quantity,
+            },
+          });
+        } else {
           await tx.auctionProduct.update({
             where: { auctionId_productId: { auctionId, productId } },
             data: { quantity },

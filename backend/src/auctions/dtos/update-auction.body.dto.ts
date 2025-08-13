@@ -17,7 +17,7 @@ export class UpdateAuctionDto {
 
   @ValidateNested({ each: true })
   @Type(() => UpdateAuctionProductDto)
-  products?: UpdateAuctionProductDto[];
+  products!: UpdateAuctionProductDto[];
 }
 
 export class UpdateAuctionProductDto {

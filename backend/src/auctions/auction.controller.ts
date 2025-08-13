@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Post,
   Query,
+  Put,
   Patch,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
@@ -26,6 +27,8 @@ import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
 import { SortDirection } from '@common/types/sort-direction.enum';
 import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
+import { AuthType } from '@common/types/auth-type.enum';
+import { Auth } from '@common/decorators/auth.decorator';
 
 @Controller('auctions')
 export class AuctionController {
@@ -76,7 +79,8 @@ export class AuctionController {
     return auction;
   }
 
-  @Patch(':auctionId')
+  @Put(':auctionId')
+  @Auth(AuthType.ACCESS_TOKEN)
   @Roles(Role.SELLER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateAuction(
@@ -88,6 +92,7 @@ export class AuctionController {
   }
 
   @Patch('open/:auctionId')
+  @Auth(AuthType.ACCESS_TOKEN)
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmAuction(@Param('auctionId') auctionId: string): Promise<void> {
@@ -95,6 +100,7 @@ export class AuctionController {
   }
 
   @Patch('cancel/:auctionId')
+  @Auth(AuthType.ACCESS_TOKEN)
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async cancelAuction(@Param('auctionId') auctionId: string): Promise<void> {
@@ -102,6 +108,7 @@ export class AuctionController {
   }
 
   @Patch('close/:auctionId')
+  @Auth(AuthType.ACCESS_TOKEN)
   @Roles(Role.ADMIN, Role.SELLER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async closeAuction(@Param('auctionId') auctionId: string): Promise<void> {
