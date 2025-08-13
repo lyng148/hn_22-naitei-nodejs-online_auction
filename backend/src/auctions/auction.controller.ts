@@ -25,6 +25,7 @@ import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto'
 import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
 import { SortDirection } from '@common/types/sort-direction.enum';
+import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
 
 @Controller('auctions')
 export class AuctionController {
@@ -73,6 +74,17 @@ export class AuctionController {
       throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
     }
     return auction;
+  }
+
+  @Patch(':auctionId')
+  @Roles(Role.SELLER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateAuction(
+    @CurrentUser() user: any,
+    @Param('auctionId') auctionId: string,
+    @Body() dto: UpdateAuctionDto,
+  ): Promise<void> {
+    await this.auctionService.updateAuction(user, auctionId, dto);
   }
 
   @Patch('open/:auctionId')
