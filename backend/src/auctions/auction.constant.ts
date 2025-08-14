@@ -52,4 +52,10 @@ export const ERROR_PRODUCT_NOT_AVAILABLE = (productId: string) => ({
   errorCode: 'PRODUCT_NOT_AVAILABLE',
 });
 
+export const ERROR_AUCTION_NOT_SELLER = {
+  statusCode: 403,
+  message: 'You are not the seller of this auction.',
+  errorCode: 'AUCTION_NOT_SELLER',
+};
+
 export const MAX_AUCTIONS_NUMBERS = Number.MAX_SAFE_INTEGER;

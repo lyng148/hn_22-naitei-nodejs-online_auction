@@ -4,12 +4,14 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ERROR_AUCTION_NOT_CANCELLABLE,
   ERROR_AUCTION_NOT_CLOSABLE,
   ERROR_AUCTION_NOT_FOUND,
   ERROR_AUCTION_NOT_PENDING,
+  ERROR_AUCTION_NOT_SELLER,
   ERROR_AUCTION_START_TIME_IN_PAST,
   ERROR_INVALID_AUCTION_TIME,
   ERROR_PRODUCT_NOT_AVAILABLE,
@@ -31,6 +33,7 @@ import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
 import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
 import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
 import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
+import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
 
 @Injectable()
 export class AuctionService {
@@ -369,7 +372,111 @@ export class AuctionService {
       },
     });
   }
-  
+
+  async updateAuction(
+    user: any,
+    auctionId: string,
+    dto: UpdateAuctionDto,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const auction = await tx.auction.findUnique({
+        where: { auctionId },
+        include: { auctionProducts: true },
+      });
+
+      if (!auction) {
+        throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+      }
+
+      if (auction.sellerId !== user.id) {
+        throw new ForbiddenException(ERROR_AUCTION_NOT_SELLER);
+      }
+
+      if (auction.status !== AuctionStatus.PENDING) {
+        throw new BadRequestException(ERROR_AUCTION_NOT_PENDING);
+      }
+
+      const oldProductsMap = new Map(
+        auction.auctionProducts.map((ap) => [ap.productId, ap.quantity]),
+      );
+
+      const incomingProductIds = dto.products?.map((p) => p.productId) || [];
+
+      const products = await tx.product.findMany({
+        where: { productId: { in: incomingProductIds } },
+      });
+
+      const productMap = new Map(products.map((p) => [p.productId, p]));
+
+      for (const oldProduct of auction.auctionProducts) {
+        if (!incomingProductIds.includes(oldProduct.productId)) {
+          await tx.product.update({
+            where: { productId: oldProduct.productId },
+            data: { stockQuantity: { increment: oldProduct.quantity } },
+          });
+
+          await tx.auctionProduct.delete({
+            where: {
+              auctionId_productId: {
+                auctionId,
+                productId: oldProduct.productId,
+              },
+            },
+          });
+        }
+      }
+
+      for (const { productId, quantity } of dto.products || []) {
+        const product = productMap.get(productId);
+        if (!product) {
+          throw new NotFoundException(ERROR_PRODUCT_NOT_FOUND);
+        }
+
+        const oldQty = oldProductsMap.get(productId) ?? 0;
+        const diff = quantity - oldQty;
+
+        if (diff > 0) {
+          if (product.stockQuantity < diff) {
+            throw new BadRequestException(
+              ERROR_PRODUCT_STOCK_INSUFFICIENT(productId),
+            );
+          }
+          await tx.product.update({
+            where: { productId },
+            data: { stockQuantity: { decrement: diff } },
+          });
+        } else if (diff < 0) {
+          await tx.product.update({
+            where: { productId },
+            data: { stockQuantity: { increment: Math.abs(diff) } },
+          });
+        }
+
+        if (oldQty == 0) {
+          await tx.auctionProduct.create({
+            data: {
+              auctionId,
+              productId,
+              quantity,
+            },
+          });
+        } else {
+          await tx.auctionProduct.update({
+            where: { auctionId_productId: { auctionId, productId } },
+            data: { quantity },
+          });
+        }
+      }
+
+      await tx.auction.update({
+        where: { auctionId },
+        data: {
+          title: dto.title ?? auction.title,
+          endTime: dto.endTime ? new Date(dto.endTime) : auction.endTime,
+        },
+      });
+    });
+  }
 
   async addToWatchlist(currUser: any, addToWatchlistDto: AddToWatchlistDto): Promise<AddToWatchlistResponseDto> {
     const auctionId = addToWatchlistDto.auctionId;
