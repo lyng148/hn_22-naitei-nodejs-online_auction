@@ -9,6 +9,7 @@ const CHAT_API = {
   UNREAD_COUNT: '/api/chat/unread-count',
   ROOM_DETAILS: (roomId) => `/api/chat/rooms/${roomId}`,
   DELETE_ROOM: (roomId) => `/api/chat/rooms/${roomId}`,
+  UPLOAD_AND_SEND: (roomId) => `/api/chat/rooms/${roomId}/upload-and-send`,
 };
 
 export const chatService = {
@@ -165,6 +166,38 @@ export const chatService = {
         statusCode: err?.response?.status || 500,
       };
     }
+  },
+
+  uploadFileAndSendMessage: async (chatRoomId, file, content = '') => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (content.trim()) {
+        formData.append('content', content);
+      }
+
+      const response = await axiosClient.post(
+        CHAT_API.UPLOAD_AND_SEND(chatRoomId),
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      const { message } = err?.response?.data || {};
+      throw {
+        response: {
+          data: {
+            message: message || 'Failed to upload file and send message'
+          }
+        },
+        message: message || 'Failed to upload file and send message',
+        statusCode: err?.response?.status || 500,
+      };
+    }
   }
 };
 
@@ -237,6 +270,15 @@ export const chatApiService = {
     try {
       const result = await chatService.deleteChatRoom(chatRoomId);
       return { success: true, data: result.data || result, message: result.message || 'Chat room deleted successfully' };
+    } catch (error) {
+      return { success: false, message: error.message, data: null };
+    }
+  },
+
+   uploadFileAndSendMessage: async (chatRoomId, file, content = '') => {
+    try {
+      const result = await chatService.uploadFileAndSendMessage(chatRoomId, file, content);
+      return { success: true, data: result.data || result };
     } catch (error) {
       return { success: false, message: error.message, data: null };
     }
