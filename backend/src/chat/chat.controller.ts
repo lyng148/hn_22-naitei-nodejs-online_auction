@@ -7,6 +7,8 @@ import {
   Body,
   UseGuards,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Auth } from '@common/decorators/auth.decorator';
@@ -15,6 +17,7 @@ import { CurrentUser } from '@common/decorators/user.decorator';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { CreateChatRoomDto } from './dtos/create-chat-room.dto';
 import { ListMessageQueryDto } from './dtos/list-message-query.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('chat')
 export class ChatController {
@@ -110,5 +113,25 @@ export class ChatController {
     @CurrentUser() user: { id: string },
   ) {
     return await this.chatService.handleDeleteChatRoom(chatRoomId, user.id);
+  }
+
+  /**
+  * Upload file/ảnh và tự động gửi message
+  */
+  @Post('rooms/:chatRoomId/upload-and-send')
+  @Auth(AuthType.ACCESS_TOKEN)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFileAndSendMessage(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: { id: string },
+    @Param('chatRoomId') chatRoomId: string,
+    @Body() messageData: { content?: string },
+  ) {
+    return await this.chatService.handleUploadFileAndSendMessage(
+      file,
+      chatRoomId,
+      user.id,
+      messageData.content
+    );
   }
 }
