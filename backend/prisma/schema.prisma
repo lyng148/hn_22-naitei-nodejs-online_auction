@@ -47,7 +47,8 @@ model User {
 
   bid Bid[] @relation("User_Has_Bids")
 
-  payment Payment[] @relation("User_Has_Payments")
+  walletBalance Decimal @default(0) @map("wallet_balance") @db.Decimal(19, 4)
+  walletTransactions WalletTransaction[] @relation("User_Has_WalletTransactions")
 
   sentMessages      Message[]  @relation("UserSentMessages")
   chatRoomsAsUser1  ChatRoom[] @relation("User1ChatRooms")
@@ -56,6 +57,53 @@ model User {
   watchlist Watchlist[] @relation("User_Has_Watchlist")
 
   @@map("users")
+}
+
+enum TransactionType {
+  DEPOSIT     // Nạp tiền
+  WITHDRAWAL  // Rút tiền
+  BID_PAYMENT // Thanh toán đặt cược
+  BID_REFUND  // Hoàn tiền khi thua cuộc
+  AUCTION_PAYMENT // Thanh toán khi thắng auction
+  ADMIN_ADJUSTMENT // Điều chỉnh từ admin
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+// Bảng giao dịch ví
+model WalletTransaction {
+  transactionId String @id @default(uuid()) @map("transaction_id") @db.Char(36)
+
+  userId String @map("user_id") @db.Char(36)
+  user   User   @relation("User_Has_WalletTransactions", fields: [userId], references: [userId], onDelete: Cascade)
+
+  type   TransactionType   @map("transaction_type")
+  status TransactionStatus @map("transaction_status")
+
+  // Số tiền giao dịch
+  amount Decimal @map("amount") @db.Decimal(19, 4)
+
+  // Số dư sau giao dịch
+  balanceAfter Decimal @map("balance_after") @db.Decimal(19, 4)
+
+  // Reference đến auction/bid nếu có
+  auctionId String? @map("auction_id") @db.Char(36)
+  auction   Auction? @relation("Auction_WalletTransactions", fields: [auctionId], references: [auctionId], onDelete: SetNull)
+
+  bidId String? @unique @map("bid_id") @db.Char(36)
+  bid   Bid?    @relation("Bid_WalletTransaction", fields: [bidId], references: [bidId], onDelete: SetNull)
+
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("wallet_transactions")
 }
 
 model Warning {
@@ -243,7 +291,7 @@ model Auction {
 
   bids Bid[] @relation("Auction_Has_Bids")
 
-  payment Payment? @relation("Auction_Has_Payment")
+  walletTransactions WalletTransaction[] @relation("Auction_WalletTransactions")
 
   watchlist Watchlist[] @relation("Auction_In_Watchlist")
 
@@ -284,38 +332,13 @@ model Bid {
   user   User   @relation("User_Has_Bids", fields: [userId], references: [userId], onDelete: Cascade)
 
   bidAmount Decimal   @map("bid_amount") @db.Decimal(19, 4)
+
+  walletTransaction WalletTransaction? @relation("Bid_WalletTransaction")
+
   status    BidStatus
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
 
   @@map("bids")
-}
-
-enum PaymentMethod {
-  VNPAY
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
-model Payment {
-  auctionId String  @id @map("auction_id") @db.Char(36)
-  auction   Auction @relation("Auction_Has_Payment", fields: [auctionId], references: [auctionId], onDelete: Cascade)
-
-  userId String @map("user_id") @db.Char(36)
-  user   User   @relation("User_Has_Payments", fields: [userId], references: [userId], onDelete: Cascade)
-
-  amount        Decimal       @db.Decimal(19, 4)
-  paymentMethod PaymentMethod @map("payment_method")
-  status        PaymentStatus @map("status")
-  bankCode      String?       @map("bank_code") @db.VarChar(255)
-  paymentDate   DateTime?     @map("payment_date") @db.Timestamp(0)
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-
-  @@map("payments")
 }
 
 enum MessageType {
