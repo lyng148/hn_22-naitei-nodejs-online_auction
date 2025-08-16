@@ -106,6 +106,12 @@ const AuctionListing = () => {
             <span className="text-green-600 text-sm font-medium">Completed</span>
           </div>
         );
+      case AUCTION_STATUS.COMPLETED:
+        return (
+          <div className="flex gap-2">
+            <span className="text-green-600 text-sm font-medium">Completed</span>
+          </div>
+        );
       default:
         return (
           <div className="flex gap-2">

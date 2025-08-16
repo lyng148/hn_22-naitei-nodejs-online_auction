@@ -30,11 +30,14 @@ import {
   AuctionProductDetailDto,
 } from './dtos/get-auction-detail.response.dto';
 import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
-import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
+import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_CANT_BE_EDITED, ERROR_AUTION_CANT_BE_REOPENED, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
 import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
 import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
 import { CancelAuctionDto } from './dtos/cancel-auction.body.dto';
+import { ReopenAuctionBodyDto, ReopenAuctionResponseDto } from './dtos/reopen-auction.dto';
+import { EditAuctionBodyDto } from './dtos/edit-auction.body.dto';
+import { EditAuctionResponseDto } from './dtos/edit-auction.response.dto';
 
 @Injectable()
 export class AuctionService {
@@ -610,6 +613,155 @@ export class AuctionService {
       page: 0,
       size: data.length,
       data,
+    };
+  }
+
+  async reopenAuction(reopenAuctionBodyDto: ReopenAuctionBodyDto): Promise<ReopenAuctionResponseDto> {
+    const { auctionId } = reopenAuctionBodyDto;
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+    });
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
+    }
+
+    if (auction.status !== AuctionStatus.CANCELED) {
+      throw new BadRequestException(ERROR_AUTION_CANT_BE_REOPENED);
+    }
+
+    await this.prisma.auction.update({
+      where: { auctionId },
+      data: { status: AuctionStatus.PENDING },
+    });
+
+    return {
+      auctionId,
+      message: 'Auction reopened successfully, waiting for admin approval',
+    };
+  }
+
+  async editAuction(auctionId: string, editAuctionBodyDto: EditAuctionBodyDto): Promise<EditAuctionResponseDto> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+      include: {
+        auctionProducts: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!auction) {
+      throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
+    }
+
+    if ((auction.status !== AuctionStatus.CANCELED) && (auction.status !== AuctionStatus.PENDING)) {
+      throw new BadRequestException(ERROR_AUTION_CANT_BE_EDITED);
+    }
+
+    const now = new Date();
+    if (editAuctionBodyDto.startTime && new Date(editAuctionBodyDto.startTime) < now) {
+      const { statusCode, message, errorCode } =
+        ERROR_AUCTION_START_TIME_IN_PAST(now);
+      throw new BadRequestException({ statusCode, message, errorCode });
+    }
+
+    if (editAuctionBodyDto.startTime && editAuctionBodyDto.endTime && new Date(editAuctionBodyDto.startTime) >= new Date(editAuctionBodyDto.endTime)) {
+      throw new BadRequestException(ERROR_INVALID_AUCTION_TIME);
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Hoàn trả stock quantity cho các sản phẩm cũ
+      for (const auctionProduct of auction.auctionProducts) {
+        await tx.product.update({
+          where: { productId: auctionProduct.productId },
+          data: {
+            stockQuantity: { increment: auctionProduct.quantity },
+          },
+        });
+      }
+
+      // Xóa các auction products cũ
+      await tx.auctionProduct.deleteMany({
+        where: { auctionId },
+      });
+
+      // Xử lý products mới nếu có
+      if (editAuctionBodyDto.products && editAuctionBodyDto.products.length > 0) {
+        const productIds = editAuctionBodyDto.products.map((p) => p.productId);
+
+        const foundProducts = await tx.product.findMany({
+          where: { productId: { in: productIds } },
+        });
+
+        if (foundProducts.length !== productIds.length) {
+          throw new NotFoundException(ERROR_PRODUCT_NOT_FOUND);
+        }
+
+        const productMap = new Map(
+          foundProducts.map((product) => [product.productId, product]),
+        );
+
+        for (const { productId, quantity } of editAuctionBodyDto.products) {
+          const product = productMap.get(productId);
+          if (!product) continue;
+
+          if (product.status !== 'ACTIVE') {
+            const { statusCode, message, errorCode } =
+              ERROR_PRODUCT_NOT_AVAILABLE(product.name);
+            throw new BadRequestException({ statusCode, message, errorCode });
+          }
+
+          if (product.stockQuantity < quantity) {
+            const { statusCode, message, errorCode } =
+              ERROR_PRODUCT_STOCK_INSUFFICIENT(productId);
+            throw new BadRequestException({ statusCode, message, errorCode });
+          }
+
+          await tx.product.update({
+            where: { productId },
+            data: {
+              stockQuantity: { decrement: quantity },
+            },
+          });
+        }
+
+        // Tạo auction products mới
+        await tx.auctionProduct.createMany({
+          data: editAuctionBodyDto.products.map(({ productId, quantity }) => ({
+            auctionId,
+            productId,
+            quantity,
+          })),
+        });
+      }
+
+      // Cập nhật auction
+      const updatedAuction = await tx.auction.update({
+        where: { auctionId },
+        data: {
+          ...(editAuctionBodyDto.title && { title: editAuctionBodyDto.title }),
+          ...(editAuctionBodyDto.startTime && {
+            startTime: new Date(editAuctionBodyDto.startTime),
+            lastBidTime: new Date(editAuctionBodyDto.startTime)
+          }),
+          ...(editAuctionBodyDto.endTime && { endTime: new Date(editAuctionBodyDto.endTime) }),
+          ...(editAuctionBodyDto.startingPrice && {
+            startingPrice: editAuctionBodyDto.startingPrice,
+            currentPrice: editAuctionBodyDto.startingPrice
+          }),
+          ...(editAuctionBodyDto.minimumBidIncrement && { minimumBidIncrement: editAuctionBodyDto.minimumBidIncrement }),
+          status: AuctionStatus.PENDING, // Đặt lại status về PENDING để admin approve lại
+        },
+      });
+
+      return updatedAuction;
+    });
+
+    return {
+      auctionId: result.auctionId,
+      message: 'Auction updated successfully, waiting for admin approval',
     };
   }
 }
