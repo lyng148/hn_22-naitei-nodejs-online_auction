@@ -9,7 +9,8 @@ import { ProductFilters } from "@/components/ui/ProductFilters";
 import { ProductTable } from "@/components/ui/ProductTable";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { IoAddOutline, IoChevronDownOutline } from "react-icons/io5";
+import ExportModal from "@/components/ui/ExportModal";
+import { IoAddOutline, IoChevronDownOutline, IoDownloadOutline } from "react-icons/io5";
 
 const ProductListing = () => {
   const [products, setProducts] = useState([]);
@@ -17,8 +18,10 @@ const ProductListing = () => {
   const [error, setError] = useState("");
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null });
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(null); // Track which product is being toggled
-  
+  const [toggleLoading, setToggleLoading] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
+
   const { user } = useUser();
   const { showToastNotification } = useNotification();
   const navigate = useNavigate();
@@ -54,15 +57,15 @@ const ProductListing = () => {
 
   const handleToggleStatus = async (product) => {
     if (toggleLoading === product.productId) return; // Prevent multiple clicks
-    
+
     try {
       setToggleLoading(product.productId);
-      
+
       // Determine new status
-      const newStatus = product.status === PRODUCT_STATUS.ACTIVE 
-        ? PRODUCT_STATUS.INACTIVE 
+      const newStatus = product.status === PRODUCT_STATUS.ACTIVE
+        ? PRODUCT_STATUS.INACTIVE
         : PRODUCT_STATUS.ACTIVE;
-      
+
       // Update product status
       const updatedProduct = {
         productId: product.productId,
@@ -72,12 +75,12 @@ const ProductListing = () => {
         status: newStatus,
         imageUrls: product.images?.map(img => img.imageUrl) || []
       };
-      
+
       await productService.updateProducts([updatedProduct]);
-      
+
       const statusText = newStatus === PRODUCT_STATUS.ACTIVE ? 'activated' : 'deactivated';
       showToastNotification(`Product ${statusText} successfully`, 'success');
-      
+
       fetchMyProducts(); // Refresh the list
     } catch (err) {
       showToastNotification(err.message || 'Failed to update product status', 'error');
@@ -88,7 +91,7 @@ const ProductListing = () => {
 
   const confirmDelete = async () => {
     if (!deleteModal.product) return;
-    
+
     try {
       setDeleteLoading(true);
       await productService.deleteProducts([deleteModal.product.productId]);
@@ -110,6 +113,29 @@ const ProductListing = () => {
     navigate('/products/add-multiple');
   };
 
+  const handleExportProducts = async (params = {}) => {
+    if (exportLoading) return; // Prevent multiple clicks
+
+    try {
+      setExportLoading(true);
+      await productService.exportProductsToExcel(params);
+      showToastNotification('Products exported successfully', 'success');
+      setExportModal(false);
+    } catch (err) {
+      showToastNotification(err.message || 'Failed to export products', 'error');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleOpenExportModal = () => {
+    setExportModal(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setExportModal(false);
+  };
+
   if (loading) {
     return <LoadingSpinner text="Loading products..." />;
   }
@@ -121,8 +147,17 @@ const ProductListing = () => {
         <Title level={2} className="text-3xl font-bold text-gray-900">
           Manage product
         </Title>
-        
+
         <div className="flex gap-3">
+          <PrimaryButton
+            onClick={handleOpenExportModal}
+            disabled={products.length === 0}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-full flex items-center gap-2 transition-colors duration-200"
+          >
+            Export Excel
+            <IoDownloadOutline size={16} />
+          </PrimaryButton>
+
           <PrimaryButton
             onClick={handleCreateMultipleProducts}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full flex items-center gap-2 transition-colors duration-200"
@@ -174,7 +209,7 @@ const ProductListing = () => {
           </div>
         </div>
       )}
-      
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
@@ -182,6 +217,14 @@ const ProductListing = () => {
         onConfirm={confirmDelete}
         productName={deleteModal.product?.name || ""}
         isLoading={deleteLoading}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={exportModal}
+        onClose={handleCloseExportModal}
+        onExport={handleExportProducts}
+        isLoading={exportLoading}
       />
     </div>
   );
