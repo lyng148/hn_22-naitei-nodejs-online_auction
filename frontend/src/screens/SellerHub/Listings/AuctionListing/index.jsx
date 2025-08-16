@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Title, PrimaryButton, SecondaryButton, LoadingSpinner, CancelAuctionModal } from "@/components/ui/index.js";
+import { Title, PrimaryButton, SecondaryButton, LoadingSpinner, CancelAuctionModal, ReopenAuctionModal } from "@/components/ui/index.js";
 import { useNavigate } from "react-router-dom";
 import { useAuctionListing } from "@/hooks/useAuctionListing.js";
 import { AUCTION_STATUS, getAuctionStatusConfig } from "@/constants/auctionStatus.js";
@@ -11,6 +11,7 @@ const AuctionListing = () => {
     auctions,
     loading,
     cancelLoading,
+    reopenLoading,
     searchTerm,
     setSearchTerm,
     filterPeriod,
@@ -26,6 +27,7 @@ const AuctionListing = () => {
 
   // Modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState(null);
 
   const openCancelModal = (auction) => {
@@ -38,10 +40,29 @@ const AuctionListing = () => {
     setSelectedAuction(null);
   };
 
+  const openReopenModal = (auction) => {
+    setSelectedAuction(auction);
+    setReopenModalOpen(true);
+  };
+
+  const closeReopenModal = () => {
+    setReopenModalOpen(false);
+    setSelectedAuction(null);
+  };
+
   const handleConfirmCancel = async (auctionId, reason) => {
     try {
       await handleCancelAuction(auctionId, reason);
       closeCancelModal();
+    } catch (error) {
+      // Error is already handled in the hook
+    }
+  };
+
+  const handleConfirmReopen = async (auction) => {
+    try {
+      await handleReopenAuction(auction);
+      closeReopenModal();
     } catch (error) {
       // Error is already handled in the hook
     }
@@ -83,10 +104,11 @@ const AuctionListing = () => {
           </div>
         );
       case AUCTION_STATUS.CANCELED:
+      case AUCTION_STATUS.CLOSED:
         return (
           <div className="flex gap-2">
             <SecondaryButton
-              onClick={() => handleReopenAuction(auction)}
+              onClick={() => openReopenModal(auction)}
               className="px-3 py-1 text-sm bg-green-50 border border-green-200 text-green-700 rounded-md hover:bg-green-100 transition-colors"
             >
               Reopen
@@ -98,6 +120,12 @@ const AuctionListing = () => {
         return (
           <div className="flex gap-2">
             <span className="text-gray-400 text-sm">In progress</span>
+          </div>
+        );
+      case AUCTION_STATUS.COMPLETED:
+        return (
+          <div className="flex gap-2">
+            <span className="text-green-600 text-sm font-medium">Completed</span>
           </div>
         );
       case AUCTION_STATUS.COMPLETED:
@@ -297,6 +325,15 @@ const AuctionListing = () => {
         onConfirm={handleConfirmCancel}
         auction={selectedAuction}
         loading={cancelLoading}
+      />
+
+      {/* Reopen Auction Modal */}
+      <ReopenAuctionModal
+        isOpen={reopenModalOpen}
+        onClose={closeReopenModal}
+        onConfirm={handleConfirmReopen}
+        auction={selectedAuction}
+        loading={reopenLoading}
       />
     </div>
   );
