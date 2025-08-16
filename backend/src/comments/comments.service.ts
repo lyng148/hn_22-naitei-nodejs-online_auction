@@ -23,7 +23,7 @@ export class CommentsService {
         const comment = await this.prisma.productComment.create({
             data: {
                 productId: createCommentDto.productId,
-                userId: user.userId,
+                userId: (user as any).id || user.userId,
                 content: createCommentDto.content,
                 rating: createCommentDto.rating,
             },
@@ -116,7 +116,7 @@ export class CommentsService {
         }
 
         // Kiểm tra quyền sở hữu comment
-        if (existingComment.userId !== user.userId) {
+        if (existingComment.userId !== ((user as any).id || user.userId)) {
             throw new ForbiddenException('You can only update your own comments');
         }
 
@@ -163,7 +163,7 @@ export class CommentsService {
         }
 
         // Kiểm tra quyền sở hữu comment hoặc admin
-        if (existingComment.userId !== user.userId && user.role !== 'ADMIN') {
+        if (existingComment.userId !== ((user as any).id || user.userId) && user.role !== 'ADMIN') {
             throw new ForbiddenException('You can only delete your own comments');
         }
 

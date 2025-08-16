@@ -2,6 +2,7 @@ import {
   IsBoolean,
   IsDate,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -55,6 +56,14 @@ export class GetProductResponseDto {
 
   @IsNotEmpty()
   stockQuantity!: number;
+
+  @IsOptional()
+  @IsNumber()
+  averageRating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  totalComments?: number;
 
   images!: ProductImageDto[];
 
