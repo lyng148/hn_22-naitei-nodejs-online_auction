@@ -33,20 +33,22 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
 
   if (!rooms || rooms.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-6 text-center text-gray-500">
         <div className="py-8">
-          <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-          </svg>
-          <p className="font-medium">No chat rooms yet</p>
-          <p className="text-sm mt-1">Start a conversation with someone!</p>
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <p className="font-semibold text-gray-700 text-lg">No conversations yet</p>
+          <p className="text-sm mt-1 text-gray-500">Start messaging with friends!</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="space-y-0">
       {rooms.map((room) => {
         const hasRecentUnread = room.unreadCount > 0 && room.lastMessage &&
           new Date(room.lastMessage.timestamp) > new Date(Date.now() - 5 * 60 * 1000);
@@ -54,46 +56,53 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
         return (
           <div
             key={room.chatRoomId}
-            className={`relative p-4 cursor-pointer hover:bg-gray-100 transition-colors ${
-              currentRoom?.chatRoomId === room.chatRoomId
+            className={`relative px-4 py-3 cursor-pointer hover:bg-gray-50 transition-all duration-200 group ${currentRoom?.chatRoomId === room.chatRoomId
                 ? 'bg-blue-50 border-r-4 border-blue-500'
                 : ''
-            }`}
+              }`}
             onClick={() => handleRoomClick(room)}
           >
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                {room.otherUser?.profile?.profileImageUrl ? (
-                  <img
-                    src={room.otherUser.profile.profileImageUrl}
-                    alt="Avatar"
-                    className="w-full h-full rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <span
-                  className={`font-medium text-lg ${
-                    room.otherUser?.profile?.profileImageUrl ? 'hidden' : 'flex'
-                  } items-center justify-center text-green-600`}
-                >
-                  {room.otherUser?.profile?.fullName?.charAt(0) ||
-                   room.otherUser?.email?.charAt(0) || '?'}
-                </span>
+              {/* Avatar with online indicator */}
+              <div className="relative">
+                <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+                  {room.otherUser?.profile?.profileImageUrl ? (
+                    <img
+                      src={room.otherUser.profile.profileImageUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={`w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center ${room.otherUser?.profile?.profileImageUrl ? 'hidden' : 'flex'
+                      }`}
+                  >
+                    <span className="font-semibold text-lg text-white">
+                      {room.otherUser?.profile?.fullName?.charAt(0) ||
+                        room.otherUser?.email?.charAt(0) || '?'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Online status indicator */}
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">
+                  <h3 className={`text-sm font-semibold truncate ${hasRecentUnread ? 'text-gray-900' : 'text-gray-800'
+                    }`}>
                     {room.otherUser?.profile?.fullName || room.otherUser?.email || 'Unknown User'}
                   </h3>
 
                   <div className="flex items-center space-x-2">
                     {room.lastMessage && (
                       <span className="text-xs text-gray-500 flex-shrink-0">
-                        {formatDistanceToNow(new Date(room.lastMessage.timestamp), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(room.lastMessage.timestamp), { addSuffix: false })}
                       </span>
                     )}
 
@@ -101,7 +110,7 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
                       <div className="relative">
                         <button
                           onClick={(e) => toggleDeleteMenu(e, room.chatRoomId)}
-                          className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                          className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-all duration-200"
                           title="More options"
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -110,10 +119,10 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
                         </button>
 
                         {showDeleteMenu === room.chatRoomId && (
-                          <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                          <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
                             <button
                               onClick={(e) => handleDeleteClick(e, room)}
-                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200 flex items-center"
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 flex items-center"
                             >
                               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -128,26 +137,40 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
                 </div>
 
                 <div className="flex items-center justify-between mt-1">
-                  <p className={`text-sm truncate ${
-                    hasRecentUnread ? 'text-gray-900 font-medium' : 'text-gray-600'
-                  }`}>
+                  <p className={`text-sm truncate pr-2 ${hasRecentUnread ? 'text-gray-900 font-medium' : 'text-gray-600'
+                    }`}>
                     {room.lastMessage ? (
                       <>
-                        {room.lastMessage.type === 'IMAGE' && '📷 Image'}
-                        {room.lastMessage.type === 'FILE' && '📎 File'}
+                        {room.lastMessage.type === 'IMAGE' && (
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Sent a photo
+                          </span>
+                        )}
+                        {room.lastMessage.type === 'FILE' && (
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            Sent an attachment
+                          </span>
+                        )}
                         {room.lastMessage.type === 'TEXT' && room.lastMessage.content}
                       </>
                     ) : (
-                      <span className="italic">No messages yet</span>
+                      <span className="italic text-gray-400">Start the conversation</span>
                     )}
                   </p>
 
                   {room.unreadCount > 0 && (
-                    <span className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white rounded-full flex-shrink-0 ml-2 ${
-                      hasRecentUnread ? 'bg-red-500' : 'bg-gray-400'
-                    }`}>
-                      {room.unreadCount > 99 ? '99+' : room.unreadCount}
-                    </span>
+                    <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${hasRecentUnread ? 'bg-blue-500' : 'bg-gray-400'
+                      }`}>
+                      <span className="text-white text-xs font-bold">
+                        {room.unreadCount > 9 ? '9+' : room.unreadCount}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>

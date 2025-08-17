@@ -4,7 +4,8 @@ import { useChat } from '@/hooks/useChat.js';
 import ChatRoomList from './chatRoomList.jsx';
 import Message from './message.jsx';
 import Input from './input.jsx';
-import { Container } from '@/components/ui/Design.jsx';
+import DeleteChatModal from './DeleteChatModal.jsx';
+import UserSearchModal from './UserSearchModal.jsx';
 
 const ChatWindow = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,6 +29,7 @@ const ChatWindow = () => {
   const lastMessageCountRef = useRef(0);
 
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, room: null });
+  const [userSearchModal, setUserSearchModal] = useState({ isOpen: false });
   const [isDeleting, setIsDeleting] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -142,9 +144,24 @@ const ChatWindow = () => {
   }, [searchParams, rooms, currentRoom, selectRoom, createChatRoom, setSearchParams]);
 
   const startChatwithOtherUser = async () => {
-    const otherUserId = prompt('Enter other user ID to start chat:');
-    if (otherUserId && otherUserId.trim()) {
-      await createChatRoom(otherUserId.trim());
+    setUserSearchModal({ isOpen: true });
+  };
+
+  const handleUserSelect = async (user) => {
+    if (user && user.userId) {
+      try {
+        // Đóng modal trước
+        setUserSearchModal({ isOpen: false });
+
+        // Tạo hoặc lấy chat room với user được chọn
+        await createChatRoom(user.userId);
+
+        // Hiển thị thông báo thành công
+        // showToastNotification(`Started chat with ${user.profile?.fullName || user.email}`, 'success');
+      } catch (error) {
+        // Error đã được handle trong useChat hook
+        console.error('Error selecting user:', error);
+      }
     }
   };
 
@@ -165,12 +182,6 @@ const ChatWindow = () => {
       // Error handled by useChat hook
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const handleModalClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setDeleteModal({ isOpen: false, room: null });
     }
   };
 
@@ -205,28 +216,60 @@ const ChatWindow = () => {
   }, [uploadFileAndSendMessage]);
 
   return (
-    <Container className="max-w-6xl mx-auto py-8">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900">Chat</h1>
-            <div className="flex items-center space-x-4">
-              {/* Connection status */}
-              <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
-                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm font-medium">
-                  {connected ? 'Connected' : 'Disconnected'}
-                </span>
+    <div className="w-full">
+      <div className="bg-white overflow-hidden" style={{ height: 'calc(100vh - 140px)' }}>
+        {/* Messenger-style layout */}
+        <div className="flex h-full">{/* Sidebar - Chat rooms list */}
+          <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+            {/* Sidebar Header */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900">Chats</h1>
+                <div className="flex items-center space-x-2">
+                  {/* Connection status indicator */}
+                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  {/* New chat button */}
+                  <button
+                    onClick={startChatwithOtherUser}
+                    disabled={uploading}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                    title="Start new chat"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
+            </div>
 
-              {/* Rooms count */}
-              <div className="text-sm text-gray-500">
-                Rooms: {rooms.length}
+            {/* Search bar */}
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search Messenger"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm focus:outline-none focus:bg-white focus:shadow-md transition-all"
+                />
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
+            </div>
 
-              {/* Upload status */}
-              {uploading && (
+            {/* Chat rooms list */}
+            <div className="flex-1 overflow-y-auto">
+              <ChatRoomList
+                rooms={rooms}
+                onRoomSelect={selectRoom}
+                onDeleteRoom={handleDeleteRoom}
+                currentRoom={currentRoom}
+              />
+            </div>
+
+            {/* Upload status */}
+            {uploading && (
+              <div className="px-4 py-2 border-t border-gray-200 bg-blue-50">
                 <div className="flex items-center space-x-2 text-sm text-blue-600">
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -234,34 +277,8 @@ const ChatWindow = () => {
                   </svg>
                   <span>Uploading...</span>
                 </div>
-              )}
-
-              {/* Start new chat button */}
-              <button
-                onClick={startChatwithOtherUser}
-                disabled={uploading}
-                className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Start New Chat
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main chat area */}
-        <div className="flex h-[600px]">
-          {/* Sidebar - Chat rooms list */}
-          <div className="w-1/3 border-r border-gray-200 overflow-y-auto bg-gray-50">
-            <div className="p-4 border-b border-gray-200 bg-white">
-              <h2 className="font-medium text-gray-900">Conversations</h2>
-            </div>
-
-            <ChatRoomList
-              rooms={rooms}
-              onRoomSelect={selectRoom}
-              onDeleteRoom={handleDeleteRoom}
-              currentRoom={currentRoom}
-            />
+              </div>
+            )}
           </div>
 
           {/* Main chat area */}
@@ -269,11 +286,11 @@ const ChatWindow = () => {
             {currentRoom ? (
               <>
                 {/* Chat header */}
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <div className="px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       {/* Avatar */}
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 relative">
                         {currentRoom.otherUser?.profile?.profileImageUrl ? (
                           <img
                             src={currentRoom.otherUser.profile.profileImageUrl}
@@ -281,36 +298,59 @@ const ChatWindow = () => {
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
-                          <span className="text-green-600 font-medium text-sm">
-                            {currentRoom.otherUser?.profile?.fullName?.charAt(0) ||
-                              currentRoom.otherUser?.email?.charAt(0) || '?'}
-                          </span>
+                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-medium text-sm">
+                              {currentRoom.otherUser?.profile?.fullName?.charAt(0) ||
+                                currentRoom.otherUser?.email?.charAt(0) || '?'}
+                            </span>
+                          </div>
                         )}
+                        {/* Online status indicator */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                       </div>
 
                       {/* User info */}
                       <div>
-                        <h3 className="font-medium text-gray-900">
+                        <h3 className="font-semibold text-gray-900 text-lg">
                           {currentRoom.otherUser?.profile?.fullName ||
                             currentRoom.otherUser?.email || 'Unknown User'}
                         </h3>
+                        <p className="text-sm text-green-500 font-medium">Active now</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
-                      {/* Room ID */}
-                      <div className="text-sm text-gray-500">
-                        Room: {currentRoom.chatRoomId.substring(0, 8)}...
-                      </div>
+                    <div className="flex items-center space-x-3">
+                      {/* Phone icon */}
+                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </button>
+
+                      {/* Video icon */}
+                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+
+                      {/* Info icon */}
+                      <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
 
                       {/* Delete button */}
                       <button
                         onClick={() => handleDeleteRoom(currentRoom)}
                         disabled={uploading}
-                        className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        title="Delete this chat room"
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                        title="Delete conversation"
                       >
-                        🗑️ Delete
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -319,7 +359,7 @@ const ChatWindow = () => {
                 {/* Messages area */}
                 <div
                   ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50"
+                  className="flex-1 overflow-y-auto px-6 py-4 bg-white"
                   style={{ scrollBehavior: 'auto' }}
                 >
                   {/* Loading state - only show on initial load or when no messages */}
@@ -332,19 +372,29 @@ const ChatWindow = () => {
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-gray-500 mt-8">
-                      <div className="text-4xl mb-4">💬</div>
-                      <p className="text-lg font-medium">No messages yet</p>
-                      <p className="text-sm">Start the conversation!</p>
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-white font-medium text-2xl">
+                          {currentRoom.otherUser?.profile?.fullName?.charAt(0) ||
+                            currentRoom.otherUser?.email?.charAt(0) || '?'}
+                        </span>
+                      </div>
+                      <p className="text-xl font-semibold text-gray-900 mb-2">
+                        {currentRoom.otherUser?.profile?.fullName || 'User'}
+                      </p>
+                      <p className="text-sm text-gray-500">You're now connected on Messenger</p>
+                      <p className="text-sm text-gray-400 mt-1">Say hello 👋</p>
                     </div>
                   ) : (
                     <>
                       {/* Messages list */}
-                      {messages.map((message, index) => (
-                        <Message
-                          key={`${message.messageId}-${index}`}
-                          message={message}
-                        />
-                      ))}
+                      <div className="space-y-1">
+                        {messages.map((message, index) => (
+                          <Message
+                            key={`${message.messageId}-${index}`}
+                            message={message}
+                          />
+                        ))}
+                      </div>
 
                       {/* Subtle loading indicator for background loading */}
                       {loading && !isInitialLoad && messages.length > 0 && (
@@ -370,125 +420,55 @@ const ChatWindow = () => {
                   currentRoom={currentRoom}
                   disabled={!connected}
                   uploading={uploading}
-                  placeholder={uploading ? "Uploading file..." : "Type a message..."}
+                  placeholder={uploading ? "Uploading file..." : "Aa"}
                 />
               </>
             ) : (
               /* No room selected state */
-              <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <div className="flex-1 flex items-center justify-center bg-white">
+                <div className="text-center max-w-md">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <p className="text-lg font-medium">Select a conversation</p>
-                  <p className="text-sm">Choose a chat room to start messaging</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    {rooms.length > 0 ? `${rooms.length} conversation(s) available` : 'No conversations yet'}
-                  </p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Messages</h2>
+                  <p className="text-gray-500 mb-4">Send private photos and messages to a friend or group.</p>
+                  <button
+                    onClick={startChatwithOtherUser}
+                    className="px-6 py-3 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-600 transition-colors"
+                  >
+                    Send Message
+                  </button>
+                  {rooms.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-4">
+                      {rooms.length} conversation(s) available
+                    </p>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* User Search Modal */}
+        <UserSearchModal
+          isOpen={userSearchModal.isOpen}
+          onClose={() => setUserSearchModal({ isOpen: false })}
+          onSelectUser={handleUserSelect}
+          isLoading={uploading}
+        />
+
+        {/* Delete confirmation modal */}
+        <DeleteChatModal
+          isOpen={deleteModal.isOpen}
+          onClose={() => setDeleteModal({ isOpen: false, room: null })}
+          onConfirm={handleConfirmDelete}
+          chatRoom={deleteModal.room}
+          isLoading={isDeleting}
+        />
       </div>
-
-      {/* Delete confirmation modal */}
-      {deleteModal.isOpen && (
-        <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-          onClick={handleModalClick}
-        >
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              {/* Modal header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Delete Conversation
-                </h3>
-                <button
-                  onClick={() => setDeleteModal({ isOpen: false, room: null })}
-                  className="text-gray-400 hover:text-gray-600"
-                  disabled={isDeleting}
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Modal content */}
-              {deleteModal.room && (
-                <div className="mb-4">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {deleteModal.room.otherUser?.profile?.fullName || deleteModal.room.otherUser?.email || 'Unknown User'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Room ID: {deleteModal.room.chatRoomId.substring(0, 8)}...
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div className="flex">
-                      <svg className="w-5 h-5 text-yellow-400 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      <div className="text-sm">
-                        <p className="text-yellow-800 font-medium">
-                          Are you sure you want to delete this conversation?
-                        </p>
-                        <p className="text-yellow-700 mt-1">
-                          This will hide the conversation from your chat list. The other person can still see and send messages.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Modal actions */}
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setDeleteModal({ isOpen: false, room: null })}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                >
-                  {isDeleting ? (
-                    <div className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Deleting...
-                    </div>
-                  ) : (
-                    'Delete Conversation'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </Container>
+    </div>
   );
 };
 
