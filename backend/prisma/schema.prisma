@@ -56,6 +56,8 @@ model User {
 
   watchlist Watchlist[] @relation("User_Has_Watchlist")
 
+  notifications Notification[] @relation("UserNotifications")
+
   @@map("users")
 }
 
@@ -412,4 +414,19 @@ model Watchlist {
 
   @@unique([userId, auctionId])
   @@map("watchlists")
+}
+
+model Notification {
+  notificationId String   @id @default(uuid()) @map("notification_id") @db.Char(36)
+  message        String   @db.Text
+  isRead         Boolean  @default(false) @map("is_read")
+
+  userId         String   @map("user_id") @db.Char(36)
+  user           User     @relation("UserNotifications", fields: [userId], references: [userId], onDelete: Cascade)
+
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  metadata       Json?    @db.Json
+
+  @@map("notifications")
 }

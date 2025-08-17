@@ -355,4 +355,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   getUserSocketId(userId: string): string | undefined {
     return this.connectedUsers.get(userId);
   }
+  async getClientCountInRoom(userId: string): Promise<number> {
+    const room = `user.${userId}.notifications`;
+    const sockets = await this.server.in(room).fetchSockets();
+    return sockets.length;
+  }
 }
