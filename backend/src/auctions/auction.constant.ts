@@ -46,9 +46,9 @@ export const ERROR_AUCTION_NOT_CLOSABLE = {
   errorCode: 'AUCTION_NOT_CLOSABLE',
 };
 
-export const ERROR_PRODUCT_NOT_AVAILABLE = (productId: string) => ({
+export const ERROR_PRODUCT_NOT_AVAILABLE = (productName: string) => ({
   statusCode: 404,
-  message: `Product not available: ${productId}`,
+  message: `Product not available: ${productName}`,
   errorCode: 'PRODUCT_NOT_AVAILABLE',
 });
 

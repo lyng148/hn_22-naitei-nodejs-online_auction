@@ -30,6 +30,9 @@ import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
 import { AuthType } from '@common/types/auth-type.enum';
 import { Auth } from '@common/decorators/auth.decorator';
 import { CancelAuctionDto } from './dtos/cancel-auction.body.dto';
+import { ReopenAuctionBodyDto, ReopenAuctionResponseDto } from './dtos/reopen-auction.dto';
+import { EditAuctionResponseDto } from './dtos/edit-auction.response.dto';
+import { EditAuctionBodyDto } from './dtos/edit-auction.body.dto';
 
 @Controller('auctions')
 export class AuctionController {
@@ -66,6 +69,14 @@ export class AuctionController {
       sortField: 'createdAt',
       sortDirection: SortDirection.DESC
     } as SearchAuctionQueryDto);
+  }
+
+  @Roles(Role.BIDDER)
+  @Get('watchlist')
+  async getWatchlist(
+    @CurrentUser() user: any,
+  ): Promise<SearchAuctionResponseDto> {
+    return this.auctionService.getWatchlist(user);
   }
 
   @Get(':auctionId')
@@ -133,11 +144,20 @@ export class AuctionController {
     return this.auctionService.removeFromWatchlist(user, removeFromWatchlistDto);
   }
 
-  @Roles(Role.BIDDER)
-  @Post('watchlist')
-  async getWatchlist(
-    @CurrentUser() user: any,
-  ): Promise<SearchAuctionResponseDto> {
-    return this.auctionService.getWatchlist(user);
+  @Roles(Role.SELLER)
+  @Patch('reopen')
+  async reopenAuction(
+    @Body() reopenAuctionBodyDto: ReopenAuctionBodyDto,
+  ): Promise<ReopenAuctionResponseDto> {
+    return this.auctionService.reopenAuction(reopenAuctionBodyDto);
+  }
+
+  @Roles(Role.SELLER)
+  @Patch('edit/:auctionId')
+  async editAuction(
+    @Param('auctionId') auctionId: string,
+    @Body() editAuctionDto: EditAuctionBodyDto,
+  ): Promise<EditAuctionResponseDto> {
+    return this.auctionService.editAuction(auctionId, editAuctionDto);
   }
 }
