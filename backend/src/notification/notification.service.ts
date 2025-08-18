@@ -12,6 +12,7 @@ import {
   SUCCESS_NOTIFICATION_MESSAGES
 } from './notification-constants';
 import { NotificationGateway } from './notification-gateway';
+import { ERROR_USER_NOT_FOUND } from '../common/constants/error.constant';
 
 @Injectable()
 export class NotificationService {
@@ -23,6 +24,10 @@ export class NotificationService {
   ) { }
 
   async createNotification(dto: CreateNotificationDto): Promise<NotificationResponseDto> {
+    if (!dto.userId) {
+      throw new Error(ERROR_USER_NOT_FOUND.message);
+    }
+    
     const notification = await this.prisma.notification.create({
       data: {
         message: dto.message,
