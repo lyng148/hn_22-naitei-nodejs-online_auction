@@ -349,6 +349,8 @@ model Bid {
 
   walletTransaction WalletTransaction? @relation("Bid_WalletTransaction")
 
+  isHidden Boolean @default(false) // để đánh dấu bid trong nước rút
+
   status    BidStatus
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
 

@@ -13,6 +13,7 @@ import { ProductsModule } from './products/products.module';
 import { AuctionModule } from './auctions/auction.module';
 import { join } from 'path';
 import { ChatModule } from './chat/chat.module';
+import { BidModule } from './bid/bid.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
@@ -44,6 +45,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       },
     }),
     CommonModule,
+    BidModule,
     AuthModule,
     UsersModule,
     ProfileModule,
