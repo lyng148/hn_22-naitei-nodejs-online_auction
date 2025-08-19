@@ -8,6 +8,8 @@ import { CommentForm } from '@/components/ui/CommentForm';
 import { RatingSummary } from '@/components/ui/RatingSummary';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { useUser } from '@/contexts/UserContext';
+import { useNotification } from '@/contexts/NotificationContext';
+import { chatApiService } from '@/services/chat.service';
 import '@/styles/ProductDetail.css';
 import {
     IoArrowBackOutline,
@@ -23,6 +25,7 @@ const ProductDetail = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
     const { user } = useUser();
+    const { showToastNotification } = useNotification();
 
     const {
         product,
@@ -42,6 +45,8 @@ const ProductDetail = () => {
         selectedImageIndex,
         setSelectedImageIndex,
     } = useProductDetail(productId);
+
+    const [chatLoading, setChatLoading] = React.useState(false);
 
     if (productLoading) {
         return (
@@ -83,13 +88,37 @@ const ProductDetail = () => {
         setSelectedImageIndex(index);
     };
 
-    const handleContactSeller = () => {
+    const handleContactSeller = async () => {
         if (!user) {
+            showToastNotification('Vui lòng đăng nhập để liên hệ người bán', 'error');
             navigate('/auth/login');
             return;
         }
-        // Navigate to chat with seller
-        navigate(`/chat?sellerId=${product.seller.userId}`);
+
+        if (user.id === product.seller.userId) {
+            showToastNotification('Bạn không thể chat với chính mình', 'error');
+            return;
+        }
+
+        setChatLoading(true);
+        try {
+            const response = await chatApiService.createOrGetChatRoom({
+                otherUserId: product.seller.userId
+            });
+
+            if (response.success) {
+                showToastNotification('Đang mở cuộc trò chuyện với người bán...', 'success');
+                // Chuyển hướng đến trang chat với query parameter để tự động select room
+                navigate(`/chat?sellerId=${product.seller.userId}`);
+            } else {
+                throw new Error(response.message || 'Không thể tạo cuộc trò chuyện');
+            }
+        } catch (error) {
+            console.error('Error creating chat with seller:', error);
+            showToastNotification(error.message || 'Không thể liên hệ người bán', 'error');
+        } finally {
+            setChatLoading(false);
+        }
     };
 
     const getStatusBadge = (status) => {
@@ -146,8 +175,8 @@ const ProductDetail = () => {
                                             key={image.imageId}
                                             onClick={() => handleImageClick(index)}
                                             className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors product-thumbnail ${index === selectedImageIndex
-                                                    ? 'border-green'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                ? 'border-green'
+                                                : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                         >
                                             <img
@@ -249,10 +278,20 @@ const ProductDetail = () => {
 
                                 <PrimaryButton
                                     onClick={handleContactSeller}
-                                    className="w-full bg-green hover:bg-green-600 flex items-center justify-center"
+                                    disabled={chatLoading}
+                                    className="w-full bg-green hover:bg-green-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <IoChatbubbleOutline size={16} className="mr-2" />
-                                    Liên hệ người bán
+                                    {chatLoading ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                                            Đang kết nối...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <IoChatbubbleOutline size={16} className="mr-2" />
+                                            Liên hệ người bán
+                                        </>
+                                    )}
                                 </PrimaryButton>
                             </div>
                         </div>
