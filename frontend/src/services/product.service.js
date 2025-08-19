@@ -5,6 +5,8 @@ const PRODUCT_API = {
   UPLOAD_IMAGE: '/api/products/upload',
   MY_PRODUCTS: '/api/products/my-products',
   MY_ACTIVE_PRODUCTS: '/api/products/my-products/active',
+  USER_PRODUCTS: (userId) => `/api/products/user/${userId}`,
+  USER_ACTIVE_PRODUCTS: (userId) => `/api/products/user/${userId}/active`,
   UPDATE_PRODUCTS: '/api/products',
   DELETE_PRODUCTS: '/api/products',
   GET_PRODUCT_BY_ID: '/api/products',
@@ -98,6 +100,38 @@ export const productService = {
       return Promise.reject({
         statusCode: statusCode || 500,
         message: message || 'Failed to fetch active products',
+        errorCode: code || 'INTERNAL_SERVER_ERROR',
+      });
+    }
+  },
+
+  // Get products by user ID
+  getUserProducts: async (userId) => {
+    try {
+      const response = await axiosClient.get(PRODUCT_API.USER_PRODUCTS(userId));
+      return response.data;
+    } catch (err) {
+      const statusCode = err?.status;
+      const { message, code } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || 500,
+        message: message || 'Failed to fetch user products',
+        errorCode: code || 'INTERNAL_SERVER_ERROR',
+      });
+    }
+  },
+
+  // Get active products by user ID
+  getUserActiveProducts: async (userId) => {
+    try {
+      const response = await axiosClient.get(PRODUCT_API.USER_ACTIVE_PRODUCTS(userId));
+      return response.data;
+    } catch (err) {
+      const statusCode = err?.status;
+      const { message, code } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || 500,
+        message: message || 'Failed to fetch user active products',
         errorCode: code || 'INTERNAL_SERVER_ERROR',
       });
     }
