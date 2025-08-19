@@ -17,10 +17,15 @@ import {
   ERROR_NOT_FOLLOWING,
   ERROR_UNFOLLOW_FAILED,
 } from '@common/constants/error.constant';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DOMAIN_EVENTS } from '../notification/notification-constants';
 
 @Injectable()
 export class FollowsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async getFollowNumber(sellerId: string): Promise<{ followerCount: number }> {
     const seller = await this.prisma.user.findUnique({
@@ -97,6 +102,12 @@ export class FollowsService {
           sellerId: sellerId,
         },
       });
+
+      this.eventEmitter.emit(DOMAIN_EVENTS.FOLLOW_CREATED, {
+        sellerId,
+        currentUser: currentUser.email,
+      }
+      );
 
       return {
         followId: follow.followId,

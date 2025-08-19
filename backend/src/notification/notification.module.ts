@@ -6,6 +6,7 @@ import { NotificationAuctionsListener } from './listeners/notification-auctions-
 import { NotificationGateway } from './notification-gateway';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
+import { NotificationUserListener } from './listeners/notificatioin-user-listener';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { NotificationService } from './notification.service';
     NotificationService,
     NotificationGateway,
     NotificationAuctionsListener,
+    NotificationUserListener,
   ],
   exports: [NotificationService],
 })

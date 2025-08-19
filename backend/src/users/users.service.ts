@@ -19,10 +19,15 @@ import {
   DEFAULT_PAGE,
 } from '@common/constants/pagination.constant';
 import { BanUserResponseDto } from './dtos/ban-user-response.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DOMAIN_EVENTS } from '../notification/notification-constants';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
 
   async findUserById(userId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -141,11 +146,25 @@ export class UsersService {
         },
       });
 
+      if (shouldBan) {
+        this.eventEmitter.emit(DOMAIN_EVENTS.BAND,
+          {
+            userId
+          }
+        )
+      }
+
       const userWarnings = await prisma.warning.findMany({
         where: { userId: userId },
         orderBy: { createdAt: 'asc' },
       });
 
+      this.eventEmitter.emit(DOMAIN_EVENTS.WARNING_CREATED,
+        {
+          userId,
+          warningCount
+        }
+      )
       return {
         user: updatedUser,
         warnings: userWarnings,
@@ -274,13 +293,16 @@ export class UsersService {
       throw new ForbiddenException(ERROR_USER_ALREADY_BANNED);
     }
 
-    // ✅ Simply set isBanned to true
     const updatedUser = await this.prisma.user.update({
       where: { userId },
       data: {
         isBanned: true,
       },
     });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.BAND, {
+      userId
+    })
 
     return {
       userId: updatedUser.userId,
@@ -314,6 +336,10 @@ export class UsersService {
         isBanned: false,
       },
     });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.UNBAND, {
+      userId
+    })
 
     return {
       userId: updatedUser.userId,
