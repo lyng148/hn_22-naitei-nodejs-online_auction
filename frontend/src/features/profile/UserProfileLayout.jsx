@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { UserAccountInfo } from "@/features/profile/UserAccountInfo";
+import OrderListForBidder from "@/features/profile/OrderListForBidder";
 import { Container } from "@/components/ui/index.js";
 
 const ProfileTabs = {
@@ -16,7 +17,7 @@ export const UserProfileLayout = () => {
   const tabComponents = {
     [ProfileTabs.ACCOUNT]: <UserAccountInfo />,
     [ProfileTabs.WATCHLIST]: <div className="text-center py-8">Watchlist - Coming Soon</div>,
-    [ProfileTabs.ORDER]: <div className="text-center py-8">Orders - Coming Soon</div>,
+    [ProfileTabs.ORDER]: <OrderListForBidder />,
     [ProfileTabs.PAYMENT_HISTORY]: <div className="text-center py-8">Payment History - Coming Soon</div>,
     [ProfileTabs.SHIPPING]: <div className="text-center py-8">Shipping - Coming Soon</div>,
   };
