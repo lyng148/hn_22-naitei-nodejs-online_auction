@@ -77,5 +77,21 @@ export const orderService = {
         errorCode: errorCode || 'UPDATE_ORDER_ERROR',
       });
     }
+  },
+
+  cancelOrder: async (orderId, reason) => {
+    try {
+      const response = await axiosClient.patch(`${ORDER_API.GET_ORDERS}/${orderId}/cancel`, {
+        reason
+      });
+      return response.data;
+    } catch (err) {
+      const { statusCode, message, errorCode } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || err?.response?.status || 500,
+        message: message || 'Failed to cancel order',
+        errorCode: errorCode || 'CANCEL_ORDER_ERROR',
+      });
+    }
   }
 };
