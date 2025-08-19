@@ -14,6 +14,7 @@ export const useAuctionListing = () => {
     const [filterPeriod, setFilterPeriod] = useState("Last 90 days");
     const [sortBy, setSortBy] = useState("Current price");
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [reopenLoading, setReopenLoading] = useState(false);
 
     // Fetch seller's auctions
     const fetchMyAuctions = useCallback(async () => {
@@ -87,9 +88,31 @@ export const useAuctionListing = () => {
         }
     }, [showToastNotification]);
 
-    const handleReopenAuction = useCallback((auction) => {
-        // Implement reopen auction functionality
-        showToastNotification('Reopen auction functionality coming soon', 'info');
+    const handleReopenAuction = useCallback(async (auction) => {
+        try {
+            setReopenLoading(true);
+            const response = await auctionService.reopenAuction(auction.auctionId);
+
+            // Update the auction status locally
+            setAuctions(prevAuctions =>
+                prevAuctions.map(auc =>
+                    auc.auctionId === auction.auctionId
+                        ? { ...auc, status: 'PENDING' }
+                        : auc
+                )
+            );
+
+            showToastNotification(
+                response.message || 'Auction reopened successfully, waiting for admin approval',
+                'success'
+            );
+        } catch (err) {
+            console.error('Failed to reopen auction:', err);
+            showToastNotification(err.message || 'Failed to reopen auction', 'error');
+            throw err; // Re-throw to let the modal handle it
+        } finally {
+            setReopenLoading(false);
+        }
     }, [showToastNotification]);
 
     return {
@@ -98,6 +121,7 @@ export const useAuctionListing = () => {
         loading,
         error,
         cancelLoading,
+        reopenLoading,
 
         // Search and filters
         searchTerm,
