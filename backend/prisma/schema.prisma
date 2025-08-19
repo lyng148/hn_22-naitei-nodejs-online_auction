@@ -47,25 +47,26 @@ model User {
 
   bid Bid[] @relation("User_Has_Bids")
 
-  walletBalance Decimal @default(0) @map("wallet_balance") @db.Decimal(19, 4)
+  walletBalance      Decimal             @default(0) @map("wallet_balance") @db.Decimal(19, 4)
   walletTransactions WalletTransaction[] @relation("User_Has_WalletTransactions")
 
-  sentMessages      Message[]  @relation("UserSentMessages")
-  chatRoomsAsUser1  ChatRoom[] @relation("User1ChatRooms")
-  chatRoomsAsUser2  ChatRoom[] @relation("User2ChatRooms")
+  sentMessages     Message[]  @relation("UserSentMessages")
+  chatRoomsAsUser1 ChatRoom[] @relation("User1ChatRooms")
+  chatRoomsAsUser2 ChatRoom[] @relation("User2ChatRooms")
 
   watchlist Watchlist[] @relation("User_Has_Watchlist")
 
   notifications Notification[] @relation("UserNotifications")
+  orders        Order[]        @relation("User_Has_Orders")
 
   @@map("users")
 }
 
 enum TransactionType {
-  DEPOSIT     // Nạp tiền
-  WITHDRAWAL  // Rút tiền
+  DEPOSIT // Nạp tiền
+  WITHDRAWAL // Rút tiền
   BID_PAYMENT // Thanh toán đặt cược
-  BID_REFUND  // Hoàn tiền khi thua cuộc
+  BID_REFUND // Hoàn tiền khi thua cuộc
   AUCTION_PAYMENT // Thanh toán khi thắng auction
   ADMIN_ADJUSTMENT // Điều chỉnh từ admin
 }
@@ -94,7 +95,7 @@ model WalletTransaction {
   balanceAfter Decimal @map("balance_after") @db.Decimal(19, 4)
 
   // Reference đến auction/bid nếu có
-  auctionId String? @map("auction_id") @db.Char(36)
+  auctionId String?  @map("auction_id") @db.Char(36)
   auction   Auction? @relation("Auction_WalletTransactions", fields: [auctionId], references: [auctionId], onDelete: SetNull)
 
   bidId String? @unique @map("bid_id") @db.Char(36)
@@ -298,6 +299,8 @@ model Auction {
 
   watchlist Watchlist[] @relation("Auction_In_Watchlist")
 
+  orders Order[] @relation("Auction_Has_Orders")
+
   @@map("auctions")
 }
 
@@ -325,6 +328,14 @@ enum BidStatus {
   INVALID
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPING
+  COMPLETED
+  CANCELED
+}
+
 model Bid {
   bidId String @id @default(uuid()) @map("bid_id") @db.Char(36)
 
@@ -334,7 +345,7 @@ model Bid {
   userId String @map("user_id") @db.Char(36)
   user   User   @relation("User_Has_Bids", fields: [userId], references: [userId], onDelete: Cascade)
 
-  bidAmount Decimal   @map("bid_amount") @db.Decimal(19, 4)
+  bidAmount Decimal @map("bid_amount") @db.Decimal(19, 4)
 
   walletTransaction WalletTransaction? @relation("Bid_WalletTransaction")
 
@@ -417,16 +428,34 @@ model Watchlist {
 }
 
 model Notification {
-  notificationId String   @id @default(uuid()) @map("notification_id") @db.Char(36)
-  message        String   @db.Text
-  isRead         Boolean  @default(false) @map("is_read")
+  notificationId String  @id @default(uuid()) @map("notification_id") @db.Char(36)
+  message        String  @db.Text
+  isRead         Boolean @default(false) @map("is_read")
 
-  userId         String   @map("user_id") @db.Char(36)
-  user           User     @relation("UserNotifications", fields: [userId], references: [userId], onDelete: Cascade)
+  userId String @map("user_id") @db.Char(36)
+  user   User   @relation("UserNotifications", fields: [userId], references: [userId], onDelete: Cascade)
 
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
-  metadata       Json?    @db.Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  metadata  Json?    @db.Json
 
   @@map("notifications")
+}
+
+model Order {
+  orderId String @id @default(uuid()) @map("id") @db.Char(36)
+
+  userId String @map("user_id") @db.Char(36)
+  user   User   @relation("User_Has_Orders", fields: [userId], references: [userId], onDelete: Cascade)
+
+  auctionId String  @map("auction_id") @db.Char(36)
+  auction   Auction @relation("Auction_Has_Orders", fields: [auctionId], references: [auctionId], onDelete: Cascade)
+
+  totalAmount    Decimal     @map("total_amount") @db.Decimal(19, 4)
+  status         OrderStatus @default(PENDING)
+  paymentDueDate DateTime?   @map("payment_due_date") @db.Timestamp(0)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("orders")
 }

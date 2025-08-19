@@ -15,6 +15,7 @@ import { join } from 'path';
 import { ChatModule } from './chat/chat.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { NotificationModule } from './notification/notification.module';
     ChatModule,
     WalletModule,
     NotificationModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
