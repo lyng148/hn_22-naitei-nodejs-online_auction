@@ -18,6 +18,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
 import { ShippingModule } from './shipping/shipping.module';
+import { StatisticsModule } from './statistics/statistics.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CommentsModule } from './comments/comments.module';
 
@@ -61,8 +62,9 @@ import { CommentsModule } from './comments/comments.module';
     OrdersModule,
     CommentsModule,
     ShippingModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
