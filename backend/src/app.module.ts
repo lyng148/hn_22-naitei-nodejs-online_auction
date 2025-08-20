@@ -16,6 +16,7 @@ import { ChatModule } from './chat/chat.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
+import { StatisticsModule } from './statistics/statistics.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -54,8 +55,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     WalletModule,
     NotificationModule,
     OrdersModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
