@@ -13,10 +13,20 @@ import { AuthType } from '../common/types/auth-type.enum';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { ListNotificationQueryDto } from './dtos/notification-query.dto';
 import { NotificationService } from './notification.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) { }
+  constructor(private readonly notificationService: NotificationService,
+    private readonly eventEmitter: EventEmitter2,
+
+  ) { }
+
+  @Post('test/emit')
+  async emitTest(@Body() dto: { event: string; payload: any }) {
+    this.eventEmitter.emit(dto.event, dto.payload);
+    return { success: true, emitted: dto.event, payload: dto.payload };
+  }
 
   @Post('create')
   async create(@Body() dto: CreateNotificationDto) {
