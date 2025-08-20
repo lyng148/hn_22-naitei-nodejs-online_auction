@@ -191,6 +191,16 @@ export class AuctionService {
           currentPrice: true,
           minimumBidIncrement: true,
           status: true,
+          seller: {
+            select: {
+              email: true,
+              profile: {
+                select: {
+                  fullName: true,
+                },
+              },
+            },
+          },
         },
       }),
     ]);
@@ -204,6 +214,8 @@ export class AuctionService {
       currentPrice: auction.currentPrice.toString(),
       minimumBidIncrement: auction.minimumBidIncrement.toString(),
       status: auction.status,
+      sellerName: auction.seller.profile?.fullName || '',
+      sellerEmail: auction.seller.email,
     }));
 
     return { total, page: query.page, size: query.size, data: auctions };
@@ -582,6 +594,16 @@ export class AuctionService {
             currentPrice: true,
             minimumBidIncrement: true,
             status: true,
+            seller: {
+              select: {
+                email: true,
+                profile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
             auctionProducts: {
               select: {
                 product: {
@@ -607,6 +629,8 @@ export class AuctionService {
       currentPrice: item.auction.currentPrice.toString(),
       minimumBidIncrement: item.auction.minimumBidIncrement.toString(),
       status: item.auction.status,
+      sellerName: item.auction.seller.profile?.fullName || '',
+      sellerEmail: item.auction.seller.email,
     }));
     return {
       total: data.length,
