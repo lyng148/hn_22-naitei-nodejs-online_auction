@@ -234,9 +234,14 @@ export const UserAccountInfo = () => {
   );
 
   return (
-    <Container>
+    <div className="p-6"> 
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="space-y-6">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
+            <p className="text-gray-600">Manage your personal information and account settings</p>
+          </div>
           
           {/* Personal Information & Profile Avatar Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -553,6 +558,6 @@ export const UserAccountInfo = () => {
         warnings={warnings}
         warningStatus={warningStatus}
       />
-    </Container>
+    </div>
   );
 };
