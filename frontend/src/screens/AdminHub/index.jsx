@@ -5,6 +5,7 @@ import { AdminHubUserSidebar } from "@/components/ui/AdminHubUserSidebar";
 import { Routes, Route, Navigate } from "react-router-dom";
 import BidderManagement from "@/screens/AdminHub/User/BidderManagement/index.jsx";
 import SellerManagement from "@/screens/AdminHub/User/SellerManagement/index.jsx";
+import OrderManagement from "@/screens/AdminHub/OrderManagement/index.jsx";
 import ComingSoon from "@/screens/AdminHub/ComingSoon/index.jsx";
 
 const AdminHub = () => {
@@ -28,7 +29,7 @@ const AdminHub = () => {
         
         {/* Other Routes - Coming Soon */}
         <Route path="overview" element={<ComingSoon title="Overview" />} />
-        <Route path="orders" element={<ComingSoon title="Orders" />} />
+        <Route path="orders" element={<OrderManagement />} />
         <Route path="listings" element={<ComingSoon title="Listings" />} />
         <Route path="store" element={<ComingSoon title="Store" />} />
         <Route path="performance" element={<ComingSoon title="Performance" />} />
