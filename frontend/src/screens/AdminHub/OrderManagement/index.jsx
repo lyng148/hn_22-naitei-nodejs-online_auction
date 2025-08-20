@@ -73,67 +73,15 @@ const OrderManagement = () => {
     }
   }, [searchTerm, sortBy, sortOrder, statusFilter]);
 
-  // Filter and sort logic
-  const filterAndSortOrders = useCallback(() => {
-    let filtered = [...orders];
-
-    // Apply search filter based on searchBy criteria
-    if (searchTerm) {
-      filtered = filtered.filter((order) => {
-        switch (searchBy) {
-          case "auction_title":
-            return order.auction?.title?.toLowerCase().includes(searchTerm.toLowerCase());
-          case "order_id":
-            return order.orderId?.toLowerCase().includes(searchTerm.toLowerCase());
-          case "buyer_email":
-            return order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-          case "seller_email":
-            return order.auction?.seller?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-          default:
-            return false;
-        }
-      });
-    }
-
-    // Apply period filter
-    if (period) {
-      const now = new Date();
-      let startDate;
-
-      switch (period) {
-        case "today":
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          break;
-        case "week":
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case "month":
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          break;
-        case "3months":
-          startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-          break;
-        default:
-          startDate = null;
-      }
-
-      if (startDate) {
-        filtered = filtered.filter(order => new Date(order.createdAt) >= startDate);
-      }
-    }
-
-    setFilteredOrders(filtered);
-  }, [orders, searchTerm, searchBy, period]);
-
   // Initialize data
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Apply filters when dependencies change
+  // Set filtered orders directly from server response
   useEffect(() => {
-    filterAndSortOrders();
-  }, [filterAndSortOrders]);
+    setFilteredOrders(orders);
+  }, [orders]);
 
   // Handle pagination change
   const handlePageChange = (newPage) => {
@@ -275,7 +223,7 @@ const OrderManagement = () => {
       {/* Orders Table - Desktop View */}
       <div className="hidden lg:block">
         <OrderManagementTable
-          orders={filteredOrders}
+          orders={orders}
           loading={loading}
           onViewDetails={handleViewDetails}
           onCancelOrder={handleCancelOrder}

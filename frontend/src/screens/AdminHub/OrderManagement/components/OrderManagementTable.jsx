@@ -108,15 +108,11 @@ const OrderManagementTable = ({
                         )}
                       </div>
                       <div className="ml-3 flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate" title={order.auction?.title}>
-                          {order.auction?.title && order.auction.title.length > 30 
-                            ? order.auction.title.substring(0, 30) + "..." 
-                            : order.auction?.title || "N/A"}
+                        <div className="text-sm font-medium text-gray-900 line-clamp-1" title={order.auction?.title}>
+                          {order.auction?.title || "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={productInfo.name}>
-                          {productInfo.name.length > 35 
-                            ? productInfo.name.substring(0, 35) + "..." 
-                            : productInfo.name}
+                        <div className="text-xs text-gray-500 line-clamp-1" title={productInfo.name}>
+                          {productInfo.name}
                         </div>
                       </div>
                     </div>
@@ -127,15 +123,11 @@ const OrderManagementTable = ({
                     <div className="flex items-center">
                       <IoPersonOutline className="text-blue-500 mr-2 flex-shrink-0" size={14} />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate" title={order.user?.profile?.fullName}>
-                          {order.user?.profile?.fullName && order.user.profile.fullName.length > 12
-                            ? order.user.profile.fullName.substring(0, 12) + "..."
-                            : order.user?.profile?.fullName || "N/A"}
+                        <div className="text-sm font-medium text-gray-900 line-clamp-1" title={order.user?.profile?.fullName}>
+                          {order.user?.profile?.fullName || "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={order.user?.email}>
-                          {order.user?.email && order.user.email.length > 15
-                            ? order.user.email.substring(0, 15) + "..."
-                            : order.user?.email || ""}
+                        <div className="text-xs text-gray-500 line-clamp-1" title={order.user?.email}>
+                          {order.user?.email || ""}
                         </div>
                       </div>
                     </div>
@@ -146,15 +138,11 @@ const OrderManagementTable = ({
                     <div className="flex items-center">
                       <IoPersonOutline className="text-green-500 mr-2 flex-shrink-0" size={14} />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate" title={order.auction?.seller?.profile?.fullName}>
-                          {order.auction?.seller?.profile?.fullName && order.auction.seller.profile.fullName.length > 12
-                            ? order.auction.seller.profile.fullName.substring(0, 12) + "..."
-                            : order.auction?.seller?.profile?.fullName || "N/A"}
+                        <div className="text-sm font-medium text-gray-900 line-clamp-1" title={order.auction?.seller?.profile?.fullName}>
+                          {order.auction?.seller?.profile?.fullName || "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={order.auction?.seller?.email}>
-                          {order.auction?.seller?.email && order.auction.seller.email.length > 15
-                            ? order.auction.seller.email.substring(0, 15) + "..."
-                            : order.auction?.seller?.email || ""}
+                        <div className="text-xs text-gray-500 line-clamp-1" title={order.auction?.seller?.email}>
+                          {order.auction?.seller?.email || ""}
                         </div>
                       </div>
                     </div>
@@ -176,7 +164,7 @@ const OrderManagementTable = ({
                       {order.paymentDueDate && order.status === 'PENDING' && (
                         <div className="text-xs text-red-500 flex items-center gap-1">
                           <IoTimeOutline size={10} />
-                          <span className="truncate">
+                          <span className="line-clamp-1">
                             {new Date(order.paymentDueDate).toLocaleDateString()}
                           </span>
                         </div>

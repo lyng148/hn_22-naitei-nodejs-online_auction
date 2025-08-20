@@ -28,7 +28,7 @@ const OrderCard = ({
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-sm font-medium text-gray-900">
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
             {order.auction?.title || "N/A"}
           </h3>
           <p className="text-xs text-gray-500">
@@ -80,10 +80,10 @@ const OrderCard = ({
             <span className="text-blue-700 font-medium">Buyer</span>
           </div>
           <div className="mt-1 ml-6">
-            <div className="font-medium text-gray-900 truncate" title={order.user?.profile?.fullName}>
+            <div className="font-medium text-gray-900 line-clamp-1" title={order.user?.profile?.fullName}>
               {order.user?.profile?.fullName || "N/A"}
             </div>
-            <div className="text-xs text-gray-600 truncate" title={order.user?.email}>
+            <div className="text-xs text-gray-600 line-clamp-1" title={order.user?.email}>
               {order.user?.email || ""}
             </div>
           </div>
@@ -95,10 +95,10 @@ const OrderCard = ({
             <span className="text-green-700 font-medium">Seller</span>
           </div>
           <div className="mt-1 ml-6">
-            <div className="font-medium text-gray-900 truncate" title={order.auction?.seller?.profile?.fullName}>
+            <div className="font-medium text-gray-900 line-clamp-1" title={order.auction?.seller?.profile?.fullName}>
               {order.auction?.seller?.profile?.fullName || "N/A"}
             </div>
-            <div className="text-xs text-gray-600 truncate" title={order.auction?.seller?.email}>
+            <div className="text-xs text-gray-600 line-clamp-1" title={order.auction?.seller?.email}>
               {order.auction?.seller?.email || ""}
             </div>
           </div>
