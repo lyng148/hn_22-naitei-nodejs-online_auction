@@ -65,6 +65,12 @@ export class ProductsController {
     return this.productsService.getProductsByUserId(userId);
   }
 
+  @Auth(AuthType.NONE)
+  @Get('user/:userId/active')
+  async getActiveProductsByUserId(@Param('userId') userId: string) {
+    return this.productsService.getActiveProductsByUserId(userId);
+  }
+
   @Get('my-products')
   @Roles(Role.ADMIN, Role.SELLER)
   async getMyProducts(@CurrentUser() currentUser: any) {
