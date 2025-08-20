@@ -75,3 +75,21 @@ export const ERROR_INVALID_USER_ROLE = {
   message: 'Invalid user role for this operation',
   errorCode: 'INVALID_USER_ROLE',
 };
+
+// Shipping confirmation related constants
+export const ERROR_MESSAGES = {
+  INVALID_USER_ROLE: 'Invalid user role',
+  FAILED_TO_FETCH_ORDERS: 'Failed to fetch orders',
+  ORDER_NOT_FOUND: 'Order not found',
+  UNAUTHORIZED_SHIPMENT_CONFIRMATION:
+    'You are not authorized to confirm this order shipment',
+  INVALID_ORDER_STATUS_FOR_SHIPPING:
+    'Can only confirm shipment for paid orders',
+  NO_SHIPPING_RECORD: 'No shipping record found for this order',
+  INVALID_SHIPPING_STATUS: 'Shipping record is not in pending status',
+  FAILED_TO_CONFIRM_SHIPMENT: 'Failed to confirm order shipment',
+};
+
+export const SUCCESS_MESSAGES = {
+  SHIPMENT_CONFIRMED: 'Shipment confirmed successfully',
+};
