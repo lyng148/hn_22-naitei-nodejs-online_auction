@@ -26,6 +26,19 @@ import { Auction } from '@prisma/client';
 export class BidService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async countBidsByAuction(auctionId: string): Promise<number> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { auctionId },
+    });
+    if (!auction) throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
+
+    const bidCount = await this.prisma.bid.count({
+      where: { auctionId, isHidden: false },
+    });
+
+    return bidCount;
+  }
+
   async getBidsByAuction(auctionId: string): Promise<BidResponseDto[]> {
     const auction = await this.prisma.auction.findUnique({
       where: { auctionId },

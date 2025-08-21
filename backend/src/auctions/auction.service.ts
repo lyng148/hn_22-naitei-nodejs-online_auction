@@ -30,18 +30,74 @@ import {
   AuctionProductDetailDto,
 } from './dtos/get-auction-detail.response.dto';
 import { AddToWatchlistDto } from './dtos/add-to-watchlist.body.dto';
-import { ERROR_AUTION_ALREADY_IN_WATCHLIST, ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST, ERROR_AUTION_CANT_BE_EDITED, ERROR_AUTION_CANT_BE_REOPENED, ERROR_AUTION_NOT_FOUND } from '@common/constants/error.constant';
+import {
+  ERROR_AUTION_ALREADY_IN_WATCHLIST,
+  ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST,
+  ERROR_AUTION_CANT_BE_EDITED,
+  ERROR_AUTION_CANT_BE_REOPENED,
+  ERROR_AUTION_NOT_FOUND,
+} from '@common/constants/error.constant';
 import { AddToWatchlistResponseDto } from './dtos/add-to-watchlist.response.dto';
-import { RemoveFromWatchlistDto, RemoveFromWatchlistResponseDto } from './dtos/remove-from-watchlist.dto';
+import {
+  RemoveFromWatchlistDto,
+  RemoveFromWatchlistResponseDto,
+} from './dtos/remove-from-watchlist.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.body.dto';
 import { CancelAuctionDto } from './dtos/cancel-auction.body.dto';
-import { ReopenAuctionBodyDto, ReopenAuctionResponseDto } from './dtos/reopen-auction.dto';
+import {
+  ReopenAuctionBodyDto,
+  ReopenAuctionResponseDto,
+} from './dtos/reopen-auction.dto';
 import { EditAuctionBodyDto } from './dtos/edit-auction.body.dto';
 import { EditAuctionResponseDto } from './dtos/edit-auction.response.dto';
+import { EndAuctionResponseDto } from './dtos/auction-end.response.dto';
 
 @Injectable()
 export class AuctionService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
+
+  async endAuction(auctionId: string): Promise<EndAuctionResponseDto | null> {
+    const allBids = await this.prisma.bid.findMany({
+      where: { auctionId, status: 'VALID' },
+      orderBy: [{ bidAmount: 'desc' }, { createdAt: 'asc' }],
+      include: { user: { include: { profile: true } } },
+    });
+
+    if (allBids.length === 0) {
+      await this.prisma.auction.update({
+        where: { auctionId },
+        data: { status: 'COMPLETED' },
+      });
+
+      return null;
+    }
+
+    let winnerBid = allBids[0];
+
+    for (let i = 1; i < allBids.length; i++) {
+      const b = allBids[i];
+      if (b.userId !== winnerBid.userId && b.bidAmount !== winnerBid.bidAmount)
+        break;
+      if (b.userId === winnerBid.userId) winnerBid = b;
+    }
+
+    await this.prisma.auction.update({
+      where: { auctionId },
+      data: {
+        status: 'COMPLETED',
+        winnerId: winnerBid.userId,
+      },
+    });
+
+    return {
+      auctionId,
+      bidId: winnerBid.bidId,
+      userId: winnerBid.userId,
+      username: winnerBid.user?.profile?.fullName || 'Unknown',
+      bidAmount: Number(winnerBid.bidAmount),
+      createdAt: winnerBid.createdAt,
+    };
+  }
 
   async createAuction(
     user: any,
@@ -329,7 +385,7 @@ export class AuctionService {
     });
   }
 
-  async cancelAuction(cancelAuctionDto: CancelAuctionDto): Promise<String> {
+  async cancelAuction(cancelAuctionDto: CancelAuctionDto): Promise<string> {
     const auction = await this.prisma.auction.findUnique({
       where: { auctionId: cancelAuctionDto.auctionId },
     });
@@ -338,9 +394,7 @@ export class AuctionService {
       throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
     }
 
-    if (
-      auction.status !== AuctionStatus.PENDING
-    ) {
+    if (auction.status !== AuctionStatus.PENDING) {
       throw new BadRequestException(ERROR_AUCTION_NOT_CANCELLABLE);
     }
 
@@ -483,7 +537,10 @@ export class AuctionService {
     });
   }
 
-  async addToWatchlist(currUser: any, addToWatchlistDto: AddToWatchlistDto): Promise<AddToWatchlistResponseDto> {
+  async addToWatchlist(
+    currUser: any,
+    addToWatchlistDto: AddToWatchlistDto,
+  ): Promise<AddToWatchlistResponseDto> {
     const auctionId = addToWatchlistDto.auctionId;
     const auction = await this.prisma.auction.findUnique({
       where: { auctionId },
@@ -492,7 +549,10 @@ export class AuctionService {
       throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
     }
 
-    if (auction.status !== AuctionStatus.OPEN && auction.status !== AuctionStatus.READY) {
+    if (
+      auction.status !== AuctionStatus.OPEN &&
+      auction.status !== AuctionStatus.READY
+    ) {
       throw new BadRequestException(ERROR_AUTION_CANT_BE_ADDED_TO_WATCHLIST);
     }
 
@@ -550,11 +610,14 @@ export class AuctionService {
       startingPrice: watchlistItem.auction.startingPrice,
       minimumBidIncrement: watchlistItem.auction.minimumBidIncrement,
       status: watchlistItem.auction.status,
-      products: watchlistItem.auction.auctionProducts.map(ap => ap.product),
+      products: watchlistItem.auction.auctionProducts.map((ap) => ap.product),
     };
   }
 
-  async removeFromWatchlist(currUser: any, removeFromWatchlistDto: RemoveFromWatchlistDto): Promise<RemoveFromWatchlistResponseDto> {
+  async removeFromWatchlist(
+    currUser: any,
+    removeFromWatchlistDto: RemoveFromWatchlistDto,
+  ): Promise<RemoveFromWatchlistResponseDto> {
     const auctionId = removeFromWatchlistDto.auctionId;
     const result = await this.prisma.watchlist.deleteMany({
       where: {
@@ -598,7 +661,7 @@ export class AuctionService {
         },
       },
     });
-    const data = watchlist.map(item => ({
+    const data = watchlist.map((item) => ({
       auctionId: item.auction.auctionId,
       title: item.auction.title,
       startTime: item.auction.startTime,
@@ -616,7 +679,9 @@ export class AuctionService {
     };
   }
 
-  async reopenAuction(reopenAuctionBodyDto: ReopenAuctionBodyDto): Promise<ReopenAuctionResponseDto> {
+  async reopenAuction(
+    reopenAuctionBodyDto: ReopenAuctionBodyDto,
+  ): Promise<ReopenAuctionResponseDto> {
     const { auctionId } = reopenAuctionBodyDto;
     const auction = await this.prisma.auction.findUnique({
       where: { auctionId },
@@ -640,7 +705,10 @@ export class AuctionService {
     };
   }
 
-  async editAuction(auctionId: string, editAuctionBodyDto: EditAuctionBodyDto): Promise<EditAuctionResponseDto> {
+  async editAuction(
+    auctionId: string,
+    editAuctionBodyDto: EditAuctionBodyDto,
+  ): Promise<EditAuctionResponseDto> {
     const auction = await this.prisma.auction.findUnique({
       where: { auctionId },
       include: {
@@ -656,18 +724,29 @@ export class AuctionService {
       throw new NotFoundException(ERROR_AUTION_NOT_FOUND);
     }
 
-    if ((auction.status !== AuctionStatus.CANCELED) && (auction.status !== AuctionStatus.PENDING)) {
+    if (
+      auction.status !== AuctionStatus.CANCELED &&
+      auction.status !== AuctionStatus.PENDING
+    ) {
       throw new BadRequestException(ERROR_AUTION_CANT_BE_EDITED);
     }
 
     const now = new Date();
-    if (editAuctionBodyDto.startTime && new Date(editAuctionBodyDto.startTime) < now) {
+    if (
+      editAuctionBodyDto.startTime &&
+      new Date(editAuctionBodyDto.startTime) < now
+    ) {
       const { statusCode, message, errorCode } =
         ERROR_AUCTION_START_TIME_IN_PAST(now);
       throw new BadRequestException({ statusCode, message, errorCode });
     }
 
-    if (editAuctionBodyDto.startTime && editAuctionBodyDto.endTime && new Date(editAuctionBodyDto.startTime) >= new Date(editAuctionBodyDto.endTime)) {
+    if (
+      editAuctionBodyDto.startTime &&
+      editAuctionBodyDto.endTime &&
+      new Date(editAuctionBodyDto.startTime) >=
+        new Date(editAuctionBodyDto.endTime)
+    ) {
       throw new BadRequestException(ERROR_INVALID_AUCTION_TIME);
     }
 
@@ -688,7 +767,10 @@ export class AuctionService {
       });
 
       // Xử lý products mới nếu có
-      if (editAuctionBodyDto.products && editAuctionBodyDto.products.length > 0) {
+      if (
+        editAuctionBodyDto.products &&
+        editAuctionBodyDto.products.length > 0
+      ) {
         const productIds = editAuctionBodyDto.products.map((p) => p.productId);
 
         const foundProducts = await tx.product.findMany({
@@ -744,14 +826,18 @@ export class AuctionService {
           ...(editAuctionBodyDto.title && { title: editAuctionBodyDto.title }),
           ...(editAuctionBodyDto.startTime && {
             startTime: new Date(editAuctionBodyDto.startTime),
-            lastBidTime: new Date(editAuctionBodyDto.startTime)
+            lastBidTime: new Date(editAuctionBodyDto.startTime),
           }),
-          ...(editAuctionBodyDto.endTime && { endTime: new Date(editAuctionBodyDto.endTime) }),
+          ...(editAuctionBodyDto.endTime && {
+            endTime: new Date(editAuctionBodyDto.endTime),
+          }),
           ...(editAuctionBodyDto.startingPrice && {
             startingPrice: editAuctionBodyDto.startingPrice,
-            currentPrice: editAuctionBodyDto.startingPrice
+            currentPrice: editAuctionBodyDto.startingPrice,
           }),
-          ...(editAuctionBodyDto.minimumBidIncrement && { minimumBidIncrement: editAuctionBodyDto.minimumBidIncrement }),
+          ...(editAuctionBodyDto.minimumBidIncrement && {
+            minimumBidIncrement: editAuctionBodyDto.minimumBidIncrement,
+          }),
           status: AuctionStatus.PENDING, // Đặt lại status về PENDING để admin approve lại
         },
       });
