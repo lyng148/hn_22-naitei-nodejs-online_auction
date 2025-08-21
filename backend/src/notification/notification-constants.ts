@@ -63,7 +63,15 @@ export const NotificationMessages = {
     `Phiên đấu giá "${title}" đã chính thức mở! Bạn đã theo dõi phiên đấu giá này. Hãy tham gia ngay nào!`,
 
   FOLLOW_CREATED: (user: string) =>
-    `Bạn đã theo dõi ${user}`,
+    `Bạn đã được ${user} theo dõi `,
+  WARNING_CREATED: (warningCount: number)=>
+    `Bạn đã bị cảnh cáo lần thứ ${warningCount}`,
+
+  BAND: (user:string) =>
+    `Bạn đã bị cấm sử dụng trang Web`,
+  UNBAND: (user:string) =>
+    `Bạn đã được sử dụng trang Web trở lại`,
+
 };
 
 export const DOMAIN_EVENTS = {
@@ -72,4 +80,7 @@ export const DOMAIN_EVENTS = {
   WATCHLIST_UPDATED: 'watchlist_updated',
   FOLLOW_CREATED: 'follow_created',
   AUCTION_STATUS_CHANGED: 'auction_status_changed',
+  WARNING_CREATED: 'warning_created',
+  BAND: 'band',
+  UNBAND: 'unband'
 };
