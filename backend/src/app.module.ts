@@ -18,10 +18,13 @@ import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EmailSchedulerModule } from './email-scheduler/email-scheduler.module';
 
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     MailerModule.forRoot({
       transport: {
@@ -38,7 +41,16 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       },
       template: {
         dir: join(process.cwd(), 'src', 'templates'),
-        adapter: new HandlebarsAdapter(),
+        adapter: new HandlebarsAdapter({
+          formatDate: (date: Date) => {
+            return date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            });
+          },
+          gt: (a: number, b: number) => a > b,
+        }),
         options: {
           strict: true,
         },
@@ -56,6 +68,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     NotificationModule,
     OrdersModule,
     StatisticsModule,
+    EmailSchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
