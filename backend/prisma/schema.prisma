@@ -447,6 +447,7 @@ model Notification {
   @@map("notifications")
 
 }
+
 model ProductComment {
   commentId String @id @default(uuid()) @map("comment_id") @db.Char(36)
 
