@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { IoSearchOutline } from "react-icons/io5";
 import { menulists } from "@/utils/data";
 import { useUser } from "@/contexts/UserContext.jsx";
-import {Container, CustomNavLink, CustomNavLinkList, UserAvatarDropdown, WalletButton} from "@/components/ui/index.js";
+import { Container, CustomNavLink, CustomNavLinkList, UserAvatarDropdown, WalletButton, NotificationBell } from "@/components/ui/index.js";
 
 export const Header = () => {
   const location = useLocation();
@@ -36,7 +36,12 @@ export const Header = () => {
               <div className="hidden lg:flex lg:items-center lg:gap-8">
                 <IoSearchOutline size={23} className={`${!isHomePage ? "text-black" : "text-white"}`} />
 
-                <WalletButton isHomePage={isHomePage} />
+                {user?.role && (
+                  <WalletButton isHomePage={isHomePage} />
+                )}
+                {user?.role && (
+                  <NotificationBell isHomePage={isHomePage} />
+                )}
 
                 {user?.role === "BIDDER" && (
                   <CustomNavLink href="/seller/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
@@ -52,7 +57,7 @@ export const Header = () => {
                       Join
                     </CustomNavLink>
                   </div>
-                 ) : (
+                ) : (
                   <UserAvatarDropdown isHomePage={isHomePage} />
                 )}
               </div>

@@ -20,6 +20,7 @@ export { default as ReopenAuctionModal } from "./ReopenAuctionModal";
 export { default as UserAvatarDropdown } from "./UserAvatarDropdown";
 export { default as Pagination } from "./Pagination";
 export { default as WalletButton } from '../../screens/wallet/WalletButton';
+export { default as NotificationBell } from "./NotificationBell";
 
 export const commonClassNameOfInput =
   "w-full p-4 text-sm text-gray-900 border border-gray-200 focus:ring-green focus:border-green outline-none";
