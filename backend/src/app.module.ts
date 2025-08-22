@@ -17,6 +17,8 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { CommentsModule } from './comments/comments.module';
+
 
 @Module({
   imports: [
@@ -54,6 +56,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     WalletModule,
     NotificationModule,
     OrdersModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

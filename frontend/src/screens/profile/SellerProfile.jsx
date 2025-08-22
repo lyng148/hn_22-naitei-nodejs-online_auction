@@ -294,8 +294,8 @@ const SellerProfile = () => {
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-500">Stock: {product.stockQuantity}</span>
                                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.status === 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-gray-100 text-gray-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {product.status}
                                             </span>
