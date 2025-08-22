@@ -58,4 +58,30 @@ export const ERROR_AUCTION_NOT_SELLER = {
   errorCode: 'AUCTION_NOT_SELLER',
 };
 
+export const ERROR_INVALID_WEBSOCKET_TOKEN = {
+  code: 'WS_INVALID_TOKEN',
+  message: 'Invalid websocket token',
+};
+
+export const ERROR_USER_NOT_FOUND = {
+  code: 'WS_USER_NOT_FOUND',
+  message: 'User not found',
+};
+
+// Tên các event websocket
+export const WS_EVENTS = {
+  CONNECTION_SUCCESS: 'connection_success',
+  ERROR: 'error',
+  JOIN_AUCTION: 'join_auction',
+  JOIN_AUCTION_SUCCESS: 'join_auction_success',
+  LEAVE_AUCTION: 'leave_auction',
+  LEAVE_AUCTION_SUCCESS: 'leave_auction_success',
+  USER_JOINED_AUCTION: 'user_joined_auction',
+  USER_LEFT_AUCTION: 'user_left_auction',
+  PLACE_BID: 'place_bid',
+  BID_ACCEPTED: 'bid_accepted',
+  BID_HISTORY: 'bid_history',
+  AUCTION_ENDED: 'auction_ended',
+};
+
 export const MAX_AUCTIONS_NUMBERS = Number.MAX_SAFE_INTEGER;
