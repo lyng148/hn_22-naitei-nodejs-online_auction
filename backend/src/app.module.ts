@@ -17,6 +17,7 @@ import { BidModule } from './bid/bid.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrdersModule } from './orders/orders.module';
+import { ShippingModule } from './shipping/shipping.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CommentsModule } from './comments/comments.module';
 
@@ -31,8 +32,8 @@ import { CommentsModule } from './comments/comments.module';
         port: 587,
         secure: false, // dùng TLS
         auth: {
-          user: process.env.GMAIL_USER,          // your@gmail.com
-          pass: process.env.GMAIL_APP_PASSWORD,  // 16‑ký tự có App Password
+          user: process.env.GMAIL_USER, // your@gmail.com
+          pass: process.env.GMAIL_APP_PASSWORD, // 16‑ký tự có App Password
         },
       },
       defaults: {
@@ -59,6 +60,7 @@ import { CommentsModule } from './comments/comments.module';
     NotificationModule,
     OrdersModule,
     CommentsModule,
+    ShippingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

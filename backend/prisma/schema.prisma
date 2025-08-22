@@ -60,6 +60,9 @@ model User {
   orders        Order[]        @relation("User_Has_Orders")
   productComments ProductComment[] @relation("User_Has_ProductComments")
 
+  sellerShippings Shipping[] @relation("Seller_Ships_Orders")
+  buyerShippings  Shipping[] @relation("Buyer_Receives_Shipments")
+
   @@map("users")
 }
 
@@ -304,6 +307,8 @@ model Auction {
 
   orders Order[] @relation("Auction_Has_Orders")
 
+  shippings Shipping[] @relation("Auction_Has_Shipping")
+
   @@map("auctions")
 }
 
@@ -337,6 +342,13 @@ enum OrderStatus {
   SHIPPING
   COMPLETED
   CANCELED
+}
+
+enum ShippingStatus {
+  PENDING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
 }
 
 model Bid {
@@ -481,4 +493,28 @@ model Order {
   updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("orders")
+}
+
+model Shipping {
+  id String @id @default(uuid()) @db.Char(36)
+
+  auctionId String  @map("auction_id") @db.Char(36)
+  auction   Auction @relation("Auction_Has_Shipping", fields: [auctionId], references: [auctionId], onDelete: Cascade)
+
+  sellerId String @map("seller_id") @db.Char(36)
+  seller   User   @relation("Seller_Ships_Orders", fields: [sellerId], references: [userId], onDelete: Cascade)
+
+  buyerId String @map("buyer_id") @db.Char(36)
+  buyer   User   @relation("Buyer_Receives_Shipments", fields: [buyerId], references: [userId], onDelete: Cascade)
+
+  shippingStatus    ShippingStatus @default(PENDING) @map("shipping_status")
+  price             Decimal?       @db.Decimal(19, 4)
+  trackingNumber    String?        @map("tracking_number") @db.VarChar(100)
+  shippedAt         DateTime?      @map("shipped_at") @db.Timestamp(0)
+  estimatedDelivery DateTime?      @map("estimated_delivery") @db.Timestamp(0)
+  actualDelivery    DateTime?      @map("actual_delivery") @db.Timestamp(0)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("shippings")
 }
