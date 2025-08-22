@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
@@ -22,6 +21,8 @@ import JwtAuthGuard from '@common/guards/jwt.guard';
 import { RoleGuard } from '@common/guards/role.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/enums/role.enum';
+import { CurrentUser } from '@common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('comments')
 export class CommentsController {
@@ -32,10 +33,10 @@ export class CommentsController {
   @Roles(Role.BIDDER, Role.SELLER)
   @HttpCode(HttpStatus.CREATED)
   async createComment(
-    @Request() req: any,
+    @CurrentUser() user: User,
     @Body() createCommentDto: CreateCommentDto,
   ): Promise<CommentResponseDto> {
-    return this.commentsService.createComment(req.user, createCommentDto);
+    return this.commentsService.createComment(user, createCommentDto);
   }
 
   @Get('product/:productId')
@@ -56,15 +57,11 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles(Role.BIDDER, Role.SELLER)
   async updateComment(
-    @Request() req: any,
+    @CurrentUser() user: User,
     @Param('commentId') commentId: string,
     @Body() updateCommentDto: UpdateCommentDto,
   ): Promise<CommentResponseDto> {
-    return this.commentsService.updateComment(
-      req.user,
-      commentId,
-      updateCommentDto,
-    );
+    return this.commentsService.updateComment(user, commentId, updateCommentDto);
   }
 
   @Delete(':commentId')
@@ -72,9 +69,9 @@ export class CommentsController {
   @Roles(Role.BIDDER, Role.SELLER, Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(
-    @Request() req: any,
+    @CurrentUser() user: User,
     @Param('commentId') commentId: string,
   ): Promise<{ message: string }> {
-    return this.commentsService.deleteComment(req.user, commentId);
+    return this.commentsService.deleteComment(user, commentId);
   }
 }

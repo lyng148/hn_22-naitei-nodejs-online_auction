@@ -21,7 +21,7 @@ const Dashboard = () => {
           <h2 className="text-xl font-semibold mb-4">Demo: Visit Seller Profiles</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link
-              to="/seller/123e4567-e89b-12d3-a456-426614174000"
+              to="/seller/7e538369-09a0-4b23-9e4f-ad148b346182"
               className="block p-4 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               <h3 className="font-medium text-blue-600">Sample Seller 1</h3>

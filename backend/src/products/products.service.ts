@@ -270,12 +270,26 @@ export class ProductsService {
         productCategories: {
           select: { category: { select: { categoryId: true, name: true } } },
         },
+        comments: {
+          select: {
+            rating: true,
+          },
+        },
       },
-    });
+    }) as any;
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    // Calculate average rating
+    const validRatings = product.comments
+      .filter((comment: any) => comment.rating !== null && comment.rating !== undefined)
+      .map((comment: any) => comment.rating as number);
+    const averageRating = validRatings.length > 0
+      ? validRatings.reduce((sum: number, rating: number) => sum + rating, 0) / validRatings.length
+      : 0;
+    const totalComments = product.comments.length;
 
     return {
       productId: product.productId,
@@ -284,7 +298,7 @@ export class ProductsService {
       status: product.status,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
-      images: product.images.map((image) => ({
+      images: product.images.map((image: any) => ({
         imageId: image.imageId,
         imageUrl: image.imageUrl,
         isPrimary: image.isPrimary,
@@ -294,10 +308,12 @@ export class ProductsService {
         userId: product.seller.userId,
         fullName: product.seller.profile?.fullName || undefined,
       },
-      categories: product.productCategories.map((pc) => ({
+      categories: product.productCategories.map((pc: any) => ({
         categoryId: pc.category.categoryId,
         name: pc.category.name,
       })),
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
+      totalComments,
     };
   }
 
