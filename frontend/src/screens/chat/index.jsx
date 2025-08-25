@@ -4,11 +4,9 @@ import { Layout } from '../../components/layout';
 
 const ChatPage = () => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Layout>
+    <Layout>
       <ChatWindow />
-      </Layout>
-    </div>
+    </Layout>
   );
 };
 

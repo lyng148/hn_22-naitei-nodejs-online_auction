@@ -33,7 +33,6 @@ export class UsersController {
 
   @Get()
   @Auth(AuthType.ACCESS_TOKEN)
-  @Roles(Role.ADMIN)
   @UseGuards(RoleGuard)
   async listUsers(
     @Query() query: ListUsersQueryDto,
