@@ -115,6 +115,7 @@ export class ProductsService {
 
   async createMultipleProducts(currUser: User, products: CreateProductDto[]): Promise<CreateMultipleProductsResponseDto> {
     const createdProducts: CreateProductResponseDto[] = [];
+
     for (const product of products) {
       const createdProd = await this.prisma.product.create({
         data: {
@@ -128,6 +129,7 @@ export class ProductsService {
         },
       });
 
+      // Tạo images nếu có
       if (product.imageUrls && product.imageUrls.length > 0) {
         const imageData = product.imageUrls.map((url, index) => ({
           productId: createdProd.productId,
@@ -138,30 +140,31 @@ export class ProductsService {
         await this.prisma.productImage.createMany({
           data: imageData,
         });
+      }
 
-        const createdProductWithImages = await this.prisma.product.findUnique({
-          where: { productId: createdProd.productId },
-          select: {
-            productId: true,
-            name: true,
-            description: true,
-            stockQuantity: true,
-            status: true,
-            images: {
-              select: {
-                imageUrl: true,
-                isPrimary: true,
-              },
+      // Lấy thông tin sản phẩm đã tạo cùng với images
+      const createdProductWithImages = await this.prisma.product.findUnique({
+        where: { productId: createdProd.productId },
+        select: {
+          productId: true,
+          name: true,
+          description: true,
+          stockQuantity: true,
+          status: true,
+          images: {
+            select: {
+              imageUrl: true,
+              isPrimary: true,
             },
-          }
-        });
-
-        if (createdProductWithImages) {
-          createdProducts.push({
-            ...createdProductWithImages,
-            description: createdProductWithImages.description ?? undefined,
-          });
+          },
         }
+      });
+
+      if (createdProductWithImages) {
+        createdProducts.push({
+          ...createdProductWithImages,
+          description: createdProductWithImages.description ?? undefined,
+        });
       }
     }
 

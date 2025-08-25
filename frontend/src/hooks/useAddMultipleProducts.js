@@ -152,10 +152,17 @@ export const useAddMultipleProducts = () => {
         imageUrls: product.uploadedImages,
       }));
 
+      console.log('Creating products:', productsData); // Debug log
+
       const response = await productService.createProducts(productsData);
 
-      if (response?.products && response.products.length > 0) {
-        showToastNotification(`${response.products.length} products created successfully!`, 'success');
+
+      // Kiểm tra response thành công
+      if (response) {
+        const productCount = response.products ? response.products.length : productsData.length;
+        const successMessage = response.message || `${productCount} products created successfully!`;
+
+        showToastNotification(successMessage, 'success');
 
         // Reset form
         setProducts([{
@@ -165,7 +172,17 @@ export const useAddMultipleProducts = () => {
           uploadedImages: [],
         }]);
 
-        navigate('/seller-hub/listings/product');
+        // Navigate về trang danh sách sản phẩm sau khi tạo thành công
+
+        setTimeout(() => {
+          navigate('/seller-hub/listings/product');
+        }, 0); // Delay 1.5 giây để user thấy notification
+      } else {
+        // Trường hợp response null/undefined - nhưng không throw error
+        showToastNotification('Products may have been created successfully', 'info');
+        setTimeout(() => {
+          navigate('/seller-hub/listings/product');
+        }, 0);
       }
     } catch (err) {
       console.error('Products creation error:', err);
