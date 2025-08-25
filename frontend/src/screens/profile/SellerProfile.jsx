@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { userService } from '@/services/user.service';
 import { productService } from '@/services/product.service';
 import { followService } from '@/services/follow.service';
+import { chatApiService } from '@/services/chat.service';
 import { useUser } from '@/contexts/UserContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Layout } from '@/components/layout/Layout';
@@ -12,13 +13,14 @@ const SellerProfile = () => {
     const { sellerId } = useParams();
     const navigate = useNavigate();
     const { user } = useUser();
-    const { showNotification } = useNotification();
+    const { showToastNotification } = useNotification();
 
     const [sellerInfo, setSellerInfo] = useState(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [productsLoading, setProductsLoading] = useState(true);
     const [followLoading, setFollowLoading] = useState(false);
+    const [chatLoading, setChatLoading] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followerCount, setFollowerCount] = useState(0);
 
@@ -54,7 +56,7 @@ const SellerProfile = () => {
             }
         } catch (error) {
             console.error('Error fetching seller data:', error);
-            showNotification('Failed to load seller profile', 'error');
+            showToastNotification('Failed to load seller profile', 'error');
         } finally {
             setLoading(false);
             setProductsLoading(false);
@@ -63,7 +65,7 @@ const SellerProfile = () => {
 
     const handleFollowToggle = async () => {
         if (!user || user.role !== 'BIDDER') {
-            showNotification('Only bidders can follow sellers', 'error');
+            showToastNotification('Only bidders can follow sellers', 'error');
             return;
         }
 
@@ -73,16 +75,16 @@ const SellerProfile = () => {
                 await followService.unfollowSeller(sellerId);
                 setIsFollowing(false);
                 setFollowerCount(prev => prev - 1);
-                showNotification('Successfully unfollowed seller', 'success');
+                showToastNotification('Successfully unfollowed seller', 'success');
             } else {
                 await followService.followSeller(sellerId);
                 setIsFollowing(true);
                 setFollowerCount(prev => prev + 1);
-                showNotification('Successfully followed seller', 'success');
+                showToastNotification('Successfully followed seller', 'success');
             }
         } catch (error) {
             console.error('Error toggling follow:', error);
-            showNotification(error.message || 'Failed to update follow status', 'error');
+            showToastNotification(error.message || 'Failed to update follow status', 'error');
         } finally {
             setFollowLoading(false);
         }
@@ -90,6 +92,36 @@ const SellerProfile = () => {
 
     const handleProductClick = (productId) => {
         navigate(`/products/${productId}`);
+    };
+
+    const handleChatWithSeller = async () => {
+        if (!user) {
+            showToastNotification('Please login to chat with seller', 'error');
+            return;
+        }
+
+        if (user.id === sellerId) {
+            showToastNotification('You cannot chat with yourself', 'error');
+            return;
+        }
+
+        setChatLoading(true);
+        try {
+            const response = await chatApiService.createOrGetChatRoom({ otherUserId: sellerId });
+
+            if (response.success) {
+                showToastNotification('Opening chat with seller...', 'success');
+                // Chuyển hướng đến trang chat với query parameter để tự động select room
+                navigate(`/chat?sellerId=${sellerId}`);
+            } else {
+                throw new Error(response.message || 'Failed to create chat room');
+            }
+        } catch (error) {
+            console.error('Error creating chat with seller:', error);
+            showToastNotification(error.message || 'Failed to start chat with seller', 'error');
+        } finally {
+            setChatLoading(false);
+        }
     };
 
     if (loading) {
@@ -192,9 +224,34 @@ const SellerProfile = () => {
                                 </div>
                             )}
 
+                            {/* Chat Button */}
+                            {user && user.id !== sellerId && (
+                                <div className="flex justify-center lg:justify-start mt-4">
+                                    <button
+                                        onClick={handleChatWithSeller}
+                                        disabled={chatLoading}
+                                        className="px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                    >
+                                        {chatLoading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                                                Opening Chat...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                                Chat với Seller
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Follow Button */}
                             {user && user.role === 'BIDDER' && user.id !== sellerId && (
-                                <div className="flex justify-center lg:justify-start">
+                                <div className="flex justify-center lg:justify-start mt-4">
                                     {isFollowing ? (
                                         <button
                                             onClick={handleFollowToggle}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useChat } from '@/hooks/useChat.js';
 import ChatRoomList from './chatRoomList.jsx';
 import Message from './message.jsx';
@@ -6,6 +7,7 @@ import Input from './input.jsx';
 import { Container } from '@/components/ui/Design.jsx';
 
 const ChatWindow = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     rooms,
     messages,
@@ -114,6 +116,30 @@ const ChatWindow = () => {
       }
     }
   }, [loading, currentRoom?.chatRoomId, isInitialLoad]);
+
+  // Handle seller ID from query params
+  useEffect(() => {
+    const sellerId = searchParams.get('sellerId');
+    if (sellerId && rooms.length > 0 && !currentRoom) {
+      // Tìm room với seller này
+      const existingRoom = rooms.find(room =>
+        room.otherUser && room.otherUser.id === sellerId
+      );
+
+      if (existingRoom) {
+        // Nếu đã có room, select room đó
+        selectRoom(existingRoom);
+        // Clear query param
+        setSearchParams({});
+      } else {
+        // Nếu chưa có room, tạo mới
+        createChatRoom(sellerId).then(() => {
+          // Clear query param sau khi tạo xong
+          setSearchParams({});
+        });
+      }
+    }
+  }, [searchParams, rooms, currentRoom, selectRoom, createChatRoom, setSearchParams]);
 
   const startChatwithOtherUser = async () => {
     const otherUserId = prompt('Enter other user ID to start chat:');
