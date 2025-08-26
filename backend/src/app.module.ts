@@ -23,6 +23,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CommentsModule } from './comments/comments.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EmailSchedulerModule } from './email-scheduler/email-scheduler.module';
+import { AuctionCommentsModule } from './comments-auction/auction-comments.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { EmailSchedulerModule } from './email-scheduler/email-scheduler.module';
     NotificationModule,
     OrdersModule,
     CommentsModule,
+    AuctionCommentsModule,
     ShippingModule,
     StatisticsModule,
     EmailSchedulerModule,
