@@ -38,6 +38,17 @@ function App() {
               <Route path="/wallet" element={<WalletDashboard />} />
               <Route path="/wallet/add-funds" element={<AddFunds />} />
             </Routes>
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'transparent',
+                  boxShadow: 'none',
+                  padding: 0,
+                },
+              }}
+            />
           </WalletProvider>
         </NotificationProvider>
       </UserProvider>

@@ -56,8 +56,13 @@ export const NotificationProvider = ({ children }) => {
 
   const showToastNotification = useCallback((message, type = "info") => {
     toast(<Toast message={message} type={type} />, {
-      duration: 3000,
-      position: "top-right",
+      duration: 4000,
+      position: "bottom-right",
+      style: {
+        background: 'transparent',
+        boxShadow: 'none',
+        padding: 0,
+      },
     });
   }, []);
 
@@ -242,6 +247,7 @@ export const NotificationProvider = ({ children }) => {
     reloadNotifications, // NEW
     markAsRead,
     markAllAsRead,
+    showNotification: showToastNotification,
     showToastNotification,
   }), [notifications, unreadCount, loading, connected, loadMore, reloadNotifications, markAsRead, markAllAsRead, showToastNotification]);
 
