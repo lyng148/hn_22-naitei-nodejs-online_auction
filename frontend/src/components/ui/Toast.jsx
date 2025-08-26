@@ -7,17 +7,17 @@ import {
 } from "react-icons/fa";
 
 const icons = {
-  success: <FaCheckCircle className="text-green-600" size={20} />,
-  error: <FaTimesCircle className="text-red-600" size={20} />,
-  warning: <FaExclamationTriangle className="text-yellow-600" size={20} />,
-  info: <FaInfoCircle className="text-blue-600" size={20} />,
+  success: <FaCheckCircle className="text-white" size={16} />,
+  error: <FaTimesCircle className="text-white" size={16} />,
+  warning: <FaExclamationTriangle className="text-white" size={16} />,
+  info: <FaInfoCircle className="text-white" size={16} />,
 };
 
 const bgColors = {
-  success: "bg-green-100 text-green-800 border-green-500",
-  error: "bg-red-100 text-red-800 border-red-500",
-  warning: "bg-yellow-100 text-yellow-800 border-yellow-500",
-  info: "bg-blue-100 text-blue-800 border-blue-500",
+  success: "bg-green-500",
+  error: "bg-red-500", 
+  warning: "bg-yellow-500",
+  info: "bg-blue-500",
 };
 
 const Toast = ({ message, type = "info" }) => {
@@ -26,10 +26,10 @@ const Toast = ({ message, type = "info" }) => {
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg shadow-md px-4 py-2 text-sm border-l-4 ${bgColor}`}
+      className={`flex items-center gap-3 rounded-lg shadow-lg px-4 py-3 text-sm text-white min-w-[280px] max-w-[400px] ${bgColor} backdrop-blur-sm`}
     >
       {icon}
-      <span>{message}</span>
+      <span className="font-medium">{message}</span>
     </div>
   );
 };
