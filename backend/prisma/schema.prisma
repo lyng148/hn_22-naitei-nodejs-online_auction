@@ -19,14 +19,16 @@ enum Role {
 }
 
 model User {
-  userId     String   @id @default(uuid()) @map("user_id") @db.Char(36)
-  email      String   @unique @db.VarChar(255)
-  password   String   @db.VarChar(255)
-  role       Role
-  isBanned   Boolean  @default(false) @map("is_banned")
-  isVerified Boolean  @default(false) @map("is_verified")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  userId            String   @id @default(uuid()) @map("user_id") @db.Char(36)
+  email             String   @unique @db.VarChar(255)
+  password          String   @db.VarChar(255)
+  role              Role
+  isBanned          Boolean  @default(false) @map("is_banned")
+  isVerified        Boolean  @default(false) @map("is_verified")
+  verificationToken String?  @map("verification_token") @db.VarChar(255)
+  verificationTokenExpiresAt DateTime? @map("verification_token_expires_at") @db.Timestamp(0)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
   warnings      Warning[] @relation("UserWarnings")
   adminWarnings Warning[] @relation("AdminWarnings")

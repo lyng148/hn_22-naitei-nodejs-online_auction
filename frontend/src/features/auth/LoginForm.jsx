@@ -57,7 +57,19 @@ export const LoginForm = () => {
 
             {error && (
               <div className="text-center">
-                <div className="text-red-500 mt-4">{error}</div>
+                <div className="text-red-500 mt-4 p-3 bg-red-50 rounded-md">
+                  {error}
+                </div>
+                {error.includes('verify your email') && (
+                  <div className="mt-3">
+                    <CustomNavLink 
+                      href="/auth/resend-verification"
+                      className="text-green font-medium hover:underline"
+                    >
+                      Resend Verification Email
+                    </CustomNavLink>
+                  </div>
+                )}
               </div>
             )}
 

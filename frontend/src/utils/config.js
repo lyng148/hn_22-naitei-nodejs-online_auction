@@ -6,6 +6,8 @@ export const API_CONFIG = {
       LOGIN: '/users/login',
       FORGOT_PASSWORD: '/users/forgot-password',
       RESET_PASSWORD: '/users/reset-password',
+      VERIFY_EMAIL: '/users/verify-email',
+      RESEND_VERIFICATION: '/users/resend-verification',
     },
     USER: {
       PROFILE: '/users/profile',

@@ -13,7 +13,7 @@ export const useRegister = () => {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { showToastNotification } = useNotification();
   const navigate = useNavigate();
   const { login } = useUser();
@@ -63,15 +63,18 @@ export const useRegister = () => {
       });
 
       if (response?.user) {
-        login({
-          id: response.user.id,
-          email: response.user.email,
-          role: response.user.role,
-          accessToken: response.user.accessToken,
-          refreshToken: response.user.refreshToken,
+        showToastNotification(
+          'Registration successful! Please check your email to verify your account.',
+          'success'
+        );
+
+        // Redirect to a page that shows verification message instead of login
+        navigate('/auth/verification-success', {
+          state: {
+            message: 'Please check your email for verification link',
+            email: email.trim()
+          }
         });
-        showToastNotification('Registration successful!', 'success');
-        navigate('/');
       }
     } catch (err) {
       console.error('Registration error:', err);

@@ -6,6 +6,8 @@ CREATE TABLE `users` (
     `role` ENUM('ADMIN', 'BIDDER', 'SELLER') NOT NULL,
     `is_banned` BOOLEAN NOT NULL DEFAULT false,
     `is_verified` BOOLEAN NOT NULL DEFAULT false,
+    `verification_token` VARCHAR(255) NULL,
+    `verification_token_expires_at` TIMESTAMP(0) NULL,
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
     `warningCount` INTEGER NOT NULL DEFAULT 0,
