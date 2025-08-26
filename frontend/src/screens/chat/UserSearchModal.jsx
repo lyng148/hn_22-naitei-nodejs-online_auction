@@ -118,8 +118,8 @@ const UserSearchModal = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
                     <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                            <IoPersonOutline className="text-blue-600" size={20} />
+                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
+                            <IoPersonOutline className="text-emerald-600" size={20} />
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">Start New Chat</h3>
                     </div>
@@ -143,7 +143,7 @@ const UserSearchModal = ({
                             <select
                                 value={searchBy}
                                 onChange={(e) => setSearchBy(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                             >
                                 {searchByOptions.map(option => (
                                     <option key={option.value} value={option.value}>
@@ -164,7 +164,7 @@ const UserSearchModal = ({
                                 placeholder={`Search by ${searchBy === "all" ? "any field" : searchByOptions.find(opt => opt.value === searchBy)?.label.toLowerCase()}...`}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
                                 autoFocus
                             />
                         </div>
@@ -176,7 +176,7 @@ const UserSearchModal = ({
                     <div className="h-full overflow-y-auto p-6">
                         {isSearching ? (
                             <div className="flex items-center justify-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                                 <span className="ml-2 text-gray-600">Searching...</span>
                             </div>
                         ) : hasSearched ? (
@@ -188,8 +188,8 @@ const UserSearchModal = ({
                                             key={user.userId}
                                             onClick={() => handleUserSelect(user)}
                                             className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedUser?.userId === user.userId
-                                                    ? 'border-blue-500 bg-blue-50'
-                                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                                ? 'border-emerald-500 bg-emerald-50'
+                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                 }`}
                                         >
                                             {/* Avatar */}
@@ -201,7 +201,7 @@ const UserSearchModal = ({
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-purple-500 flex items-center justify-center">
                                                         <span className="text-white font-medium text-lg">
                                                             {(user.profile?.fullName || user.email)?.charAt(0).toUpperCase()}
                                                         </span>
@@ -228,8 +228,8 @@ const UserSearchModal = ({
                                                                 <span>Phone: {user.profile.phoneNumber}</span>
                                                             )}
                                                             <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'SELLER' ? 'bg-purple-100 text-purple-800' :
-                                                                    user.role === 'BIDDER' ? 'bg-green-100 text-green-800' :
-                                                                        'bg-gray-100 text-gray-800'
+                                                                user.role === 'BIDDER' ? 'bg-green-100 text-green-800' :
+                                                                    'bg-gray-100 text-gray-800'
                                                                 }`}>
                                                                 {user.role}
                                                             </span>
@@ -243,10 +243,10 @@ const UserSearchModal = ({
                                                             setSelectedUser(user);
                                                             handleConfirm();
                                                         }}
-                                                        className="ml-3 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+                                                        className="ml-3 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex-shrink-0"
                                                         disabled={isLoading}
                                                     >
-                                                        <IoAmericanFootballOutline className="w-4 h-4 mr-1" />
+
                                                         Chat
                                                     </button>
                                                 </div>
@@ -254,7 +254,7 @@ const UserSearchModal = ({
 
                                             {/* Selection Indicator */}
                                             {selectedUser?.userId === user.userId && (
-                                                <IoCheckmarkCircleOutline className="text-blue-500 flex-shrink-0 ml-2" size={20} />
+                                                <IoCheckmarkCircleOutline className="text-emerald-500 flex-shrink-0 ml-2" size={20} />
                                             )}
                                         </div>
                                     ))}
@@ -285,7 +285,7 @@ const UserSearchModal = ({
                     {isSearching && (
                         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
                             <div className="flex items-center space-x-2">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
                                 <span className="text-gray-600 font-medium">Searching...</span>
                             </div>
                         </div>
@@ -304,7 +304,7 @@ const UserSearchModal = ({
                     <PrimaryButton
                         onClick={handleConfirm}
                         disabled={isLoading || !selectedUser}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg"
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg"
                     >
                         {isLoading ? (
                             <>

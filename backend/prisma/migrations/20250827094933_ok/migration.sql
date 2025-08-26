@@ -6,6 +6,8 @@ CREATE TABLE `users` (
     `role` ENUM('ADMIN', 'BIDDER', 'SELLER') NOT NULL,
     `is_banned` BOOLEAN NOT NULL DEFAULT false,
     `is_verified` BOOLEAN NOT NULL DEFAULT false,
+    `verification_token` VARCHAR(255) NULL,
+    `verification_token_expires_at` TIMESTAMP(0) NULL,
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
     `warningCount` INTEGER NOT NULL DEFAULT 0,
@@ -131,6 +133,7 @@ CREATE TABLE `product_images` (
 CREATE TABLE `auctions` (
     `auction_id` CHAR(36) NOT NULL,
     `title` VARCHAR(255) NOT NULL,
+    `image_url` VARCHAR(255) NOT NULL,
     `seller_id` CHAR(36) NOT NULL,
     `start_time` TIMESTAMP(0) NOT NULL,
     `end_time` TIMESTAMP(0) NOT NULL,
@@ -291,6 +294,7 @@ CREATE TABLE `orders` (
 -- CreateTable
 CREATE TABLE `shippings` (
     `id` CHAR(36) NOT NULL,
+    `order_id` CHAR(36) NULL,
     `auction_id` CHAR(36) NOT NULL,
     `seller_id` CHAR(36) NOT NULL,
     `buyer_id` CHAR(36) NOT NULL,
@@ -303,6 +307,7 @@ CREATE TABLE `shippings` (
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
 
+    UNIQUE INDEX `shippings_order_id_key`(`order_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -410,6 +415,9 @@ ALTER TABLE `orders` ADD CONSTRAINT `orders_user_id_fkey` FOREIGN KEY (`user_id`
 
 -- AddForeignKey
 ALTER TABLE `orders` ADD CONSTRAINT `orders_auction_id_fkey` FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`auction_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `shippings` ADD CONSTRAINT `shippings_order_id_fkey` FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `shippings` ADD CONSTRAINT `shippings_auction_id_fkey` FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`auction_id`) ON DELETE CASCADE ON UPDATE CASCADE;

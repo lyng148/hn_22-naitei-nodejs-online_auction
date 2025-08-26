@@ -5,6 +5,7 @@ import {
     Caption,
     CustomNavLink
 } from '@/components/ui/index.js';
+import { IoMailOpenOutline } from 'react-icons/io5';
 
 const VerificationSuccessPage = () => {
     const location = useLocation();
@@ -32,7 +33,7 @@ const VerificationSuccessPage = () => {
             <div className="transition-all duration-500 ease-in-out transform translate-x-0">
                 <div className="bg-white shadow-s3 w-1/2 m-auto my-16 p-8 rounded-xl">
                     <div className="text-center">
-                        <div className="text-green text-6xl mb-6">📧</div>
+                        <div className="text-green text-6xl mb-6 justify-center flex"><IoMailOpenOutline /></div>
                         <Title level={4} className="text-green-600 mb-4">
                             Check Your Email!
                         </Title>

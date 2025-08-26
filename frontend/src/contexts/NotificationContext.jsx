@@ -1,4 +1,3 @@
-import { Toast } from '@/components/ui/index.js';
 import notificationWS from '@/services/notification-websocket.service.js';
 import notificationService from '@/services/notification.service.js';
 import { clearTokens, clearUser, getAccessToken } from '@/utils/token-storage.js';
@@ -55,15 +54,22 @@ export const NotificationProvider = ({ children }) => {
   const limitRef = useRef(10);
 
   const showToastNotification = useCallback((message, type = "info") => {
-    toast(<Toast message={message} type={type} />, {
-      duration: 4000,
-      position: "bottom-right",
-      style: {
-        background: 'transparent',
-        boxShadow: 'none',
-        padding: 0,
-      },
-    });
+    // Use react-hot-toast directly without custom wrapper
+    switch (type) {
+      case 'success':
+        toast.success(message);
+        break;
+      case 'error':
+        toast.error(message);
+        break;
+      case 'warning':
+        toast(message, { icon: '⚠️' });
+        break;
+      case 'info':
+      default:
+        toast(message);
+        break;
+    }
   }, []);
 
   const loadInitial = useCallback(async () => {

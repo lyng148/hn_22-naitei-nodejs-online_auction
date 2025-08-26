@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Caption,
     Container,
@@ -10,17 +10,20 @@ import { useNavigate } from "react-router-dom";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useCreateAuction } from "@/hooks/useCreateAuction.js";
-import { IoImageOutline, IoCloudUploadOutline, IoCloseOutline, IoCheckmarkOutline } from "react-icons/io5";
+import { IoImageOutline, IoCloudUploadOutline, IoCloseOutline, IoCheckmarkOutline, IoTrashOutline } from "react-icons/io5";
 
 export const CreateAuctionForm = () => {
     const { user, loading } = useUser();
     const { showToastNotification } = useNotification();
     const navigate = useNavigate();
     const [showProductSelector, setShowProductSelector] = useState(false);
+    const fileInputRef = useRef(null);
 
     const {
         title,
         setTitle,
+        imageUrl,
+        setImageUrl,
         startTime,
         setStartTime,
         endTime,
@@ -34,10 +37,13 @@ export const CreateAuctionForm = () => {
         loadingProducts,
         error,
         submitting,
+        uploading,
         loadAvailableProducts,
         addProduct,
         removeProduct,
         updateProductQuantity,
+        handleImageUpload,
+        removeImage,
         handleSubmit,
     } = useCreateAuction();
 
@@ -58,7 +64,18 @@ export const CreateAuctionForm = () => {
     useEffect(() => {
         console.log('Available products:', availableProducts);
         console.log('Loading products:', loadingProducts);
-    }, [availableProducts, loadingProducts]); const formatDateTime = (dateTimeString) => {
+    }, [availableProducts, loadingProducts]);
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleImageUpload(file);
+        }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    }; const formatDateTime = (dateTimeString) => {
         if (!dateTimeString) return '';
         const date = new Date(dateTimeString);
         return date.toLocaleString('en-US', {
@@ -121,7 +138,7 @@ export const CreateAuctionForm = () => {
                                 <div>
                                     <Title level={5} className="text-gray-800 font-semibold">Product Setting</Title>
                                     <Caption className="text-gray-500">PHOTO & VIDEO</Caption>
-                                    <Caption className="text-gray-500">0 of 24 photos</Caption>
+                                    <Caption className="text-gray-500">{imageUrl ? '1' : '0'} of 1 photo</Caption>
                                 </div>
                                 <button
                                     type="button"
@@ -133,11 +150,19 @@ export const CreateAuctionForm = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mb-6">
-                                {/* Add Photos Section - Placeholder */}
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-not-allowed opacity-50">
+                                {/* Add Photos Section */}
+                                <div
+                                    onClick={triggerFileInput}
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green hover:bg-green-50 transition-colors"
+                                >
                                     <IoImageOutline size={48} className="mx-auto mb-4 text-gray-400" />
                                     <p className="text-gray-600 font-medium">Add photos</p>
                                     <Caption className="text-gray-500">or drag and drop</Caption>
+                                    {uploading && (
+                                        <div className="mt-2">
+                                            <Caption className="text-blue-500">Uploading...</Caption>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Add Video Section - Placeholder */}
@@ -147,6 +172,35 @@ export const CreateAuctionForm = () => {
                                     <Caption className="text-gray-500">or drag and drop</Caption>
                                 </div>
                             </div>
+
+                            {/* Uploaded Image Display */}
+                            {imageUrl && (
+                                <div className="mb-6">
+                                    <Caption className="mb-3 text-gray-700">Uploaded Photo</Caption>
+                                    <div className="relative inline-block">
+                                        <img
+                                            src={imageUrl}
+                                            alt="Auction"
+                                            className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                                        >
+                                            <IoTrashOutline size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                            />
                         </div>
 
                         {/* Product Selector Modal */}

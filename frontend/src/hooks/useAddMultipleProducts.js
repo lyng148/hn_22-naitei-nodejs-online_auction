@@ -47,7 +47,7 @@ export const useAddMultipleProducts = () => {
 
     setProducts(newProducts);
     setError("");
-    showToastNotification(`Đã import ${importedProducts.length} sản phẩm từ Excel`, 'success');
+    showToastNotification(`Đã import ${importedProducts.length} sản phẩm từ Excel`, 'info');
   };
 
   const clearAllProducts = () => {

@@ -269,8 +269,8 @@ const ChatWindow = () => {
 
             {/* Upload status */}
             {uploading && (
-              <div className="px-4 py-2 border-t border-gray-200 bg-blue-50">
-                <div className="flex items-center space-x-2 text-sm text-blue-600">
+              <div className="px-4 py-2 border-t border-gray-200 bg-emerald-50">
+                <div className="flex items-center space-x-2 text-sm text-emerald-600">
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -298,7 +298,7 @@ const ChatWindow = () => {
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center">
                             <span className="text-white font-medium text-sm">
                               {currentRoom.otherUser?.profile?.fullName?.charAt(0) ||
                                 currentRoom.otherUser?.email?.charAt(0) || '?'}
@@ -321,14 +321,14 @@ const ChatWindow = () => {
 
                     <div className="flex items-center space-x-3">
                       {/* Phone icon */}
-                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                      <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-full transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                       </button>
 
                       {/* Video icon */}
-                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                      <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-full transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
@@ -366,13 +366,13 @@ const ChatWindow = () => {
                   {loading && (isInitialLoad || messages.length === 0) ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-2"></div>
                         <p className="text-gray-500">Loading messages...</p>
                       </div>
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-gray-500 mt-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span className="text-white font-medium text-2xl">
                           {currentRoom.otherUser?.profile?.fullName?.charAt(0) ||
                             currentRoom.otherUser?.email?.charAt(0) || '?'}
@@ -399,7 +399,7 @@ const ChatWindow = () => {
                       {/* Subtle loading indicator for background loading */}
                       {loading && !isInitialLoad && messages.length > 0 && (
                         <div className="flex justify-center py-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 opacity-50"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500 opacity-50"></div>
                         </div>
                       )}
 
@@ -427,7 +427,7 @@ const ChatWindow = () => {
               /* No room selected state */
               <div className="flex-1 flex items-center justify-center bg-white">
                 <div className="text-center max-w-md">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                     </svg>
@@ -436,15 +436,10 @@ const ChatWindow = () => {
                   <p className="text-gray-500 mb-4">Send private photos and messages to a friend or group.</p>
                   <button
                     onClick={startChatwithOtherUser}
-                    className="px-6 py-3 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-600 transition-colors"
+                    className="px-6 py-3 bg-emerald-500 text-white font-medium rounded-full hover:bg-emerald-600 transition-colors"
                   >
                     Send Message
                   </button>
-                  {rooms.length > 0 && (
-                    <p className="text-xs text-gray-400 mt-4">
-                      {rooms.length} conversation(s) available
-                    </p>
-                  )}
                 </div>
               </div>
             )}

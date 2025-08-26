@@ -7,6 +7,8 @@ import {
   IsUUID,
   IsInt,
   Min,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -22,6 +24,10 @@ class AuctionProductItemDto {
 export class CreateAuctionDto {
   @IsNotEmpty()
   title!: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
   @IsDateString()
   startTime!: string;

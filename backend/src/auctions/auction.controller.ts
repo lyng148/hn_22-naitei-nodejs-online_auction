@@ -10,7 +10,10 @@ import {
   Query,
   Put,
   Patch,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuctionService } from './auction.service';
 import { CreateAuctionDto } from './dtos/create-auction.body.dto';
 import { CreateAuctionResponseDto } from './dtos/create-auction.response.dto';
@@ -45,7 +48,7 @@ import { EditAuctionBodyDto } from './dtos/edit-auction.body.dto';
 
 @Controller('auctions')
 export class AuctionController {
-  constructor(private readonly auctionService: AuctionService) {}
+  constructor(private readonly auctionService: AuctionService) { }
 
   @Post()
   @Roles(Role.SELLER)
@@ -55,6 +58,16 @@ export class AuctionController {
     @CurrentUser() user: any,
   ): Promise<CreateAuctionResponseDto> {
     return this.auctionService.createAuction(user, createAuctionDto);
+  }
+
+  @Post('upload')
+  @Roles(Role.SELLER)
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.OK)
+  async uploadAuctionImage(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.auctionService.uploadAuctionImage(file);
   }
 
   @Get()

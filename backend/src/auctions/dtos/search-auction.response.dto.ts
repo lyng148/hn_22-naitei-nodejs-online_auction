@@ -3,6 +3,7 @@ import { AuctionStatus } from '@prisma/client';
 export class AuctionItemDto {
   auctionId!: string;
   title!: string;
+  imageUrl!: string;
   startTime!: Date;
   endTime!: Date;
   startingPrice!: string;
@@ -11,6 +12,7 @@ export class AuctionItemDto {
   status!: AuctionStatus;
   sellerName!: string;
   sellerEmail!: string;
+  profileImageUrl!: string;
 }
 
 export class SearchAuctionResponseDto {

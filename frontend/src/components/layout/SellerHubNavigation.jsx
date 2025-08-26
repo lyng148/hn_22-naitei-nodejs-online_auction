@@ -7,12 +7,6 @@ export const SellerHubNavigation = () => {
     { id: 1, path: "/seller-hub/overview", label: "Overview" },
     { id: 2, path: "/seller-hub/orders", label: "Orders" },
     { id: 3, path: "/seller-hub/listings", label: "Listings" },
-    { id: 4, path: "/seller-hub/marketing", label: "Marketing" },
-    { id: 5, path: "/seller-hub/store", label: "Store" },
-    { id: 6, path: "/seller-hub/performance", label: "Performance" },
-    { id: 7, path: "/seller-hub/payments", label: "Payments" },
-    { id: 8, path: "/seller-hub/research", label: "Research" },
-    { id: 9, path: "/seller-hub/reports", label: "Reports" },
     { id: 10, path: "/seller-hub/statistics", label: "Statistics" },
   ];
 
