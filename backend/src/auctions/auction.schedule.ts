@@ -4,6 +4,7 @@ import PrismaService from '@common/services/prisma.service';
 import { AuctionStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DOMAIN_EVENTS } from '../notification/notification-constants';
+import { AuctionService } from './auction.service';
 
 @Injectable()
 export class AuctionScheduler {
@@ -12,7 +13,8 @@ export class AuctionScheduler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+    private readonly auctionService: AuctionService,
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async updateReadyAuctionsToOpen(): Promise<void> {
@@ -76,6 +78,37 @@ export class AuctionScheduler {
       this.logger.log(
         `Closed ${pendingAuctions.length} auctions that passed end time`,
       );
+    }
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleExpiredOpenAuctions(): Promise<void> {
+    const now = new Date();
+
+    const expiredAuctions = await this.prisma.auction.findMany({
+      where: {
+        status: {
+          in: [AuctionStatus.OPEN, AuctionStatus.EXTENDED],
+        },
+        endTime: { lte: now },
+      },
+    });
+
+    if (expiredAuctions.length > 0) {
+      await Promise.all(
+        expiredAuctions.map(async (auction) => {
+          try {
+            await this.auctionService.endAuction(auction.auctionId);
+            this.logger.log(`Ended auction ${auction.auctionId}`);
+          } catch (error) {
+            this.logger.error(
+              `Failed to end auction ${auction.auctionId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
+          }
+        }),
+      );
+
+      this.logger.log(`Processed ${expiredAuctions.length} expired auctions`);
     }
   }
 

@@ -31,6 +31,94 @@ import { ConfirmShippedResponseDto } from '../shipping/dtos/confirm-shipped-resp
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async createOrderFromAuction(
+    auctionId: string,
+    winnerId: string,
+    finalPrice: number,
+  ): Promise<{ orderId: string }> {
+    try {
+      // Get auction details to validate
+      const auction = await this.prisma.auction.findUnique({
+        where: { auctionId },
+        include: {
+          auctionProducts: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      if (!auction) {
+        throw new NotFoundException('Auction not found');
+      }
+
+      if (auction.status !== AuctionStatus.COMPLETED) {
+        throw new BadRequestException('Auction must be completed to create order');
+      }
+
+      if (auction.winnerId !== winnerId) {
+        throw new BadRequestException('Only the auction winner can have an order created');
+      }
+
+      // Check if order already exists
+      const existingOrder = await this.prisma.order.findFirst({
+        where: {
+          auctionId,
+          userId: winnerId,
+        },
+      });
+
+      if (existingOrder) {
+        return { orderId: existingOrder.orderId };
+      }
+
+      // Calculate payment due date (7 days from now)
+      const paymentDueDate = new Date();
+      paymentDueDate.setDate(paymentDueDate.getDate() + 7);
+
+      // Create order and shipping in a transaction
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Create the order
+        const order = await tx.order.create({
+          data: {
+            userId: winnerId,
+            auctionId,
+            totalAmount: finalPrice,
+            status: OrderStatus.PAID,
+            paymentDueDate,
+          },
+        });
+
+        // Create shipping record
+        await tx.shipping.create({
+          data: {
+            orderId: order.orderId,
+            auctionId,
+            sellerId: auction.sellerId,
+            buyerId: winnerId,
+            shippingStatus: ShippingStatus.PENDING,
+          },
+        });
+
+        return order;
+      });
+
+      return { orderId: result.orderId };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        `Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
   async getOrders(
     userId: string,
     userRole: Role,
