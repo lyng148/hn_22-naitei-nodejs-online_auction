@@ -27,7 +27,7 @@ export class NotificationService {
     if (!dto.userId) {
       throw new Error(ERROR_USER_NOT_FOUND.message);
     }
-    
+
     const notification = await this.prisma.notification.create({
       data: {
         message: dto.message,
@@ -90,9 +90,6 @@ export class NotificationService {
     });
     if (!notification) {
       throw new Error(ERROR_NOT_FOUND_NOTIFICATION);
-    }
-    if (notification.isRead) {
-      throw new Error(ERROR_ALREADY_MARKED_AS_READ);
     }
 
     const updatedNotification = await this.prisma.notification.update({

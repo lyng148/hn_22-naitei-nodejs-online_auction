@@ -110,6 +110,16 @@ export class NotificationAuctionsListener {
         metadata: JSON.stringify({ type: 'AUCTION_ENDED', role: 'FOLLOWER', auctionId: auction.auctionId, finalPrice }),
       })
     ));
+
+    await this.notificationService.createNotification({
+      userId: auction.sellerId,
+      message: NotificationMessages.AUCTION_PENDING_SELLER(auction.title),
+      metadata: JSON.stringify({
+        type: 'AUCTION_ENDED',
+        role: 'SELLER',
+        auctionId: auction.auctionId,
+      }),
+    });
   }
 
   @OnEvent(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED)
