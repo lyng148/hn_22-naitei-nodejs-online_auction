@@ -9,7 +9,15 @@ const formatTime = (d) => {
 
 const getTargetPath = (notification) => {
   let meta = {};
-  try { meta = notification?.metadata ? JSON.parse(notification.metadata) : {}; } catch { meta = {}; }
+  try { 
+    meta = notification?.metadata ? JSON.parse(notification.metadata) : {}; 
+  } catch (e) { 
+    console.error('Failed to parse notification metadata:', e, notification.metadata);
+    meta = {}; 
+  }
+  
+  console.log('Notification metadata:', meta, 'notification:', notification);
+  
   switch (meta.type) {
     case "OUTBID":
     case "AUCTION_ENDED":
@@ -19,6 +27,18 @@ const getTargetPath = (notification) => {
     case "AUCTION_READY":
     case "AUCTION_OPEN":
       return meta.role === "SELLER" ? "/seller-hub/listings/auction" : "/dashboard";
+    case "COMMENT_REPORT":
+      console.log('Comment report navigation:', {
+        auctionId: meta.auctionId,
+        commentId: meta.commentId,
+        willNavigateTo: meta.auctionId && meta.commentId 
+          ? `/auctions/${meta.auctionId}?highlightComment=${meta.commentId}`
+          : "/admin-hub/reports"
+      });
+      if (meta.auctionId && meta.commentId) {
+        return `/auctions/${meta.auctionId}?highlightComment=${meta.commentId}`;
+      }
+      return "/admin-hub/reports";
     case "FOLLOW_CREATED":
     case "WARNING_CREATED":
     case "BAND":
@@ -41,7 +61,11 @@ const NotificationBell = ({ isHomePage = false }) => {
   const handleClickNotification = async (n) => {
     const path = getTargetPath(n);
     if (!n.read) {
-      try { await markAsRead(n.id); } catch {}
+      try { 
+        await markAsRead(n.id); 
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
     }
     setOpen(false);
     navigate(path);

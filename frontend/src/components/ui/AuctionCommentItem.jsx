@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 import { useUser } from '@/contexts/UserContext.jsx';
-import { IoTrashOutline, IoCreateOutline, IoSaveOutline, IoCloseOutline } from 'react-icons/io5';
+import { IoTrashOutline, IoCreateOutline, IoSaveOutline, IoCloseOutline, IoWarningOutline, IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
 
-export const AuctionCommentItem = ({ comment, onDelete, onEdit }) => {
+export const AuctionCommentItem = ({ comment, onDelete, onEdit, onReport, onHide, onUnhide, highlightCommentId }) => {
     const { user } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(comment.content);
 
     const canModifyComment = user && (user.userId === comment.user?.userId || user.role === 'ADMIN');
+    const canReportComment = user && user.userId !== comment.user?.userId;
+    const isHighlighted = highlightCommentId === comment.commentId;
+
+    // Debug log
+    console.log('AuctionCommentItem Debug:', {
+        user: user ? { userId: user.userId, role: user.role } : null,
+        commentUserId: comment.user?.userId,
+        canReportComment,
+        canModifyComment,
+        isEditing
+    });
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -38,6 +49,24 @@ export const AuctionCommentItem = ({ comment, onDelete, onEdit }) => {
         setIsEditing(false);
     };
 
+    const handleReport = () => {
+        if (onReport) {
+            onReport(comment);
+        }
+    };
+
+    const handleHideComment = () => {
+        if (onHide) {
+            onHide(comment.commentId);
+        }
+    };
+
+    const handleUnhideComment = () => {
+        if (onUnhide) {
+            onUnhide(comment.commentId);
+        }
+    };
+
     const getUserDisplayName = () => {
         if (comment.user?.profile?.firstName || comment.user?.profile?.lastName) {
             return `${comment.user.profile.firstName || ''} ${comment.user.profile.lastName || ''}`.trim();
@@ -51,8 +80,28 @@ export const AuctionCommentItem = ({ comment, onDelete, onEdit }) => {
     };
 
     return (
-        <div className="comment-item border-b border-gray-200 pb-4 last:border-b-0">
-            <div className="flex items-start space-x-3">
+        <div 
+            className={`comment-item border-b border-gray-200 pb-4 last:border-b-0 ${isHighlighted ? 'highlighted' : ''}`}
+            data-comment-id={comment.commentId}
+        >
+            {/* Hidden Comment Placeholder */}
+            {comment.isHidden && user?.role !== 'ADMIN' ? (
+                <div className="flex items-center space-x-3 py-4">
+                    <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <IoWarningOutline className="text-gray-500" size={16} />
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-sm text-gray-600 italic">
+                                This comment has been hidden due to multiple reports.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-start space-x-3">
                 {/* User Avatar */}
                 <div className="flex-shrink-0">
                     {getUserAvatar() ? (
@@ -80,45 +129,93 @@ export const AuctionCommentItem = ({ comment, onDelete, onEdit }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        {canModifyComment && !isEditing && (
-                            <div className="comment-actions flex items-center space-x-1">
+                        <div className="comment-actions flex items-center space-x-1">
+                            {/* Report Button - Show for logged in users on others' comments */}
+                            {canReportComment && !isEditing && (
                                 <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                                    title="Edit comment"
-                                >
-                                    <IoCreateOutline size={16} />
-                                </button>
-                                <button
-                                    onClick={handleDelete}
+                                    onClick={handleReport}
                                     className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                    title="Delete comment"
+                                    title="Report comment"
                                 >
-                                    <IoTrashOutline size={16} />
+                                    <IoWarningOutline size={16} />
                                 </button>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Edit Actions */}
-                        {isEditing && (
-                            <div className="flex items-center space-x-1">
+                            {/* Debug Report Button - Always show for testing */}
+                            {!isEditing && (
                                 <button
-                                    onClick={handleSaveEdit}
-                                    className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                                    title="Save changes"
-                                    disabled={!editContent.trim()}
+                                    onClick={handleReport}
+                                    className="p-1 text-orange-400 hover:text-orange-600 transition-colors"
+                                    title="Report comment (Debug)"
                                 >
-                                    <IoSaveOutline size={16} />
+                                    <IoWarningOutline size={16} />
                                 </button>
-                                <button
-                                    onClick={handleCancelEdit}
-                                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                    title="Cancel editing"
-                                >
-                                    <IoCloseOutline size={16} />
-                                </button>
-                            </div>
-                        )}
+                            )}
+
+                            {/* Edit/Delete buttons for own comments and admin */}
+                            {canModifyComment && !isEditing && (
+                                <>
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                        title="Edit comment"
+                                    >
+                                        <IoCreateOutline size={16} />
+                                    </button>
+                                    <button
+                                        onClick={handleDelete}
+                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        title="Delete comment"
+                                    >
+                                        <IoTrashOutline size={16} />
+                                    </button>
+                                </>
+                            )}
+
+                            {/* Admin Hide/Unhide buttons */}
+                            {user?.role === 'ADMIN' && !isEditing && (
+                                <>
+                                    {comment.isHidden ? (
+                                        <button
+                                            onClick={handleUnhideComment}
+                                            className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                                            title="Unhide comment"
+                                        >
+                                            <IoEyeOutline size={16} />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleHideComment}
+                                            className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                            title="Hide comment"
+                                        >
+                                            <IoEyeOffOutline size={16} />
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Edit Actions */}
+                            {isEditing && (
+                                <>
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                                        title="Save changes"
+                                        disabled={!editContent.trim()}
+                                    >
+                                        <IoSaveOutline size={16} />
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        title="Cancel editing"
+                                    >
+                                        <IoCloseOutline size={16} />
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     {/* Comment Content */}
@@ -156,6 +253,7 @@ export const AuctionCommentItem = ({ comment, onDelete, onEdit }) => {
                     </div>
                 </div>
             </div>
+            )}
         </div>
     );
 };

@@ -6,6 +6,8 @@ const COMMENT_API = {
     UPDATE_COMMENT: (commentId) => `/api/comments/${commentId}`,
     DELETE_COMMENT: (commentId) => `/api/comments/${commentId}`,
     GET_COMMENT: (commentId) => `/api/comments/${commentId}`,
+    HIDE_COMMENT: (commentId) => `/api/comments/${commentId}/hide`,
+    UNHIDE_COMMENT: (commentId) => `/api/comments/${commentId}/unhide`,
 };
 
 export const commentService = {
@@ -84,6 +86,38 @@ export const commentService = {
             return Promise.reject({
                 statusCode: statusCode || 500,
                 message: message || 'Failed to fetch comment',
+                errorCode: code || 'INTERNAL_SERVER_ERROR',
+            });
+        }
+    },
+
+    // Hide comment (admin only) - independent of reports
+    hideComment: async (commentId) => {
+        try {
+            const response = await axiosClient.patch(COMMENT_API.HIDE_COMMENT(commentId));
+            return response.data;
+        } catch (err) {
+            const statusCode = err?.response?.status || err?.status;
+            const { message, code } = err?.response?.data || {};
+            return Promise.reject({
+                statusCode: statusCode || 500,
+                message: message || 'Failed to hide comment',
+                errorCode: code || 'INTERNAL_SERVER_ERROR',
+            });
+        }
+    },
+
+    // Unhide comment (admin only) - independent of reports  
+    unhideComment: async (commentId) => {
+        try {
+            const response = await axiosClient.patch(COMMENT_API.UNHIDE_COMMENT(commentId));
+            return response.data;
+        } catch (err) {
+            const statusCode = err?.response?.status || err?.status;
+            const { message, code } = err?.response?.data || {};
+            return Promise.reject({
+                statusCode: statusCode || 500,
+                message: message || 'Failed to unhide comment',
                 errorCode: code || 'INTERNAL_SERVER_ERROR',
             });
         }

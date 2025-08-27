@@ -3,7 +3,7 @@ import { Container, Title, Caption, PrimaryButton, LoadingSpinner, AuctionCommen
 import { auctionService } from "@/services/auction.service.js";
 import { bidService } from "@/services/bid.service.js";
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {io} from "socket.io-client";
 import {getAccessToken} from "@/utils/token-storage.js";
 import { useUser } from "@/contexts/UserContext.jsx";
@@ -42,6 +42,8 @@ const useCountdown = (end) => {
 
 const AuctionDetail = () => {
   const { auctionId } = useParams();
+  const [searchParams] = useSearchParams();
+  const highlightCommentId = searchParams.get('highlightComment');
   const { user } = useUser();
   const { showToastNotification } = useNotification();
   const [winner, setWinner] = useState(null);
@@ -235,6 +237,16 @@ const AuctionDetail = () => {
     console.log(timeLeftMs);
     if (timeLeftMs <= 0 && socketRef.current) {
       socketRef.current.emit("auction_ended", { auctionId });
+      const refreshAuction = async () => {
+        try {
+          const data = await auctionService.getAuctionById(auctionId);
+          setAuction(data);
+        } catch (error) {
+          // keep old state on refresh error
+          console.error('Failed to refresh auction:', error);
+        }
+      };
+      refreshAuction();
     }
   }, [timeLeftMs, auctionId]);
 
@@ -604,7 +616,7 @@ const AuctionDetail = () => {
 
         {/* Comment Section */}
         <div className="mt-6">
-          <AuctionCommentSection auctionId={auctionId} />
+          <AuctionCommentSection auctionId={auctionId} highlightCommentId={highlightCommentId} />
         </div>
       </Container>
     </Layout>

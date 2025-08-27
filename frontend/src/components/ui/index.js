@@ -17,6 +17,7 @@ export { LoadingSpinner } from "./LoadingSpinner";
 export { DeleteConfirmModal } from "./DeleteConfirmModal";
 export { default as CancelAuctionModal } from "./CancelAuctionModal";
 export { default as ReopenAuctionModal } from "./ReopenAuctionModal";
+export { default as ReportCommentModal } from "./ReportCommentModal";
 export { default as UserAvatarDropdown } from "./UserAvatarDropdown";
 export { default as Pagination } from "./Pagination";
 export { default as WalletButton } from '../../screens/wallet/WalletButton';
