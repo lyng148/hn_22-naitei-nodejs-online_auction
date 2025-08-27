@@ -400,5 +400,32 @@ export class NotificationAuctionsListener {
         )
       );
     }
+    if (previousStatus === 'CLOSED') {
+      const watchers = await this.prisma.watchlist.findMany({
+        where: { auctionId: auction.auctionId },
+        select: { userId: true },
+        distinct: ['userId'],
+      });
+
+      const watcherIds = Array.from(new Set(watchers.map(w => w.userId)));
+      const followerIdSet = new Set(followerIds);
+      const watcherOnlyIds = watcherIds.filter(userId => !followerIdSet.has(userId));
+
+      // Gửi thông báo cho tất cả watcher
+      await Promise.all(
+        watcherOnlyIds.map(userId =>
+          this.notificationService.createNotification({
+            userId,
+            message: NotificationMessages.AUCTION_OPEN_WATCHER(title),
+            metadata: JSON.stringify({
+              type: 'AUCTION_OPEN',
+              role: 'WATCHER',
+              auctionId: auction.auctionId,
+              previousStatus,
+            }),
+          })
+        )
+      );
+    }
   }
 }

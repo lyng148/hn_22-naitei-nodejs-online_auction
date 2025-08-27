@@ -22,10 +22,15 @@ import { BidResponseDto } from './dtos/bid.response.dto';
 import { CreateBidBodyDto } from './dtos/create-bid.body.dto';
 import { Auction } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DOMAIN_EVENTS } from '../notification/notification-constants';
 
 @Injectable()
 export class BidService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly evenEmitter: EventEmitter2,
+  ) { }
 
   async countBidsByAuction(auctionId: string): Promise<number> {
     const auction = await this.prisma.auction.findUnique({
@@ -280,6 +285,12 @@ export class BidService {
           balanceAfter: Number(user.walletBalance) - dto.bidAmount,
         },
       });
+
+      this.evenEmitter.emit(DOMAIN_EVENTS.BID_CREATED, {
+        auctionId: dto.auctionId,
+        bidderId: userId,
+        bidAmount: dto.bidAmount
+      })
 
       return bid;
     });

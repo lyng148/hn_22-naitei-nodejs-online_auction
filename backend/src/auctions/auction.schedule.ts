@@ -2,12 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import PrismaService from '@common/services/prisma.service';
 import { AuctionStatus } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DOMAIN_EVENTS } from '../notification/notification-constants';
 
 @Injectable()
 export class AuctionScheduler {
   private readonly logger = new Logger(AuctionScheduler.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
 
   @Cron(CronExpression.EVERY_MINUTE)
   async updateReadyAuctionsToOpen(): Promise<void> {
@@ -22,12 +27,18 @@ export class AuctionScheduler {
 
     if (readyAuctions.length > 0) {
       await Promise.all(
-        readyAuctions.map((auction) =>
-          this.prisma.auction.update({
+        readyAuctions.map(async (auction) => {
+          await this.prisma.auction.update({
             where: { auctionId: auction.auctionId },
             data: { status: AuctionStatus.OPEN },
-          }),
-        ),
+          });
+
+          this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+            auctionId: auction.auctionId,
+            status: 'OPEN',
+            previousStatus: 'READY',
+          });
+        }),
       );
 
       this.logger.log(
@@ -49,12 +60,17 @@ export class AuctionScheduler {
 
     if (pendingAuctions.length > 0) {
       await Promise.all(
-        pendingAuctions.map((auction) =>
-          this.prisma.auction.update({
+        pendingAuctions.map(async (auction) => {
+          await this.prisma.auction.update({
             where: { auctionId: auction.auctionId },
             data: { status: AuctionStatus.CLOSED },
-          }),
-        ),
+          });
+
+          this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+            auctionId: auction.auctionId,
+            status: 'CLOSED',
+          });
+        }),
       );
 
       this.logger.log(

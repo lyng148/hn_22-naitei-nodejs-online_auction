@@ -53,10 +53,15 @@ import {
 import { EditAuctionBodyDto } from './dtos/edit-auction.body.dto';
 import { EditAuctionResponseDto } from './dtos/edit-auction.response.dto';
 import { EndAuctionResponseDto } from './dtos/auction-end.response.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DOMAIN_EVENTS } from '../notification/notification-constants';
 
 @Injectable()
 export class AuctionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
 
   async endAuction(auctionId: string): Promise<EndAuctionResponseDto | null> {
     const allBids = await this.prisma.bid.findMany({
@@ -70,6 +75,11 @@ export class AuctionService {
       await this.prisma.auction.update({
         where: { auctionId },
         data: { status: AuctionStatus.CLOSED },
+      });
+
+      this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+        auctionId: auctionId,
+        status: 'CLOSED',
       });
 
       return null;
@@ -91,6 +101,12 @@ export class AuctionService {
         status: AuctionStatus.COMPLETED,
         winnerId: winnerBid.userId,
       },
+    });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_ENDED, {
+      auctionId,
+      winnerId: winnerBid.userId,
+      finalPrice: Number(winnerBid.bidAmount),
     });
 
     return {
@@ -185,6 +201,11 @@ export class AuctionService {
           productId,
           quantity,
         })),
+      });
+
+      this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+        auctionId: auction.auctionId,
+        status: 'PENDING'
       });
 
       return auction;
@@ -404,6 +425,11 @@ export class AuctionService {
         lastBidTime: now,
       },
     });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+      auctionId: auctionId,
+      status: newStatus,
+    });
   }
 
   async cancelAuction(cancelAuctionDto: CancelAuctionDto): Promise<string> {
@@ -426,6 +452,12 @@ export class AuctionService {
         status: AuctionStatus.CANCELED,
       },
     });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+      auctionId: cancelAuctionDto.auctionId,
+      status: 'CANCELED',
+    });
+
     return 'Auction canceled successfully';
   }
 
@@ -506,6 +538,11 @@ export class AuctionService {
       await tx.bid.deleteMany({
         where: { auctionId },
       });
+    });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+      auctionId: auctionId,
+      status: 'CLOSED',
     });
   }
 
@@ -788,6 +825,11 @@ export class AuctionService {
       data: { status: AuctionStatus.PENDING },
     });
 
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+      auctionId: auctionId,
+      status: 'PENDING',
+    });
+
     return {
       auctionId,
       message: 'Auction reopened successfully, waiting for admin approval',
@@ -834,7 +876,7 @@ export class AuctionService {
       editAuctionBodyDto.startTime &&
       editAuctionBodyDto.endTime &&
       new Date(editAuctionBodyDto.startTime) >=
-        new Date(editAuctionBodyDto.endTime)
+      new Date(editAuctionBodyDto.endTime)
     ) {
       throw new BadRequestException(ERROR_INVALID_AUCTION_TIME);
     }
@@ -964,6 +1006,12 @@ export class AuctionService {
         status: 'OPEN',
         updatedAt: new Date(),
       },
+    });
+
+    this.eventEmitter.emit(DOMAIN_EVENTS.AUCTION_STATUS_CHANGED, {
+      auctionId: auctionId,
+      status: 'OPEN',
+      previousStatus: 'CLOSED',
     });
   }
 }
