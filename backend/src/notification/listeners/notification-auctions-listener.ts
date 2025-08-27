@@ -113,7 +113,7 @@ export class NotificationAuctionsListener {
 
     await this.notificationService.createNotification({
       userId: auction.sellerId,
-      message: NotificationMessages.AUCTION_PENDING_SELLER(auction.title),
+      message: NotificationMessages.AUCTION_ENDED_SELLER(title, finalPrice),
       metadata: JSON.stringify({
         type: 'AUCTION_ENDED',
         role: 'SELLER',
