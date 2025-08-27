@@ -28,6 +28,11 @@ export class WalletService {
     userId: string,
     addFundsDto: AddFundsDto,
   ): Promise<WalletTransactionResponseDto> {
+    const user = await this.prisma.user.findUnique({ where: { userId } })
+
+    if (user?.isBanned) {
+      throw new BadRequestException('Your account has been banned and cannot add funds.');
+    }
     const { amount, description } = addFundsDto;
 
     if (amount < WALLET_CONFIG.MIN_DEPOSIT_AMOUNT || amount > WALLET_CONFIG.MAX_DEPOSIT_AMOUNT) {

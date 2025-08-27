@@ -15,13 +15,16 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createComment(
     user: User,
     createCommentDto: CreateCommentDto,
   ): Promise<CommentResponseDto> {
     // Kiểm tra product có tồn tại không
+    if (user.isBanned) {
+      throw new BadRequestException('Your account has been banned and cannot comment.');
+    }
     const product = await this.prisma.product.findUnique({
       where: { productId: createCommentDto.productId },
     });
