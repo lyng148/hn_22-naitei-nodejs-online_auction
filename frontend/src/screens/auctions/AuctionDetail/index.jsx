@@ -67,6 +67,8 @@ const AuctionDetail = () => {
 
   const [bidInput, setBidInput] = useState("");
   const [hiddenInputs, setHiddenInputs] = useState(["", "", ""]);
+  const [hasShownHiddenBidNotification, setHasShownHiddenBidNotification] = useState(false);
+  const [bids, setBids] = useState([]);
 
   useEffect(() => {
     setBidInput(minBid ? String(minBid) : "");
@@ -74,13 +76,17 @@ const AuctionDetail = () => {
 
   // Auto-switch to hidden bid mode in last 10 minutes
   useEffect(() => {
-    if (isLast10Min && !isSellerOwner && canBid) {
-      // Clear normal bid input and focus on hidden bids
+    if (isLast10Min && !isSellerOwner && canBid && !hasShownHiddenBidNotification) {
       setBidInput("");
-      // Show notification about auto-switching
+
       showToastNotification("Last 10 minutes: Switched to hidden bid mode", "info");
+      setHasShownHiddenBidNotification(true);
     }
-  }, [isLast10Min, isSellerOwner, canBid, showToastNotification]);
+    // Reset notification state if user/auction context changes
+    if (!isLast10Min || isSellerOwner || !canBid) {
+      setHasShownHiddenBidNotification(false);
+    }
+  }, [isLast10Min, isSellerOwner, canBid, showToastNotification, hasShownHiddenBidNotification]);
 
   useEffect(() => {
     let mounted = true;
@@ -102,10 +108,23 @@ const AuctionDetail = () => {
     };
   }, [auctionId]);
 
+  useEffect(() => {
+    const fetchBids = async () => {
+      try {
+        const data = await bidService.getBids(auctionId);
+        setBids(data);
+      } catch (err) {
+        setBids([]); // hoặc showToastNotification("Failed to load bid history", "error");
+      }
+    };
+    if (auctionId) fetchBids();
+  }, [auctionId]);
+
   const refreshAuction = async () => {
     try {
       const data = await auctionService.getAuctionById(auctionId);
       setAuction(data);
+      setBidInput(String(Number(auction?.currentPrice || 0) + Number(auction?.minimumBidIncrement || 0)));
     } catch (e) {
       // keep old state on refresh error
     }
@@ -135,7 +154,9 @@ const AuctionDetail = () => {
         const toCents = (n) => Math.round(Number(n) * 100);
         const diffCents = toCents(amount) - toCents(current);
         const stepCents = toCents(step);
-        if (stepCents > 0 && diffCents % stepCents !== 0) {
+        console.log(diffCents, stepCents)
+        console.log(diffCents % stepCents);
+        if (stepCents > 0 && (diffCents % stepCents) !== 0) {
           showToastNotification(
             `Bid must be a multiple of the increment ($${formatMoney(step)})`,
             "error"
@@ -146,7 +167,6 @@ const AuctionDetail = () => {
         await bidService.placeBid({ auctionId, bidAmount: amount });
         showToastNotification("Bid placed successfully", "success");
         await refreshAuction();
-        setBidInput(String(Number(auction?.currentPrice || 0) + Number(auction?.minimumBidIncrement || 0)));
       } else {
         const values = hiddenInputs
           .map((v) => Number(v))
@@ -187,7 +207,6 @@ const AuctionDetail = () => {
       }
 
       showToastNotification(errorMessage, "error");
-      console.error('Bid placement error:', err);
     } finally {
       setSubmitting(false);
     }
@@ -215,7 +234,6 @@ const AuctionDetail = () => {
   }
 
   const products = auction.products || [];
-  const bids = auction.bids || [];
 
   return (
     <Layout>
@@ -314,26 +332,26 @@ const AuctionDetail = () => {
 
             {/* Bid history */}
             <div className="bg-white rounded-lg shadow p-4">
-              <Title level={4} className="mb-4">Bid history</Title>
-              {bids.length === 0 ? (
-                <Caption className="text-gray-600">No bids yet.</Caption>
-              ) : (
-                <div className="space-y-3">
-                  {bids.map((b) => (
-                    <div key={b.bidId} className="flex items-center justify-between border-b pb-3">
-                      <div>
-                        <div className="font-medium text-gray-900">{b.bidderName}</div>
-                        <Caption className="text-gray-600">{new Date(b.createdAt).toLocaleString()}</Caption>
-                      </div>
-                      <div className="text-right">
-                        <Caption className="text-gray-600">Bid</Caption>
-                        <Title level={4}>${formatMoney(b.bidAmount)}</Title>
-                      </div>
-                    </div>
-                  ))}
+          <Title level={4} className="mb-4">Bid history</Title>
+          {bids.length === 0 ? (
+            <Caption className="text-gray-600">No bids yet.</Caption>
+          ) : (
+            <div className="space-y-3">
+              {bids.map((b) => (
+                <div key={b.bidId} className="flex items-center justify-between border-b pb-3">
+                  <div>
+                    <div className="font-medium text-gray-900">{b.username}</div>
+                    <Caption className="text-gray-600">{new Date(b.createdAt).toLocaleString()}</Caption>
+                  </div>
+                  <div className="text-right">
+                    <Caption className="text-gray-600">Bid</Caption>
+                    <Title level={4}>${formatMoney(b.bidAmount)}</Title>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
+          )}
+        </div>
           </div>
 
                     {/* Right: Place bid */}

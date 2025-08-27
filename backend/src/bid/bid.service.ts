@@ -21,6 +21,7 @@ import {
 import { BidResponseDto } from './dtos/bid.response.dto';
 import { CreateBidBodyDto } from './dtos/create-bid.body.dto';
 import { Auction } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class BidService {
@@ -46,7 +47,7 @@ export class BidService {
     if (!auction) throw new NotFoundException(ERROR_AUCTION_NOT_FOUND);
 
     const bids = await this.prisma.bid.findMany({
-      where: { auctionId },
+      where: { auctionId, isHidden: false },
       include: { user: { include: { profile: true } } },
       orderBy: { bidAmount: 'desc' },
     });
@@ -97,74 +98,76 @@ export class BidService {
     });
 
     const minBidBase = lastPublicBid
-      ? Number(lastPublicBid.bidAmount) + Number(auction.minimumBidIncrement)
-      : Number(auction.currentPrice) + Number(auction.minimumBidIncrement);
+    ? new Decimal(lastPublicBid.bidAmount).plus(auction.minimumBidIncrement)
+    : new Decimal(auction.currentPrice).plus(auction.minimumBidIncrement);
 
     // 3. Validate each bidAmount
-    for (const bidAmount of dto.bidAmounts) {
-      if (bidAmount < minBidBase) {
-        throw new BadRequestException(ERROR_BID_LESS_THAN_MINIMUM);
-      }
-      const diff = bidAmount - Number(auction.currentPrice);
-      if (diff % Number(auction.minimumBidIncrement) !== 0) {
-        throw new BadRequestException(ERROR_BID_NOT_MULTIPLE_OF_INCREMENT);
-      }
+  for (const bidAmount of dto.bidAmounts) {
+    const bidDecimal = new Decimal(bidAmount);
+    if (bidDecimal.lessThan(minBidBase)) {
+      throw new BadRequestException(ERROR_BID_LESS_THAN_MINIMUM);
     }
-
-    // 4. Execute transaction: deduct max value only
-    const maxBid = Math.max(...dto.bidAmounts);
-    const user = await this.prisma.user.findUnique({ where: { userId } });
-    if (!user || Number(user.walletBalance) < maxBid) {
-      throw new BadRequestException(ERROR_INSUFFICIENT_BALANCE);
+    const diff = bidDecimal.minus(auction.currentPrice);
+    const step = new Decimal(auction.minimumBidIncrement);
+    if (!diff.mod(step).isZero()) {
+      throw new BadRequestException(ERROR_BID_NOT_MULTIPLE_OF_INCREMENT);
     }
-
-    return this.prisma.$transaction(async (prisma) => {
-      // a) Deduct max bid
-      await prisma.user.update({
-        where: { userId },
-        data: { walletBalance: { decrement: maxBid } },
-      });
-
-      // b) Create wallet transaction for max bid only
-      await prisma.walletTransaction.create({
-        data: {
-          userId,
-          type: 'BID_PAYMENT',
-          status: 'SUCCESS',
-          amount: maxBid,
-          balanceAfter: Number(user.walletBalance) - maxBid,
-          auctionId: dto.auctionId,
-        },
-      });
-
-      // c) Create all hidden bids
-      const createdBids: BidResponseDto[] = [];
-      for (const bidAmount of dto.bidAmounts) {
-        const bid = await prisma.bid.create({
-          data: {
-            auctionId: dto.auctionId,
-            userId,
-            bidAmount,
-            status: 'VALID',
-            isHidden: true,
-          },
-          include: { user: { include: { profile: true } } },
-        });
-
-        createdBids.push({
-          bidId: bid.bidId,
-          auctionId: bid.auctionId,
-          userId: bid.userId,
-          username: bid.user?.profile?.fullName || 'Unknown',
-          bidAmount: Number(bid.bidAmount),
-          status: bid.status,
-          createdAt: bid.createdAt,
-        });
-      }
-
-      return createdBids;
-    });
   }
+
+  // 4. Execute transaction: deduct max value only
+  const maxBid = Math.max(...dto.bidAmounts);
+  const user = await this.prisma.user.findUnique({ where: { userId } });
+  if (!user || new Decimal(user.walletBalance).lessThan(maxBid)) {
+    throw new BadRequestException(ERROR_INSUFFICIENT_BALANCE);
+  }
+
+  return this.prisma.$transaction(async (prisma) => {
+    // a) Deduct max bid
+    await prisma.user.update({
+      where: { userId },
+      data: { walletBalance: { decrement: maxBid } },
+    });
+
+    // b) Create wallet transaction for max bid only
+    await prisma.walletTransaction.create({
+      data: {
+        userId,
+        type: 'BID_PAYMENT',
+        status: 'SUCCESS',
+        amount: maxBid,
+        balanceAfter: new Decimal(user.walletBalance).minus(maxBid).toNumber(),
+        auctionId: dto.auctionId,
+      },
+    });
+
+    // c) Create all hidden bids
+    const createdBids: BidResponseDto[] = [];
+    for (const bidAmount of dto.bidAmounts) {
+      const bid = await prisma.bid.create({
+        data: {
+          auctionId: dto.auctionId,
+          userId,
+          bidAmount,
+          status: 'VALID',
+          isHidden: true,
+        },
+        include: { user: { include: { profile: true } } },
+      });
+
+      createdBids.push({
+        bidId: bid.bidId,
+        auctionId: bid.auctionId,
+        userId: bid.userId,
+        username: bid.user?.profile?.fullName || 'Unknown',
+        bidAmount: Number(bid.bidAmount),
+        status: bid.status,
+        createdAt: bid.createdAt,
+      });
+    }
+
+    return createdBids;
+  });
+}
 
   async placeBid(
     userId: string,
@@ -201,8 +204,13 @@ export class BidService {
     }
 
     // 5. Ensure bidAmount is a multiple of minimumBidIncrement
-    const diff = dto.bidAmount - Number(auction.currentPrice);
-    if (diff % Number(auction.minimumBidIncrement) !== 0) {
+    // const diff = Number(dto.bidAmount) - Number(auction.currentPrice);
+    const diff = new Decimal(dto.bidAmount).minus(auction.currentPrice)
+    const step = new Decimal(auction.minimumBidIncrement);
+
+    console.log(dto.bidAmount, auction.currentPrice)
+    console.log(diff, auction.minimumBidIncrement)
+    if (!diff.mod(step).isZero()) {
       throw new BadRequestException(ERROR_BID_NOT_MULTIPLE_OF_INCREMENT);
     }
 
