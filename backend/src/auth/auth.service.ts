@@ -26,6 +26,10 @@ import { ChangePasswordResponseDto } from './dtos/changePasswordResponse.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
 import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
 import { ForgotPasswordResponseDto } from './dtos/forgot-password.response.dto';
+import { VerifyEmailBodyDto } from './dtos/verify-email.body.dto';
+import { VerifyEmailResponseDto } from './dtos/verify-email.response.dto';
+import { ResendVerificationBodyDto } from './dtos/resend-verification.body.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -52,12 +56,18 @@ export class AuthService {
       role = Role.SELLER;
     }
 
+    // Generate verification token
+    const verificationToken = randomBytes(32).toString('hex');
+    const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const user = await this.prisma.$transaction(async (prisma) => {
       const newUser = await prisma.user.create({
         data: {
           email: data.email,
           password: hashedPassword,
           role: role,
+          verificationToken,
+          verificationTokenExpiresAt,
         },
       });
 
@@ -72,6 +82,9 @@ export class AuthService {
 
       return newUser;
     });
+
+    // Send verification email
+    await this.sendVerificationEmail(user.email, verificationToken);
 
     return this.buildUserResponse(user);
   }
@@ -89,6 +102,11 @@ export class AuthService {
       ))
     ) {
       throw new UnauthorizedException(ERROR_INVALID_CREDENTIALS);
+    }
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Please verify your email address before logging in. Check your email for verification link.');
     }
 
     return this.buildUserResponse(user);
@@ -189,11 +207,11 @@ export class AuthService {
     if (!email) {
       throw new BadRequestException(ERROR_BAD_REQUEST);
     }
-    
+
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
-    
+
     if (!user) {
       throw new BadRequestException(ERROR_USER_NOT_FOUND);
     }
@@ -211,7 +229,7 @@ export class AuthService {
       template: 'reset',
       context: {
         url: 'http://localhost:5173/reset?token=' + resetToken,
-        userName: user.email, 
+        userName: user.email,
       },
     });
 
@@ -248,5 +266,84 @@ export class AuthService {
       email: user.email,
       message: 'Password reset successfully',
     }
+  }
+
+  async verifyEmail(data: VerifyEmailBodyDto): Promise<VerifyEmailResponseDto> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        verificationToken: data.token,
+        verificationTokenExpiresAt: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    await this.prisma.user.update({
+      where: { userId: user.userId },
+      data: {
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpiresAt: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      email: user.email,
+      message: 'Email verified successfully',
+    };
+  }
+
+  async resendVerification(data: ResendVerificationBodyDto): Promise<VerifyEmailResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException(ERROR_USER_NOT_FOUND);
+    }
+
+    if (user.isVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    // Generate new verification token
+    const verificationToken = randomBytes(32).toString('hex');
+    const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await this.prisma.user.update({
+      where: { userId: user.userId },
+      data: {
+        verificationToken,
+        verificationTokenExpiresAt,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Send verification email
+    await this.sendVerificationEmail(user.email, verificationToken);
+
+    return {
+      email: user.email,
+      message: 'Verification email sent successfully',
+    };
+  }
+
+  private async sendVerificationEmail(email: string, token: string): Promise<void> {
+    const verificationUrl = `http://localhost:5173/auth/verify-email?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Verify Your Email Address',
+      template: 'verify-email',
+      context: {
+        verificationUrl,
+        email,
+      },
+    });
   }
 }

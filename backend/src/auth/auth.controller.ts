@@ -14,11 +14,14 @@ import { RefreshTokenDto } from './dtos/refresh-token.body.dto';
 import { RefreshTokenResponseDto } from './dtos/refresh-token.response.dto';
 import { ForgotPasswordResponseDto } from './dtos/forgot-password.response.dto';
 import { ResetPasswordBodyDto } from './dtos/reset-password.body.dto';
+import { VerifyEmailBodyDto } from './dtos/verify-email.body.dto';
+import { VerifyEmailResponseDto } from './dtos/verify-email.response.dto';
+import { ResendVerificationBodyDto } from './dtos/resend-verification.body.dto';
 
 
 @Controller('users')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Public()
   @Post('signup')
@@ -58,5 +61,17 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDTO: ResetPasswordBodyDto): Promise<ForgotPasswordResponseDto> {
     return this.authService.resetPassword(resetPasswordDTO.token, resetPasswordDTO.newPassword);
+  }
+
+  @Public()
+  @Post('verify-email')
+  async verifyEmail(@Body() verifyEmailDTO: VerifyEmailBodyDto): Promise<VerifyEmailResponseDto> {
+    return this.authService.verifyEmail(verifyEmailDTO);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  async resendVerification(@Body() resendVerificationDTO: ResendVerificationBodyDto): Promise<VerifyEmailResponseDto> {
+    return this.authService.resendVerification(resendVerificationDTO);
   }
 }

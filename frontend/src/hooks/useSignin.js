@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { authService } from "@/services/auth.service";
+import { loginUser } from "@/services/authService.js";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useNavigate } from "react-router-dom";
-import {useUser} from "@/contexts/UserContext.jsx";
+import { useUser } from "@/contexts/UserContext.jsx";
 
 export const useSignin = () => {
   const [email, setEmail] = useState("");
@@ -16,23 +16,31 @@ export const useSignin = () => {
     e.preventDefault();
     setError("");
     try {
-      const { user } = await authService.login({email, password});
+      const response = await loginUser({ email, password });
       login({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        accessToken: user.accessToken,
-        refreshToken: user.refreshToken,
+        id: response.user.id,
+        email: response.user.email,
+        role: response.user.role,
+        accessToken: response.user.accessToken,
+        refreshToken: response.user.refreshToken,
       });
-      showToastNotification('LoginForm successful!', 'info');
+      showToastNotification('Login successful!', 'success');
       navigate('/');
     } catch (err) {
       console.log(err);
-      const {statusCode, message} = err;
-      if (statusCode === 401) {
-        setError(message);
+      const errorMessage = err.message;
+      
+      // Check if it's an email verification error
+      if (errorMessage.includes('verify your email')) {
+        setError(errorMessage);
+        // Show additional action for resending verification
+        showToastNotification(
+          'Please verify your email address. Check your email or request a new verification link.', 
+          'warning'
+        );
       } else {
-        showToastNotification(message, 'error');
+        setError(errorMessage);
+        showToastNotification(errorMessage, 'error');
       }
     }
   };
