@@ -9,15 +9,15 @@ const formatTime = (d) => {
 
 const getTargetPath = (notification) => {
   let meta = {};
-  try { 
-    meta = notification?.metadata ? JSON.parse(notification.metadata) : {}; 
-  } catch (e) { 
+  try {
+    meta = notification?.metadata ? JSON.parse(notification.metadata) : {};
+  } catch (e) {
     console.error('Failed to parse notification metadata:', e, notification.metadata);
-    meta = {}; 
+    meta = {};
   }
-  
+
   console.log('Notification metadata:', meta, 'notification:', notification);
-  
+
   switch (meta.type) {
     case "OUTBID":
     case "AUCTION_ENDED":
@@ -31,7 +31,7 @@ const getTargetPath = (notification) => {
       console.log('Comment report navigation:', {
         auctionId: meta.auctionId,
         commentId: meta.commentId,
-        willNavigateTo: meta.auctionId && meta.commentId 
+        willNavigateTo: meta.auctionId && meta.commentId
           ? `/auctions/${meta.auctionId}?highlightComment=${meta.commentId}`
           : "/admin-hub/reports"
       });
@@ -61,8 +61,8 @@ const NotificationBell = ({ isHomePage = false }) => {
   const handleClickNotification = async (n) => {
     const path = getTargetPath(n);
     if (!n.read) {
-      try { 
-        await markAsRead(n.id); 
+      try {
+        await markAsRead(n.id);
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
       }
