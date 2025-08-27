@@ -13,6 +13,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   ParseUUIDPipe,
+  Patch,
 } from '@nestjs/common';
 import { AuctionCommentsService } from './auction-comments.service';
 import { CreateAuctionCommentDto } from './dtos/create-auction-comment.dto';
@@ -21,6 +22,15 @@ import {
   AuctionCommentResponseDto,
   GetAuctionCommentsResponseDto,
 } from './dtos/auction-comment-response.dto';
+import {
+  CreateCommentReportDto,
+  UpdateReportStatusDto,
+  GetReportsQueryDto,
+} from './dtos/comment-report.dto';
+import {
+  GetCommentReportsResponseDto,
+  ReportStatsResponseDto,
+} from './dtos/comment-report-response.dto';
 import JwtAuthGuard from '@common/guards/jwt.guard';
 import { RoleGuard } from '@common/guards/role.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -47,8 +57,11 @@ export class AuctionCommentsController {
   @Get('auction/:auctionId')
   async getCommentsByAuctionId(
     @Param('auctionId', ParseUUIDPipe) auctionId: string,
-    @Query('page', new DefaultValuePipe(DEFAULT_PAGE), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe) limit: number,
+    @Query('page', new DefaultValuePipe(DEFAULT_PAGE), ParseIntPipe)
+    page: number,
+    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe)
+    limit: number,
+    @Query('highlightComment') _highlightCommentId?: string,
   ): Promise<GetAuctionCommentsResponseDto> {
     return this.commentsService.getCommentsByAuctionId(auctionId, page, limit);
   }
@@ -58,10 +71,53 @@ export class AuctionCommentsController {
   @Roles(Role.BIDDER, Role.SELLER, Role.ADMIN)
   async getCommentsByUserId(
     @Param('userId', ParseUUIDPipe) userId: string,
-    @Query('page', new DefaultValuePipe(DEFAULT_PAGE), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe) limit: number,
+    @Query('page', new DefaultValuePipe(DEFAULT_PAGE), ParseIntPipe)
+    page: number,
+    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe)
+    limit: number,
   ): Promise<GetAuctionCommentsResponseDto> {
     return this.commentsService.getCommentsByUserId(userId, page, limit);
+  }
+
+  @Post('reports')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.BIDDER, Role.SELLER)
+  @HttpCode(HttpStatus.CREATED)
+  async createReport(
+    @CurrentUser() user: User,
+    @Body() createReportDto: CreateCommentReportDto,
+  ): Promise<{ message: string }> {
+    return this.commentsService.createReport(user, createReportDto);
+  }
+
+  @Get('reports')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  async getReports(
+    @CurrentUser() user: User,
+    @Query() query: GetReportsQueryDto,
+  ): Promise<GetCommentReportsResponseDto> {
+    return this.commentsService.getReports(user, query);
+  }
+
+  @Get('reports/stats')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  async getReportStats(
+    @CurrentUser() user: User,
+  ): Promise<ReportStatsResponseDto> {
+    return this.commentsService.getReportStats(user);
+  }
+
+  @Patch('reports/:reportId/status')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  async updateReportStatus(
+    @CurrentUser() user: User,
+    @Param('reportId', ParseUUIDPipe) reportId: string,
+    @Body() updateDto: UpdateReportStatusDto,
+  ): Promise<{ message: string }> {
+    return this.commentsService.updateReportStatus(user, reportId, updateDto);
   }
 
   @Get(':commentId')
@@ -95,5 +151,25 @@ export class AuctionCommentsController {
     @Param('commentId', ParseUUIDPipe) commentId: string,
   ): Promise<{ message: string }> {
     return this.commentsService.deleteComment(user, commentId);
+  }
+
+  @Patch(':commentId/hide')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  async hideComment(
+    @CurrentUser() user: User,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+  ): Promise<{ message: string }> {
+    return this.commentsService.hideComment(user, commentId);
+  }
+
+  @Patch(':commentId/unhide')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
+  async unhideComment(
+    @CurrentUser() user: User,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+  ): Promise<{ message: string }> {
+    return this.commentsService.unhideComment(user, commentId);
   }
 }

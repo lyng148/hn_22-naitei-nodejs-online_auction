@@ -63,6 +63,10 @@ model User {
   productComments ProductComment[] @relation("User_Has_ProductComments")
   auctionComments AuctionComment[] @relation("User_Has_AuctionComments")
 
+  // Report relations
+  reportedComments CommentReport[] @relation("User_Reports_Comments")
+  reviewedReports  CommentReport[] @relation("Admin_Reviews_Reports")
+
   sellerShippings Shipping[] @relation("Seller_Ships_Orders")
   buyerShippings  Shipping[] @relation("Buyer_Receives_Shipments")
 
@@ -494,10 +498,59 @@ model AuctionComment {
 
   content String @db.Text
 
+  // Report related fields
+  isHidden    Boolean @default(false) @map("is_hidden")
+  reportCount Int     @default(0) @map("report_count")
+
+  reports CommentReport[] @relation("Comment_Has_Reports")
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("auction_comments")
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportType {
+  INAPPROPRIATE_LANGUAGE
+  SPAM
+  HARASSMENT
+  UNRELATED_CONTENT
+  OTHER
+}
+
+model CommentReport {
+  reportId String @id @default(uuid()) @map("report_id") @db.Char(36)
+
+  commentId String         @map("comment_id") @db.Char(36)
+  comment   AuctionComment @relation("Comment_Has_Reports", fields: [commentId], references: [commentId], onDelete: Cascade)
+
+  reporterId String @map("reporter_id") @db.Char(36)
+  reporter   User   @relation("User_Reports_Comments", fields: [reporterId], references: [userId], onDelete: Cascade)
+
+  type   ReportType   @map("report_type")
+  reason String       @db.Text
+  status ReportStatus @default(PENDING)
+
+  // Admin who handles the report
+  reviewerId String? @map("reviewer_id") @db.Char(36)
+  reviewer   User?   @relation("Admin_Reviews_Reports", fields: [reviewerId], references: [userId], onDelete: SetNull)
+
+  reviewedAt DateTime? @map("reviewed_at") @db.Timestamp(0)
+  adminNote  String?   @map("admin_note") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Unique constraint to prevent duplicate reports from same user on same comment
+  @@unique([commentId, reporterId])
+  @@map("comment_reports")
 }
 
 model Order {
