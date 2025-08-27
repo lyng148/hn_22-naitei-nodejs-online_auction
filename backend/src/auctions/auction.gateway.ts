@@ -58,6 +58,8 @@ export class AuctionGateway
       (client.handshake.headers?.['authorization'] as unknown) ||
       (client.request?.headers?.authorization as unknown);
 
+    console.log(rawToken);
+
     const token =
       typeof rawToken === 'string' ? rawToken.replace('Bearer ', '') : '';
 
@@ -192,7 +194,7 @@ export class AuctionGateway
 
       // Thông báo cho chính user
       client.emit(WS_EVENTS.JOIN_AUCTION_SUCCESS, {
-        message: `Joined auction ${auctionId}`,
+        message: `You have joined auction ${auctionId}`,
         auctionId,
         userId: client.data.user?.id,
         participants: usersInRoom,
@@ -202,7 +204,7 @@ export class AuctionGateway
       });
 
       this.server.to(room).emit(WS_EVENTS.USER_JOINED_AUCTION, {
-        message: `User joined auction ${auctionId}`,
+        message: `User ${client.data.user?.id} joined auction ${auctionId}`,
         auctionId,
         user: {
           id: client.data.user?.id,
@@ -256,7 +258,7 @@ export class AuctionGateway
 
       // Thông báo cho chính client
       client.emit(WS_EVENTS.LEAVE_AUCTION_SUCCESS, {
-        message: `Left auction ${auctionId}`,
+        message: `You have left auction ${auctionId}`,
         auctionId,
         userId: client.data.user?.id,
         socketId: client.id,
@@ -267,7 +269,7 @@ export class AuctionGateway
 
       // Dùng server broadcast cho các client còn lại
       this.server.to(room).emit(WS_EVENTS.USER_LEFT_AUCTION, {
-        message: `User left auction ${auctionId}`,
+        message: `User ${client.data.user?.id} left auction ${auctionId}`,
         auctionId,
         user: {
           id: client.data.user?.id,

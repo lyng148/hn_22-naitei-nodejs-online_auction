@@ -4,8 +4,10 @@ import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { auctionService } from "@/services/auction.service.js";
 import { bidService } from "@/services/bid.service.js";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import {io} from "socket.io-client";
+import {getAccessToken} from "@/utils/token-storage.js";
 
 const statusBadgeClass = (status) => ({
   PENDING: "text-gray-700 bg-yellow-400",
@@ -20,7 +22,7 @@ const statusBadgeClass = (status) => ({
 const formatMoney = (n) => {
   const num = Number(n || 0);
   return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+}
 
 const useCountdown = (end) => {
   const [now, setNow] = useState(() => new Date());
@@ -29,7 +31,7 @@ const useCountdown = (end) => {
     return () => clearInterval(id);
   }, []);
   const endTime = end ? new Date(end) : null;
-  const timeLeft = endTime ? Math.max(0, endTime - now) : 0;
+  const timeLeft = endTime ? Math.max(0, endTime - now) : Number.POSITIVE_INFINITY;
   const isOver = timeLeft <= 0;
   const days = isOver ? 0 : Math.floor(timeLeft / (1000 * 60 * 60 * 24));
   const hours = isOver ? 0 : Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
@@ -42,11 +44,16 @@ const AuctionDetail = () => {
   const { auctionId } = useParams();
   const { user } = useUser();
   const { showToastNotification } = useNotification();
+  const [winner, setWinner] = useState(null);
+  const navigate = useNavigate();
 
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [hiddenSubmitted, setHiddenSubmitted] = useState(false);
+
+  const socketRef = useRef(null);
 
   const { days, hours, minutes, seconds, isOver, timeLeftMs } = useCountdown(auction?.endTime);
 
@@ -80,14 +87,16 @@ const AuctionDetail = () => {
       setBidInput("");
 
       showToastNotification("Last 10 minutes: Switched to hidden bid mode", "info");
+      setHiddenInputs([minBid, minBid, minBid]);
       setHasShownHiddenBidNotification(true);
     }
     // Reset notification state if user/auction context changes
     if (!isLast10Min || isSellerOwner || !canBid) {
       setHasShownHiddenBidNotification(false);
     }
-  }, [isLast10Min, isSellerOwner, canBid, showToastNotification, hasShownHiddenBidNotification]);
+  }, [isLast10Min, isSellerOwner, canBid, showToastNotification, hasShownHiddenBidNotification, minBid]);
 
+  // Get auction detail by id
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -95,6 +104,7 @@ const AuctionDetail = () => {
       setFetchError(null);
       try {
         const data = await auctionService.getAuctionById(auctionId);
+        console.log(data);
         if (mounted) setAuction(data);
       } catch (err) {
         if (mounted) setFetchError(err?.message || "Failed to load auction");
@@ -108,27 +118,125 @@ const AuctionDetail = () => {
     };
   }, [auctionId]);
 
+  // Get bid list
   useEffect(() => {
     const fetchBids = async () => {
       try {
         const data = await bidService.getBids(auctionId);
         setBids(data);
-      } catch (err) {
+      } catch {
         setBids([]); // hoặc showToastNotification("Failed to load bid history", "error");
       }
     };
     if (auctionId) fetchBids();
   }, [auctionId]);
 
-  const refreshAuction = async () => {
-    try {
-      const data = await auctionService.getAuctionById(auctionId);
-      setAuction(data);
-      setBidInput(String(Number(auction?.currentPrice || 0) + Number(auction?.minimumBidIncrement || 0)));
-    } catch (e) {
-      // keep old state on refresh error
+  // WebSocket setup
+  useEffect(() => {
+    if (!user) return;
+
+    const token = getAccessToken();
+    if (!token) return;
+
+    const socket = io(`${import.meta.env.VITE_BACKEND_URL}/auction`, {
+      auth: { token: token },
+      transports: ["websocket"],
+    });
+    socketRef.current = socket;
+
+    // Kết nối xong thì join room
+    socket.on("connection_success", () => {
+      socket.emit("join_auction", { auctionId });
+    });
+
+    // Thông báo nếu có lỗi
+    socket.on("error", (err) => {
+      showToastNotification(err.message || "WebSocket error", "error");
+    });
+
+    // Nhận lịch sử bid ban đầu
+    socket.on("bid_history", (data) => {
+      setAuction((prev) => ({
+        ...prev,
+        bids: data.bidHistory,
+        currentPrice: data.bidHistory[0]?.amount || prev?.currentPrice
+      }));
+    });
+
+    // Xác nhận join thành công cho chính user
+    socket.on("join_auction_success", (data) => {
+      showToastNotification(data.message, "success");
+    });
+
+    // Broadcast khi user khác join
+    socket.on("user_joined_auction", (data) => {
+      showToastNotification(data.message, "info");
+    });
+
+    // Xác nhận rời room cho chính user
+    socket.on("leave_auction_success", (data) => {
+      showToastNotification(data.message, "info");
+    });
+
+    // Broadcast khi user khác rời room
+    socket.on("user_left_auction", (data) => {
+      showToastNotification(data.message, "info");
+    });
+
+    // Update realtime bids và current price
+    socket.on("bid_accepted", (data) => {
+      console.log(data.bid.amount);
+      const bid = {
+        ...data.bid,
+        bidAmount: Number(data.bid.amount || data.bid.bidAmount || 0),
+        createdAt: data.bid.createdAt ? new Date(data.bid.createdAt) : new Date(),
+        username: data.bid.username || "Unknown",
+        bidId: data.bid.bidId || Math.random().toString(36).slice(2, 9),
+      };
+
+      setBids((prev) => [bid, ...prev]);
+      // setBids((prev) => [data.bid, ...prev]);
+      setAuction((prev) => ({
+        ...prev,
+        currentPrice: data.bid.amount,
+      }));
+    });
+
+    // Kết thúc auction
+    socket.on("auction_ended", (data) => {
+      console.log("winner", data);
+      console.log(data.winner);
+      setWinner(data.winner);
+      showToastNotification(`Auction ${data.auctionId} ended. Winner: ${data.winner?.email}`, "info");
+    });
+
+    // Sự kiện khi rời auction / disconnect
+    const handleBeforeUnload = () => {
+      if (socketRef.current) {
+        socketRef.current.emit("leave_auction", { auctionId });
+        socketRef.current.disconnect();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup khi unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.emit("leave_auction", { auctionId });
+        socketRef.current.disconnect();
+      }
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [auctionId, showToastNotification, user]);
+
+  // Emit auction end event
+  useEffect(() => {
+    console.log(timeLeftMs);
+    if (timeLeftMs <= 0 && socketRef.current) {
+      socketRef.current.emit("auction_ended", { auctionId });
     }
-  };
+  }, [timeLeftMs, auctionId]);
 
   const handlePlaceBid = async () => {
     if (!canBid) return;
@@ -154,8 +262,6 @@ const AuctionDetail = () => {
         const toCents = (n) => Math.round(Number(n) * 100);
         const diffCents = toCents(amount) - toCents(current);
         const stepCents = toCents(step);
-        console.log(diffCents, stepCents)
-        console.log(diffCents % stepCents);
         if (stepCents > 0 && (diffCents % stepCents) !== 0) {
           showToastNotification(
             `Bid must be a multiple of the increment ($${formatMoney(step)})`,
@@ -164,9 +270,18 @@ const AuctionDetail = () => {
           return;
         }
 
-        await bidService.placeBid({ auctionId, bidAmount: amount });
-        showToastNotification("Bid placed successfully", "success");
-        await refreshAuction();
+        if (socketRef.current) {
+          console.log(amount);
+          socketRef.current.emit("place_bid", { auctionId, bidAmount: amount }, (response) => {
+            if (response?.success) {
+              showToastNotification("Bid placed successfully", "success");
+            } else {
+              showToastNotification(response?.message || "Failed to place bid", "error");
+            }
+          });
+        } else {
+          showToastNotification("Socket not connected", "error");
+        }
       } else {
         const values = hiddenInputs
           .map((v) => Number(v))
@@ -181,9 +296,8 @@ const AuctionDetail = () => {
           return;
         }
         await bidService.placeHiddenBids({ auctionId, bidAmounts: values });
+        setHiddenSubmitted(true);
         showToastNotification("Hidden bids submitted successfully", "success");
-        await refreshAuction();
-        setHiddenInputs(["", "", ""]);
       }
     } catch (err) {
       let errorMessage = "Failed to place bid";
@@ -232,6 +346,13 @@ const AuctionDetail = () => {
       </Layout>
     );
   }
+
+  const handleLeaveAuction = () => {
+    if (socketRef.current) {
+      socketRef.current.emit("leave_auction", { auctionId });
+    }
+    navigate("/search?status=OPEN");
+  };
 
   const products = auction.products || [];
 
@@ -329,6 +450,16 @@ const AuctionDetail = () => {
                 </div>
               )}
             </div>
+            {/* Winner info */}
+            {winner && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <Title level={4} className="text-green-700 mb-2">Auction Ended</Title>
+                <p className="text-gray-700">
+                  Winner: <span className="font-semibold">{winner.username}</span>
+                </p>
+                <p className="text-gray-600">User ID: {winner.userId}</p>
+              </div>
+            )}
 
             {/* Bid history */}
             <div className="bg-white rounded-lg shadow p-4">
@@ -345,7 +476,7 @@ const AuctionDetail = () => {
                   </div>
                   <div className="text-right">
                     <Caption className="text-gray-600">Bid</Caption>
-                    <Title level={4}>${formatMoney(b.bidAmount)}</Title>
+                    <Title level={4}>${formatMoney(Number(b.bidAmount))}</Title>
                   </div>
                 </div>
               ))}
@@ -388,6 +519,17 @@ const AuctionDetail = () => {
                     onChange={(e) => setBidInput(e.target.value)}
                     className="w-full p-3 border border-gray-200 rounded mb-4 outline-none focus:ring-2 focus:ring-green"
                   />
+                  <PrimaryButton
+                    className="w-full py-3 rounded-lg"
+                    onClick={handlePlaceBid}
+                    disabled={!canBid || submitting || (!isLast10Min && Number(bidInput) < minBid)}
+                  >
+                    {submitting
+                      ? "Submitting..."
+                      : canBid
+                        ? (isLast10Min ? "Submit Hidden Bids" : "Place Bid")
+                        : "Bidding not available"}
+                  </PrimaryButton>
                 </>
               ) : (
                 <>
@@ -399,7 +541,7 @@ const AuctionDetail = () => {
                       <input
                         key={i}
                         type="number"
-                        min={1}
+                        min={minBid}
                         step={auction?.minimumBidIncrement || 1}
                         value={v}
                         onChange={(e) => {
@@ -412,15 +554,28 @@ const AuctionDetail = () => {
                       />
                     ))}
                   </div>
+                  <PrimaryButton
+                    className={`w-full py-3 rounded-lg ${
+                      hiddenSubmitted || !canBid
+                        ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                    onClick={handlePlaceBid}
+                    disabled={hiddenSubmitted}
+                  >
+                    {submitting
+                      ? "Submitting..."
+                      : canBid
+                        ? "Submit Hidden Bids"
+                        : "Bidding not available"}
+                  </PrimaryButton>
                 </>
               )}
-
               <PrimaryButton
-                className="w-full py-3 rounded-lg"
-                onClick={handlePlaceBid}
-                disabled={!canBid || submitting || (!isLast10Min && Number(bidInput) < minBid)}
+                className="w-full py-3 rounded-lg mt-2 bg-red-500 hover:bg-red-600"
+                onClick={() => handleLeaveAuction()}
               >
-                {submitting ? "Submitting..." : canBid ? (isLast10Min ? "Submit Hidden Bids" : "Place Bid") : "Bidding not available"}
+                Leave Auction
               </PrimaryButton>
 
               {!user && (
