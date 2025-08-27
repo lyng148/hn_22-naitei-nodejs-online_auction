@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LoadingSpinner, SecondaryButton } from '@/components/ui/index.js';
 import { AuctionCommentForm } from './AuctionCommentForm.jsx';
 import { AuctionCommentItem } from './AuctionCommentItem.jsx';
+import ReportCommentModal from './ReportCommentModal.jsx';
 import { useAuctionComments } from '@/hooks/useAuctionComments.js';
 import { useUser } from '@/contexts/UserContext.jsx';
+import { useNotification } from '@/contexts/NotificationContext.jsx';
+import { commentReportService } from '@/services/commentReport.service.js';
 import { IoChatbubbleOutline, IoLockClosedOutline } from 'react-icons/io5';
 import '@/styles/AuctionComments.css';
 
-export const AuctionCommentSection = ({ auctionId }) => {
+export const AuctionCommentSection = ({ auctionId, highlightCommentId }) => {
     const { user } = useUser();
+    const { showToastNotification } = useNotification();
+    const [reportModal, setReportModal] = useState({ isOpen: false, comment: null });
+    const [reportLoading, setReportLoading] = useState(false);
+    const commentsRef = useRef(null);
     const {
         comments,
         loading,
@@ -20,11 +27,75 @@ export const AuctionCommentSection = ({ auctionId }) => {
         updateComment,
         deleteComment,
         loadMoreComments,
-        hasMoreComments
+        hasMoreComments,
+        hideComment,
+        unhideComment
     } = useAuctionComments(auctionId);
 
     // Check if user can comment (only bidders and sellers can comment)
     const canComment = user && (user.role === 'BIDDER' || user.role === 'SELLER');
+
+    // Handle comment highlighting and scrolling
+    useEffect(() => {
+        if (highlightCommentId && comments.length > 0 && commentsRef.current) {
+            // Wait for the DOM to update
+            const timer = setTimeout(() => {
+                const commentElement = commentsRef.current.querySelector(`[data-comment-id="${highlightCommentId}"]`);
+                if (commentElement) {
+                    // Calculate scroll position with offset for header/navbar
+                    const elementTop = commentElement.getBoundingClientRect().top + window.pageYOffset;
+                    const offset = 100; // Offset for header/navbar
+                    
+                    // Smooth scroll to the comment
+                    window.scrollTo({
+                        top: elementTop - offset,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Add highlight effect
+                    commentElement.classList.add('comment-highlight');
+                    
+                    // Remove highlight after 6 seconds for better visibility
+                    setTimeout(() => {
+                        commentElement.classList.remove('comment-highlight');
+                    }, 6000);
+                } else {
+                    // If comment not found in current page, may need pagination
+                    console.log(`Comment ${highlightCommentId} not found in current comments. Total comments: ${comments.length}`);
+                }
+            }, 500); // Increased timeout for better DOM rendering and API response
+
+            return () => clearTimeout(timer);
+        }
+    }, [highlightCommentId, comments]);
+
+    const handleReport = (comment) => {
+        console.log('Report button clicked for comment:', comment);
+        setReportModal({ isOpen: true, comment });
+    };
+
+    const handleSubmitReport = async (reportData) => {
+        try {
+            setReportLoading(true);
+            await commentReportService.createReport(reportData);
+            showToastNotification('Report submitted successfully', 'success');
+            setReportModal({ isOpen: false, comment: null });
+        } catch (error) {
+            let errorMessage = 'Failed to submit report';
+            
+            if (error.statusCode === 409) {
+                errorMessage = 'You have already reported this comment';
+            } else if (error.statusCode === 403) {
+                errorMessage = 'You cannot report your own comment';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            showToastNotification(errorMessage, 'error');
+        } finally {
+            setReportLoading(false);
+        }
+    };
 
     if (error) {
         return (
@@ -77,13 +148,17 @@ export const AuctionCommentSection = ({ auctionId }) => {
 
             {/* Comments List */}
             {comments.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-6" ref={commentsRef}>
                     {comments.map((comment) => (
                         <AuctionCommentItem
                             key={comment.commentId}
                             comment={comment}
                             onDelete={deleteComment}
                             onEdit={updateComment}
+                            onReport={handleReport}
+                            onHide={hideComment}
+                            onUnhide={unhideComment}
+                            highlightCommentId={highlightCommentId}
                         />
                     ))}
 
@@ -119,6 +194,15 @@ export const AuctionCommentSection = ({ auctionId }) => {
                     </p>
                 </div>
             )}
+
+            {/* Report Comment Modal */}
+            <ReportCommentModal
+                isOpen={reportModal.isOpen}
+                onClose={() => setReportModal({ isOpen: false, comment: null })}
+                onConfirm={handleSubmitReport}
+                comment={reportModal.comment}
+                loading={reportLoading}
+            />
         </div>
     );
 };

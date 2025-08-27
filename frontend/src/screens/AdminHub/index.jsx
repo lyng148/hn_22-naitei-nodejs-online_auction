@@ -8,6 +8,7 @@ import SellerManagement from "@/screens/AdminHub/User/SellerManagement/index.jsx
 import OrderManagement from "@/screens/AdminHub/OrderManagement/index.jsx";
 import AuctionManagement from "@/screens/AdminHub/AuctionManagement/index.jsx";
 import AuctionDetailPage from "@/screens/AdminHub/AuctionManagement/AuctionDetailPage.jsx";
+import CommentReportsManagement from "@/screens/AdminHub/CommentReports/index.jsx";
 import ComingSoon from "@/screens/AdminHub/ComingSoon/index.jsx";
 
 const AdminHub = () => {
@@ -39,7 +40,7 @@ const AdminHub = () => {
         <Route path="performance" element={<ComingSoon title="Performance" />} />
         <Route path="payments" element={<ComingSoon title="Payments" />} />
         <Route path="research" element={<ComingSoon title="Research" />} />
-        <Route path="reports" element={<ComingSoon title="Reports" />} />
+        <Route path="reports" element={<CommentReportsManagement />} />
 
         {/* Default redirect */}
         <Route path="" element={<Navigate to="/admin-hub/user/bidder" replace />} />

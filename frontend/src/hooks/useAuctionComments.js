@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { auctionCommentService } from '@/services/auctionComment.service.js';
-import { useUser } from '@/contexts/UserContext.jsx';
 import { useNotification } from '@/contexts/NotificationContext.jsx';
+import { useUser } from '@/contexts/UserContext.jsx';
 
 export const useAuctionComments = (auctionId) => {
     const { user } = useUser();
@@ -181,6 +181,64 @@ export const useAuctionComments = (auctionId) => {
         return user.userId === comment.user?.userId || user.role === 'ADMIN';
     };
 
+    // Hide comment (admin only)
+    const hideComment = async (commentId) => {
+        if (!user || user.role !== 'ADMIN') {
+            showNotification('Only admins can hide comments', 'error');
+            return;
+        }
+
+        if (!window.confirm('Are you sure you want to hide this comment?')) {
+            return;
+        }
+
+        try {
+            // Use auction comment service instead of regular comment service
+            await auctionCommentService.hideComment(commentId);
+
+            // Update comment in local state
+            setComments(prev =>
+                prev.map(comment =>
+                    comment.commentId === commentId ? { ...comment, isHidden: true } : comment
+                )
+            );
+
+            showNotification('Comment hidden successfully', 'success');
+        } catch (err) {
+            showNotification(err.message || 'Failed to hide comment', 'error');
+            console.error('Error hiding comment:', err);
+        }
+    };
+
+    // Unhide comment (admin only)
+    const unhideComment = async (commentId) => {
+        if (!user || user.role !== 'ADMIN') {
+            showNotification('Only admins can unhide comments', 'error');
+            return;
+        }
+
+        if (!window.confirm('Are you sure you want to unhide this comment?')) {
+            return;
+        }
+
+        try {
+            // Use auction comment service instead of regular comment service
+            await auctionCommentService.unhideComment(commentId);
+
+            // Update comment in local state
+            setComments(prev =>
+                prev.map(comment =>
+                    comment.commentId === commentId ? { ...comment, isHidden: false } : comment
+                )
+            );
+
+            showNotification('Comment unhidden successfully', 'success');
+        } catch (err) {
+            showNotification(err.message || 'Failed to unhide comment', 'error');
+            console.error('Error unhiding comment:', err);
+        }
+    };
+
     // Calculate if there are more comments to load
     const hasMoreComments = pagination.total > comments.length;
 
@@ -215,6 +273,8 @@ export const useAuctionComments = (auctionId) => {
         deleteComment,
         loadMoreComments,
         fetchComments,
+        hideComment,
+        unhideComment,
 
         // Helpers
         canModifyComment
