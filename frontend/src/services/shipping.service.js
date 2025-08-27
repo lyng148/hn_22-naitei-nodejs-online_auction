@@ -87,4 +87,18 @@ export const shippingService = {
       });
     }
   },
+
+  confirmDelivery: async (shippingId) => {
+    try {
+      const response = await axiosClient.patch(SHIPPING_API.CONFIRM_DELIVERY(shippingId));
+      return response.data;
+    } catch (err) {
+      const { statusCode, message, errorCode } = err?.response?.data || {};
+      return Promise.reject({
+        statusCode: statusCode || err?.response?.status || 500,
+        message: message || 'Failed to confirm delivery',
+        errorCode: errorCode || 'CONFIRM_DELIVERY_ERROR',
+      });
+    }
+  },
 };
