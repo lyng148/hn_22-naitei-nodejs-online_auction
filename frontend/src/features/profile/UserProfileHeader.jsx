@@ -27,13 +27,7 @@ export const UserProfileHeader = () => {
                 Account
               </button>
               <button className="px-4 py-2 text-white hover:bg-white hover:bg-opacity-10 rounded-md">
-                Watchlist
-              </button>
-              <button className="px-4 py-2 text-white hover:bg-white hover:bg-opacity-10 rounded-md">
                 Order
-              </button>
-              <button className="px-4 py-2 text-white hover:bg-white hover:bg-opacity-10 rounded-md">
-                Payment history
               </button>
               <button className="px-4 py-2 text-white hover:bg-white hover:bg-opacity-10 rounded-md">
                 Shipping

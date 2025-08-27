@@ -3,7 +3,7 @@ import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { orderService } from "@/services/order.service.js";
 import { ORDER_STATUS, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/constants/orderStatus.js";
-import { formatVND, formatDate } from "@/utils/format.js";
+import { formatUSD, formatDate } from "@/utils/format.js";
 import { getOrderProductInfo, handleImageError } from "@/utils/imageUtils.js";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Pagination } from "@/components/ui/index.js";
@@ -326,7 +326,7 @@ const OrderListForBidder = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">
-                          {formatVND(order.totalAmount)}
+                          {formatUSD(order.totalAmount)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -424,7 +424,7 @@ const OrderListForBidder = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-semibold text-gray-900">
-                        {formatVND(order.totalAmount)}
+                        {formatUSD(order.totalAmount)}
                       </div>
                       <div className="flex items-center gap-2">
                         <button 

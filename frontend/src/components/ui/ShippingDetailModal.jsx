@@ -1,6 +1,6 @@
 import React from "react";
 import { SHIPPING_STATUS_LABELS, SHIPPING_STATUS_COLORS } from "@/constants/shippingStatus.js";
-import { formatVND, formatDate } from "@/utils/format.js";
+import { formatUSD, formatDate } from "@/utils/format.js";
 import { 
   IoCloseOutline,
   IoBusinessOutline,
@@ -177,11 +177,11 @@ const ShippingDetailModal = ({ shipping, isOpen, onClose, onConfirmDelivery }) =
                   <div className="grid grid-cols-1 gap-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Starting Price:</span>
-                      <span className="font-medium">{formatVND(shipping.auction?.startingPrice)}</span>
+                      <span className="font-medium">{formatUSD(shipping.auction?.startingPrice)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Winning Bid:</span>
-                      <span className="font-semibold text-green">{formatVND(shipping.auction?.winningBid)}</span>
+                      <span className="font-semibold text-green">{formatUSD(shipping.auction?.winningBid)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Auction End:</span>
@@ -234,7 +234,7 @@ const ShippingDetailModal = ({ shipping, isOpen, onClose, onConfirmDelivery }) =
                   {shipping.price && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Shipping Cost:</span>
-                      <span className="font-semibold text-green">{formatVND(shipping.price)}</span>
+                      <span className="font-semibold text-green">{formatUSD(shipping.price)}</span>
                     </div>
                   )}
                   

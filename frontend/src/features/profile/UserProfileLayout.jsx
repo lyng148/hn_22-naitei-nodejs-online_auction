@@ -7,7 +7,6 @@ import { Container } from "@/components/ui/index.js";
 import { useUser } from "@/contexts/UserContext.jsx";
 import {
   IoPersonOutline,
-  IoHeartOutline,
   IoReceiptOutline,
   IoCardOutline,
   IoCarOutline,
@@ -18,18 +17,14 @@ import {useSearchParams} from "react-router-dom";
 const ProfileTabs = {
   ACCOUNT: 'Account',
   AUCTION_WINNING: 'Auction Winning',
-  WATCHLIST: 'Watchlist',
   ORDER: 'Order',
-  PAYMENT_HISTORY: 'Payment history',
   SHIPPING: 'Shipping'
 };
 
 const TabIcons = {
   [ProfileTabs.ACCOUNT]: IoPersonOutline,
   [ProfileTabs.AUCTION_WINNING]: IoTrophyOutline,
-  [ProfileTabs.WATCHLIST]: IoHeartOutline,
   [ProfileTabs.ORDER]: IoReceiptOutline,
-  [ProfileTabs.PAYMENT_HISTORY]: IoCardOutline,
   [ProfileTabs.SHIPPING]: IoCarOutline,
 };
 
@@ -49,9 +44,7 @@ export const UserProfileLayout = () => {
   const tabComponents = {
     [ProfileTabs.ACCOUNT]: <UserAccountInfo />,
     [ProfileTabs.AUCTION_WINNING]: <AuctionWinning />,
-    [ProfileTabs.WATCHLIST]: <div className="text-center py-8">Watchlist - Coming Soon</div>,
     [ProfileTabs.ORDER]: <OrderListForBidder />,
-    [ProfileTabs.PAYMENT_HISTORY]: <div className="text-center py-8">Payment History - Coming Soon</div>,
     [ProfileTabs.SHIPPING]: <ShippingListForBidder />,
   };
 

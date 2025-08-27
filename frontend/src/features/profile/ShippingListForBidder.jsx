@@ -3,7 +3,7 @@ import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { shippingService } from "@/services/shipping.service.js";
 import { SHIPPING_STATUS, SHIPPING_STATUS_LABELS, SHIPPING_STATUS_COLORS, SHIPPING_SORT_OPTIONS } from "@/constants/shippingStatus.js";
-import { formatVND, formatDate } from "@/utils/format.js";
+import { formatUSD, formatDate } from "@/utils/format.js";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Pagination } from "@/components/ui/index.js";
 import ShippingDetailModal from "@/components/ui/ShippingDetailModal.jsx";
@@ -495,7 +495,7 @@ const ShippingListForBidder = () => {
                             {shipping.price && (
                               <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-lg text-sm font-medium">
                                 <span>Shipping Cost:</span>
-                                <span className="font-bold">{formatVND(shipping.price)}</span>
+                                <span className="font-bold">{formatUSD(shipping.price)}</span>
                               </div>
                             )}
                           </div>
