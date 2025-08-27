@@ -44,10 +44,10 @@ const AuctionList = () => {
 
             const response = await auctionService.getAuctions(params);
             setAuctions(response.data || []);
-            
+
             // Calculate totalPages from total and size
             const totalPages = Math.ceil((response.total || 0) / (response.size || 12));
-            
+
             setPagination({
                 page: response.page || 0,
                 size: response.size || 12,
@@ -150,8 +150,8 @@ const AuctionList = () => {
                                         key={filter.value}
                                         onClick={() => handleFilterChange(filter.value)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${statusFilter === filter.value
-                                                ? 'bg-emerald-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
                                         {filter.label}
@@ -239,8 +239,8 @@ const AuctionList = () => {
                                     key={pageNumber}
                                     onClick={() => handlePageChange(pageNumber)}
                                     className={`px-4 py-2 border rounded-lg ${pagination.page === pageNumber
-                                            ? 'bg-emerald-600 text-white border-emerald-600'
-                                            : 'border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-emerald-600 text-white border-emerald-600'
+                                        : 'border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     {pageNumber + 1}

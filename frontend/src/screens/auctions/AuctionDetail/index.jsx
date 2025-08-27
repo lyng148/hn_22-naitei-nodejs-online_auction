@@ -4,8 +4,8 @@ import { auctionService } from "@/services/auction.service.js";
 import { bidService } from "@/services/bid.service.js";
 import { useMemo, useState, useRef } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import {io} from "socket.io-client";
-import {getAccessToken} from "@/utils/token-storage.js";
+import { io } from "socket.io-client";
+import { getAccessToken } from "@/utils/token-storage.js";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useEffect } from "react";
@@ -455,8 +455,8 @@ const AuctionDetail = () => {
                 onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
                 disabled={watchlistLoading}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isInWatchlist
-                    ? "bg-red-100 text-red-600 hover:bg-red-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-red-100 text-red-600 hover:bg-red-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   } disabled:opacity-50`}
                 title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
               >
@@ -563,26 +563,26 @@ const AuctionDetail = () => {
 
             {/* Bid history */}
             <div className="bg-white rounded-lg shadow p-4">
-          <Title level={4} className="mb-4">Bid history</Title>
-          {bids.length === 0 ? (
-            <Caption className="text-gray-600">No bids yet.</Caption>
-          ) : (
-            <div className="space-y-3">
-              {bids.map((b) => (
-                <div key={b.bidId} className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <div className="font-medium text-gray-900">{b.username}</div>
-                    <Caption className="text-gray-600">{new Date(b.createdAt).toLocaleString()}</Caption>
-                  </div>
-                  <div className="text-right">
-                    <Caption className="text-gray-600">Bid</Caption>
-                    <Title level={4}>${formatMoney(Number(b.bidAmount))}</Title>
-                  </div>
+              <Title level={4} className="mb-4">Bid history</Title>
+              {bids.length === 0 ? (
+                <Caption className="text-gray-600">No bids yet.</Caption>
+              ) : (
+                <div className="space-y-3">
+                  {bids.map((b) => (
+                    <div key={b.bidId} className="flex items-center justify-between border-b pb-3">
+                      <div>
+                        <div className="font-medium text-gray-900">{b.username}</div>
+                        <Caption className="text-gray-600">{new Date(b.createdAt).toLocaleString()}</Caption>
+                      </div>
+                      <div className="text-right">
+                        <Caption className="text-gray-600">Bid</Caption>
+                        <Title level={4}>${formatMoney(Number(b.bidAmount))}</Title>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
           </div>
 
           {/* Right: Place bid */}
@@ -655,11 +655,10 @@ const AuctionDetail = () => {
                     ))}
                   </div>
                   <PrimaryButton
-                    className={`w-full py-3 rounded-lg ${
-                      hiddenSubmitted || !canBid
+                    className={`w-full py-3 rounded-lg ${hiddenSubmitted || !canBid
                         ? "bg-gray-400 text-gray-700 cursor-not-allowed"
                         : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
+                      }`}
                     onClick={handlePlaceBid}
                     disabled={hiddenSubmitted}
                   >

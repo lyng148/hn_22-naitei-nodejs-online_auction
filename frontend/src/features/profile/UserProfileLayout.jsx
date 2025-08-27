@@ -2,19 +2,22 @@ import { useState } from "react";
 import { UserAccountInfo } from "@/features/profile/UserAccountInfo";
 import OrderListForBidder from "@/features/profile/OrderListForBidder";
 import ShippingListForBidder from "@/features/profile/ShippingListForBidder";
+import AuctionWinning from "../../screens/profile/AuctionWinning";
 import { Container } from "@/components/ui/index.js";
 import { useUser } from "@/contexts/UserContext.jsx";
-import { 
-  IoPersonOutline, 
-  IoHeartOutline, 
-  IoReceiptOutline, 
-  IoCardOutline, 
-  IoCarOutline 
+import {
+  IoPersonOutline,
+  IoHeartOutline,
+  IoReceiptOutline,
+  IoCardOutline,
+  IoCarOutline,
+  IoTrophyOutline
 } from "react-icons/io5";
 
 const ProfileTabs = {
   ACCOUNT: 'Account',
-  WATCHLIST: 'Watchlist', 
+  AUCTION_WINNING: 'Auction Winning',
+  WATCHLIST: 'Watchlist',
   ORDER: 'Order',
   PAYMENT_HISTORY: 'Payment history',
   SHIPPING: 'Shipping'
@@ -22,6 +25,7 @@ const ProfileTabs = {
 
 const TabIcons = {
   [ProfileTabs.ACCOUNT]: IoPersonOutline,
+  [ProfileTabs.AUCTION_WINNING]: IoTrophyOutline,
   [ProfileTabs.WATCHLIST]: IoHeartOutline,
   [ProfileTabs.ORDER]: IoReceiptOutline,
   [ProfileTabs.PAYMENT_HISTORY]: IoCardOutline,
@@ -34,6 +38,7 @@ export const UserProfileLayout = () => {
 
   const tabComponents = {
     [ProfileTabs.ACCOUNT]: <UserAccountInfo />,
+    [ProfileTabs.AUCTION_WINNING]: <AuctionWinning />,
     [ProfileTabs.WATCHLIST]: <div className="text-center py-8">Watchlist - Coming Soon</div>,
     [ProfileTabs.ORDER]: <OrderListForBidder />,
     [ProfileTabs.PAYMENT_HISTORY]: <div className="text-center py-8">Payment History - Coming Soon</div>,
@@ -46,7 +51,7 @@ export const UserProfileLayout = () => {
       <section className="profile pt-8 relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Background decoration */}
         <div className="bg-blue-400 w-48 h-48 rounded-full opacity-5 blur-3xl absolute bottom-1/4 left-10"></div>
-        
+
         <Container>
           <div className="max-w-4xl mx-auto relative z-10">
             <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[500px]">
@@ -63,7 +68,7 @@ export const UserProfileLayout = () => {
       {/* Background decoration */}
       <div className="bg-green w-96 h-96 rounded-full opacity-10 blur-3xl absolute top-2/3 right-0"></div>
       <div className="bg-blue-400 w-64 h-64 rounded-full opacity-5 blur-3xl absolute top-1/4 left-0"></div>
-      
+
       <Container>
         <div className="flex gap-6 relative z-10">
           {/* Left Sidebar with Tabs */}
@@ -78,11 +83,10 @@ export const UserProfileLayout = () => {
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`w-full text-left px-4 py-3 text-sm font-medium transition-all duration-200 border-l-4 flex items-center gap-3 ${
-                        activeTab === tab
+                      className={`w-full text-left px-4 py-3 text-sm font-medium transition-all duration-200 border-l-4 flex items-center gap-3 ${activeTab === tab
                           ? 'bg-green-50 text-green border-green shadow-sm font-semibold'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-green border-transparent'
-                      }`}
+                        }`}
                     >
                       <IconComponent className="w-5 h-5" />
                       {tab}

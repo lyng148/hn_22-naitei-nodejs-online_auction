@@ -101,6 +101,14 @@ export class AuctionController {
     return this.auctionService.getWatchlist(user);
   }
 
+  @Roles(Role.BIDDER)
+  @Get('won-auctions')
+  async getWonAuctions(
+    @CurrentUser() user: any,
+  ): Promise<SearchAuctionResponseDto> {
+    return this.auctionService.getWonAuctions(user);
+  }
+
   @Get(':auctionId')
   @Public()
   async getAuctionById(

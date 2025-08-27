@@ -9,6 +9,7 @@ const AUCTION_API = {
     ADD_TO_WATCHLIST: '/api/auctions/add-to-watchlist',
     REMOVE_FROM_WATCHLIST: '/api/auctions/remove-from-watchlist',
     GET_WATCHLIST: '/api/auctions/watchlist',
+    GET_WON_AUCTIONS: '/api/auctions/won-auctions',
     CANCEL_AUCTION: '/api/auctions/cancel',
     REOPEN_AUCTION: '/api/auctions/reopen',
 };
@@ -195,6 +196,22 @@ export const auctionService = {
             return Promise.reject({
                 statusCode: statusCode || 500,
                 message: message || 'Failed to reopen auction',
+                errorCode: code || 'INTERNAL_SERVER_ERROR',
+            });
+        }
+    },
+
+    // Get won auctions
+    getWonAuctions: async () => {
+        try {
+            const response = await axiosClient.get(AUCTION_API.GET_WON_AUCTIONS);
+            return response.data;
+        } catch (err) {
+            const statusCode = err?.status;
+            const { message, code } = err?.response?.data || {};
+            return Promise.reject({
+                statusCode: statusCode || 500,
+                message: message || 'Failed to fetch won auctions',
                 errorCode: code || 'INTERNAL_SERVER_ERROR',
             });
         }

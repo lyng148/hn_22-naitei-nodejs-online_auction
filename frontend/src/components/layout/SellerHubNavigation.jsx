@@ -4,7 +4,6 @@ import { Title } from "../ui/index.js";
 
 export const SellerHubNavigation = () => {
   const navTabs = [
-    { id: 1, path: "/seller-hub/overview", label: "Overview" },
     { id: 2, path: "/seller-hub/orders", label: "Orders" },
     { id: 3, path: "/seller-hub/listings", label: "Listings" },
     { id: 10, path: "/seller-hub/statistics", label: "Statistics" },
