@@ -6,8 +6,8 @@ export const NOTIFICATION_QUEUE = 'queue/notifications';
 export enum NotificationType {
   OUTBID = 'OUTBID',
   AUCTION_CLOSED = 'AUCTION_CLOSED',
-
 }
+
 export const SEND_NOTIFICATION_ERROR = 'Failed to send notification';
 export const ERROR_NOT_FOUND_NOTIFICATION = 'Notification not found';
 export const ERROR_ALREADY_MARKED_AS_READ = 'Notification is already marked as read';
@@ -25,53 +25,51 @@ export const SUCCESS_NOTIFICATION_MESSAGES = {
 
 export const NotificationMessages = {
   OUTBID: (title: string, bidAmount: number) =>
-    `Bạn đã bị vượt giá ở ${title}! Giá mới: ${bidAmount.toLocaleString()}₫`,
+    `You have been outbid in ${title}! New price: ${bidAmount.toLocaleString()}₫`,
   AUCTION_ENDED_WINNER: (title: string, price: number) =>
-    `Chúc mừng! Bạn đã thắng phiên đấu giá ${title} với giá ${price.toLocaleString()}₫`,
+    `Congratulations! You won the auction ${title} with a price of ${price.toLocaleString()}₫`,
   AUCTION_ENDED_LOSER: (title: string, price: number) =>
-    `Phiên đấu giá ${title} đã kết thúc, giá cuối cùng là ${price.toLocaleString()}₫. Bạn đã thua, hãy tham gia phiên đấu giá khác nhé! Cố lên!`,
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You lost, please join another auction! Keep trying!`,
   AUCTION_ENDED_WATCHER: (title: string, price: number) =>
-    `Phiên đấu giá ${title} đã kết thúc, giá cuối cùng là ${price.toLocaleString()}₫. Bạn đã theo dõi phiên đấu giá này, hãy tham gia phiên đấu giá khác nhé!`,
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You were watching this auction, please join another auction!`,
   AUCTION_ENDED_FOLLOWER: (title: string, price: number) =>
-    `Phiên đấu giá ${title} đã kết thúc, giá cuối cùng là ${price.toLocaleString()}₫. Bạn đã theo dõi chủ sở hữu phiên đấu giá này, hãy tham gia phiên đấu giá khác nhé!`,
-
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You were following the owner of this auction, please join another auction!`,
 
   AUCTION_BIDDER_CLOSED: (title: string) =>
-    `Phiên đấu giá ${title} đã bị đóng. Bạn đã tham gia phiên đấu giá này, hãy tham gia phiên đấu giá khác nhé!`,
+    `The auction ${title} has been closed. You participated in this auction, please join another auction!`,
   AUCTION_FOLLOWER_CLOSED: (title: string) =>
-    `Phiên đấu giá ${title} đã bị đóng. Bạn đã theo dõi chủ sở hữu phiên đấu giá này, hãy tham gia phiên đấu giá khác nhé!`,
+    `The auction ${title} has been closed. You were following the owner of this auction, please join another auction!`,
   AUCTION_WATCHER_CLOSED: (title: string) =>
-    `Phiên đấu giá ${title} đã bị đóng. Bạn đã theo dõi phiên đấu giá này, hãy tham gia phiên đấu giá khác nhé!`,
+    `The auction ${title} has been closed. You were watching this auction, please join another auction!`,
   AUCTION_CLOSED_SELLER: (title: string) =>
-    `Phiên đấu giá của bạn "${title}" đã bị đóng.`,
+    `Your auction "${title}" has been closed.`,
 
   AUCTION_CANCELED_SELLER: (title: string) =>
-    `Phiên đấu giá của bạn "${title}" đã bị ADMIN hủy.`,
+    `Your auction "${title}" has been canceled by ADMIN.`,
   AUCTION_PENDING_SELLER: (title: string) =>
-    `Phiên đấu giá của bạn "${title}" đang ở trạng thái chờ xử lý.`,
+    `Your auction "${title}" is pending approval.`,
 
   AUCTION_READY_SELLER: (title: string) =>
-    `Phiên đấu giá của bạn "${title}" đã được ADMIN duyệt, chuẩn bị lên sàn đấu giá!`,
+    `Your auction "${title}" has been approved by ADMIN and is ready to go live!`,
   AUCTION_READY_FOLLOWER: (title: string) =>
-    `Phiên đấu giá "${title}" chuẩn bị lên sàn. Bạn đã theo dõi chủ sở hữu phiên đấu giá này. Hãy tham gia ngay nào!`,
+    `Auction "${title}" is about to go live. You are following the owner of this auction. Join now!`,
 
   AUCTION_OPEN_SELLER: (title: string) =>
-    `Phiên đấu giá của bạn "${title}" đã chính thức mở!`,
+    `Your auction "${title}" is now officially open!`,
   AUCTION_OPEN_FOLLOWER: (title: string) =>
-    `Phiên đấu giá "${title}" đã chính thức mở! Bạn đã theo dõi chủ sở hữu phiên đấu giá này. Hãy tham gia ngay nào!`,
+    `Auction "${title}" is now officially open! You are following the owner of this auction. Join now!`,
   AUCTION_OPEN_WATCHER: (title: string) =>
-    `Phiên đấu giá "${title}" đã chính thức mở! Bạn đã theo dõi phiên đấu giá này. Hãy tham gia ngay nào!`,
+    `Auction "${title}" is now officially open! You were watching this auction. Join now!`,
 
   FOLLOW_CREATED: (user: string) =>
-    `Bạn đã được ${user} theo dõi `,
-  WARNING_CREATED: (warningCount: number)=>
-    `Bạn đã bị cảnh cáo lần thứ ${warningCount}`,
+    `You have been followed by ${user}`,
+  WARNING_CREATED: (warningCount: number) =>
+    `You have received warning number ${warningCount}`,
 
-  BAND: (user:string) =>
-    `Bạn đã bị cấm sử dụng trang Web`,
-  UNBAND: (user:string) =>
-    `Bạn đã được sử dụng trang Web trở lại`,
-
+  BAND: (user: string) =>
+    `You have been banned from using the website`,
+  UNBAND: (user: string) =>
+    `You are allowed to use the website again`,
 };
 
 export const DOMAIN_EVENTS = {
