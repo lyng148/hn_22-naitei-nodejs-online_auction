@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
@@ -14,6 +14,7 @@ import { IoAddOutline, IoChevronDownOutline, IoDownloadOutline } from "react-ico
 
 const ProductListing = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null });
@@ -21,6 +22,13 @@ const ProductListing = () => {
   const [toggleLoading, setToggleLoading] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [exportModal, setExportModal] = useState(false);
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchBy, setSearchBy] = useState("name");
+  const [period, setPeriod] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const { user } = useUser();
   const { showToastNotification } = useNotification();
@@ -32,11 +40,123 @@ const ProductListing = () => {
     }
   }, [user]);
 
+  // Filter and sort products based on current filter criteria
+  const filterAndSortProducts = useCallback(() => {
+    let filtered = [...products];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((product) => {
+        const searchLower = searchTerm.toLowerCase();
+        switch (searchBy) {
+          case "name":
+            return product.name?.toLowerCase().includes(searchLower);
+          case "description":
+            return product.description?.toLowerCase().includes(searchLower);
+          case "category":
+            return product.category?.name?.toLowerCase().includes(searchLower);
+          case "status":
+            return product.status?.toLowerCase().includes(searchLower);
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter(product => product.status === statusFilter);
+    }
+
+    // Apply period filter
+    if (period) {
+      const now = new Date();
+      let startDate = new Date();
+
+      switch (period) {
+        case "7days":
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case "30days":
+          startDate.setDate(now.getDate() - 30);
+          break;
+        case "90days":
+          startDate.setDate(now.getDate() - 90);
+          break;
+        case "6months":
+          startDate.setMonth(now.getMonth() - 6);
+          break;
+        case "1year":
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate = null;
+          break;
+      }
+
+      if (startDate) {
+        filtered = filtered.filter(product => new Date(product.createdAt) >= startDate);
+      }
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let valueA, valueB;
+
+      switch (sortBy) {
+        case "name":
+          valueA = a.name?.toLowerCase() || "";
+          valueB = b.name?.toLowerCase() || "";
+          break;
+        case "stockQuantity":
+          valueA = a.stockQuantity || 0;
+          valueB = b.stockQuantity || 0;
+          break;
+        case "status":
+          valueA = a.status || "";
+          valueB = b.status || "";
+          break;
+        case "updatedAt":
+          valueA = new Date(a.updatedAt);
+          valueB = new Date(b.updatedAt);
+          break;
+        case "createdAt":
+        default:
+          valueA = new Date(a.createdAt);
+          valueB = new Date(b.createdAt);
+          break;
+      }
+
+      if (typeof valueA === 'string') {
+        return valueB.localeCompare(valueA); // Desc order for strings
+      } else {
+        return valueB - valueA; // Desc order for numbers and dates
+      }
+    });
+
+    setFilteredProducts(filtered);
+  }, [products, searchTerm, searchBy, period, sortBy, statusFilter]);
+
+  // Apply filters when dependencies change
+  useEffect(() => {
+    filterAndSortProducts();
+  }, [filterAndSortProducts]);
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSearchBy("name");
+    setPeriod("");
+    setSortBy("createdAt");
+    setStatusFilter("");
+  };
+
   const fetchMyProducts = async () => {
     try {
       setLoading(true);
       const response = await productService.getMyProducts();
-      setProducts(response.products || []);
+      const productsList = response.products || [];
+      setProducts(productsList);
+      setFilteredProducts(productsList); // Initialize filtered products
     } catch (err) {
       console.error('Failed to fetch products:', err);
       setError(err.message || 'Failed to fetch products');
@@ -169,7 +289,19 @@ const ProductListing = () => {
       </div>
 
       {/* Filters Section */}
-      <ProductFilters />
+      <ProductFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        searchBy={searchBy}
+        setSearchBy={setSearchBy}
+        period={period}
+        setPeriod={setPeriod}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onClearFilters={handleClearFilters}
+      />
 
       {/* Error Message */}
       {error && (
@@ -180,7 +312,7 @@ const ProductListing = () => {
 
       {/* Products Table */}
       <ProductTable
-        products={products}
+        products={filteredProducts}
         onEdit={handleEditProduct}
         onDelete={handleDeleteProduct}
         onToggleStatus={handleToggleStatus}
@@ -188,6 +320,27 @@ const ProductListing = () => {
       />
 
       {/* Empty State */}
+      {!loading && filteredProducts.length === 0 && products.length > 0 && (
+        <div className="text-center py-12">
+          <div className="mb-4">
+            <IoAddOutline size={48} className="mx-auto text-gray-400" />
+          </div>
+          <Title level={3} className="text-xl font-medium text-gray-900 mb-2">
+            No products found
+          </Title>
+          <p className="text-gray-600 mb-6">
+            Try adjusting your search criteria or filters
+          </p>
+          <button
+            onClick={handleClearFilters}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
+
+      {/* Empty State - No products at all */}
       {!loading && products.length === 0 && (
         <div className="text-center py-12">
           <div className="mb-4">

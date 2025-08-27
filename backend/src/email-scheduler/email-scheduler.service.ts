@@ -62,8 +62,8 @@ export class EmailSchedulerService {
 
         try {
             const currentDate = new Date();
-            const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-            const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
 
             // Gửi email cho từng role
             await Promise.all([
