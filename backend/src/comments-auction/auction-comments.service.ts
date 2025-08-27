@@ -37,7 +37,7 @@ export class AuctionCommentsService {
     const comment = await this.prisma.auctionComment.create({
       data: {
         auctionId: createCommentDto.auctionId,
-        userId: user.userId,
+        userId: (user as any).id,
         content: createCommentDto.content,
       },
       include: {
@@ -136,7 +136,7 @@ export class AuctionCommentsService {
       throw new NotFoundException(AUCTION_COMMENT_ERRORS.COMMENT_NOT_FOUND);
     }
 
-    if (existingComment.userId !== user.userId && user.role !== Role.ADMIN) {
+    if (existingComment.userId !== (user as any).id && user.role !== Role.ADMIN) {
       throw new ForbiddenException(AUCTION_COMMENT_ERRORS.UNAUTHORIZED_ACCESS);
     }
 
@@ -169,7 +169,7 @@ export class AuctionCommentsService {
       throw new NotFoundException(AUCTION_COMMENT_ERRORS.COMMENT_NOT_FOUND);
     }
 
-    if (existingComment.userId !== user.userId && user.role !== Role.ADMIN) {
+    if (existingComment.userId !== (user as any).id && user.role !== Role.ADMIN) {
       throw new ForbiddenException(AUCTION_COMMENT_ERRORS.UNAUTHORIZED_ACCESS);
     }
 
@@ -231,7 +231,7 @@ export class AuctionCommentsService {
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
       user: {
-        userId: comment.user.userId,
+        userId: comment.user.id,
         profile: comment.user.profile
           ? {
               firstName: comment.user.profile.fullName?.split(' ')[0] || '',

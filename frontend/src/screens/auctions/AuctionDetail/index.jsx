@@ -1,13 +1,13 @@
 import { Layout } from "@/components/layout/Layout.jsx";
-import { Caption, Container, LoadingSpinner, PrimaryButton, Title } from "@/components/ui/index.js";
-import { useNotification } from "@/contexts/NotificationContext.jsx";
-import { useUser } from "@/contexts/UserContext.jsx";
+import { Container, Title, Caption, PrimaryButton, LoadingSpinner, AuctionCommentSection } from "@/components/ui/index.js";
 import { auctionService } from "@/services/auction.service.js";
 import { bidService } from "@/services/bid.service.js";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {io} from "socket.io-client";
 import {getAccessToken} from "@/utils/token-storage.js";
+import { useUser } from "@/contexts/UserContext.jsx";
+import { useNotification } from "@/contexts/NotificationContext.jsx";
 
 const statusBadgeClass = (status) => ({
   PENDING: "text-gray-700 bg-yellow-400",
@@ -600,6 +600,11 @@ const AuctionDetail = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Comment Section */}
+        <div className="mt-6">
+          <AuctionCommentSection auctionId={auctionId} />
         </div>
       </Container>
     </Layout>
