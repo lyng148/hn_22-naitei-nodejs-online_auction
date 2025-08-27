@@ -424,7 +424,7 @@ const AuctionDetail = () => {
     if (socketRef.current) {
       socketRef.current.emit("leave_auction", { auctionId });
     }
-    navigate("/search?status=OPEN");
+    navigate("/auctions");
   };
 
   const products = auction.products || [];

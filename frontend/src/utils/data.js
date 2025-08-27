@@ -6,11 +6,16 @@ export const menulists = [
   },
   {
     id: 2,
+    path: "/auctions",
+    link: "Auctions",
+  },
+  {
+    id: 3,
     path: "/watchlist",
     link: "Watchlist",
   },
   {
-    id: 3,
+    id: 4,
     path: "/chat",
     link: "Chat",
   },
