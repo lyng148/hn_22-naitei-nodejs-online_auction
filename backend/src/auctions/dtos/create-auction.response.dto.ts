@@ -3,6 +3,8 @@ export class CreateAuctionResponseDto {
 
   title!: string;
 
+  imageUrl?: string;
+
   startTime!: Date;
 
   endTime!: Date;

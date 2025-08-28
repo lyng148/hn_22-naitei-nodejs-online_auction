@@ -21,7 +21,7 @@ export const LoginForm = () => {
   useEffect(() => {
     if (!loading && user.id && user.email && user.role) {
       showToastNotification(`You are already logged in as ${user.email}`, "info");
-      navigate("/dashboard"); // Redirect to dashboard instead of "/"
+      navigate("/"); // Redirect to homepage
     }
   }, [loading, navigate, showToastNotification, user]);
 

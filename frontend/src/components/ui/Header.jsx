@@ -11,7 +11,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className='header py-1 bg-primary scrolled'>
+      <header className='header py-1 bg-white scrolled shadow-sm'>
         <Container>
           <nav className="p-4 flex justify-between items-center relative">
             <div className="flex items-center gap-14">
@@ -21,9 +21,10 @@ export const Header = () => {
                   (list.id !== 7 || user?.role === "SELLER") &&
                   (list.id !== 8 || user?.role === "ADMIN") &&
                   (list.id !== 9 || user?.role === "SELLER") &&
+                  (list.id !== 2 || user?.role === "BIDDER") &&
                   (
                     <li key={list.id} className="capitalize list-none">
-                      <CustomNavLinkList href={list.path} isActive={location.pathname === list.path} className={`${!isHomePage ? "text-black" : "text-white"}`}>
+                      <CustomNavLinkList href={list.path} isActive={location.pathname === list.path} className="text-black">
                         {list.link}
                       </CustomNavLinkList>
                     </li>
@@ -34,31 +35,31 @@ export const Header = () => {
             </div>
             <div className="flex items-center gap-8 icons">
               <div className="hidden lg:flex lg:items-center lg:gap-8">
-                <IoSearchOutline size={23} className={`${!isHomePage ? "text-black" : "text-white"}`} />
+                <IoSearchOutline size={23} className="text-black" />
 
                 {user?.role && (
-                  <WalletButton isHomePage={isHomePage} />
+                  <WalletButton isHomePage={false} />
                 )}
                 {user?.role && (
-                  <NotificationBell isHomePage={isHomePage} />
+                  <NotificationBell isHomePage={false} />
                 )}
 
                 {user?.role === "BIDDER" && (
-                  <CustomNavLink href="/seller/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
+                  <CustomNavLink href="/seller/login" className="text-black">
                   </CustomNavLink>
                 )}
 
                 {!user?.role ? (
                   <div className="flex items-center gap-8">
-                    <CustomNavLink href="/auth/login" className={`${!isHomePage ? "text-black" : "text-white"}`}>
+                    <CustomNavLink href="/auth/login" className="text-black">
                       Sign in
                     </CustomNavLink>
-                    <CustomNavLink href="/auth/register" className={`${!isHomePage ? "bg-green" : "bg-white"} px-8 py-2 rounded-full text-primary shadow-md`}>
+                    <CustomNavLink href="/auth/register" className="bg-green px-8 py-2 rounded-full text-white shadow-md">
                       Join
                     </CustomNavLink>
                   </div>
                 ) : (
-                  <UserAvatarDropdown isHomePage={isHomePage} />
+                  <UserAvatarDropdown isHomePage={false} />
                 )}
               </div>
             </div>

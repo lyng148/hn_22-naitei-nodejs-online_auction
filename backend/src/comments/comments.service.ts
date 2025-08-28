@@ -15,7 +15,7 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createComment(
     user: User,
@@ -34,7 +34,7 @@ export class CommentsService {
     const comment = await this.prisma.productComment.create({
       data: {
         productId: createCommentDto.productId,
-        userId: user.userId,
+        userId: (user as any).id,
         content: createCommentDto.content,
         rating: createCommentDto.rating,
       },

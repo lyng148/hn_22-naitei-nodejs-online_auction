@@ -5,6 +5,7 @@ import { AuthRoute } from "@/routers/AuthRoutes.jsx";
 import { ProductRoutes } from "@/routers/ProductRoutes.jsx";
 import { AuctionRoutes } from "@/routers/AuctionRoutes.jsx";
 import Dashboard from "@/screens/Dashboard/index.jsx";
+import Homepage from "@/screens/Homepage/Homepage.jsx";
 import SellerHub from "@/screens/SellerHub/index.jsx";
 import AdminHub from "@/screens/AdminHub/index.jsx";
 import UserProfileScreen from "@/screens/profile/UserProfileScreen.jsx";
@@ -13,6 +14,7 @@ import ResetPasswordPage from "@/screens/auth/ResetPassword/index.jsx";
 import ChatPage from '@/screens/chat/index.jsx';
 import AddFunds from '@/screens/wallet/AddFunds-QR';
 import WalletDashboard from '@/screens/wallet/WalletDashboard';
+import Watchlist from '@/screens/Watchlist/index.jsx';
 import { WalletProvider } from './contexts/WalletContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -22,9 +24,8 @@ function App() {
       <UserProvider>
         <NotificationProvider>
           <WalletProvider>
-            <Toaster position="top-right" />
             <Routes>
-              <Route path="/" element={<Navigate to="/auth/login" replace />} />
+              <Route path="/" element={<Homepage />} />
               <Route path="/auth/*" element={<AuthRoute />} />
               <Route path="/reset" element={<ResetPasswordPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -35,17 +36,61 @@ function App() {
               <Route path="/profile" element={<UserProfileScreen />} />
               <Route path="/seller/:sellerId" element={<SellerProfile />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path="/watchlist" element={<Watchlist />} />
               <Route path="/wallet" element={<WalletDashboard />} />
               <Route path="/wallet/add-funds" element={<AddFunds />} />
             </Routes>
-            <Toaster 
+            <Toaster
               position="bottom-right"
               toastOptions={{
                 duration: 4000,
-                style: {
-                  background: 'transparent',
-                  boxShadow: 'none',
-                  padding: 0,
+                success: {
+                  style: {
+                    background: '#10B981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#EF4444',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                  },
+                },
+                info: {
+                  style: {
+                    background: '#3B82F6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                  },
+                },
+                warning: {
+                  style: {
+                    background: '#F59E0B',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                  },
                 },
               }}
             />

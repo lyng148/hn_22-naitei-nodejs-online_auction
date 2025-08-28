@@ -98,7 +98,7 @@ const Message = ({ message }) => {
                   <div className="text-sm">Image unavailable</div>
                   <button
                     onClick={() => handleFileDownload(message.fileUrl, fileName)}
-                    className="text-blue-500 text-xs underline mt-1"
+                    className="text-emerald-500 text-xs underline mt-1"
                   >
                     Download
                   </button>
@@ -126,7 +126,7 @@ const Message = ({ message }) => {
           {/* File card */}
           <div
             className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all duration-200 ${isMyMessage
-                ? 'bg-blue-600 border-blue-500 hover:bg-blue-700 shadow-sm'
+                ? 'bg-emerald-600 border-emerald-500 hover:bg-emerald-700 shadow-sm'
                 : 'bg-white border-gray-200 hover:bg-gray-50 shadow-sm'
               }`}
             onClick={() => handleFileDownload(message.fileUrl, fileName)}
@@ -139,12 +139,12 @@ const Message = ({ message }) => {
                 }`}>
                 {fileName}
               </p>
-              <p className={`text-xs ${isMyMessage ? 'text-blue-100' : 'text-gray-500'
+              <p className={`text-xs ${isMyMessage ? 'text-emerald-100' : 'text-gray-500'
                 }`}>
                 {fileExtension.toUpperCase()} file • Click to download
               </p>
             </div>
-            <div className={`text-xs ${isMyMessage ? 'text-blue-100' : 'text-gray-400'
+            <div className={`text-xs ${isMyMessage ? 'text-emerald-100' : 'text-gray-400'
               }`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -175,7 +175,7 @@ const Message = ({ message }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-purple-500 flex items-center justify-center">
               <span className="text-white text-xs font-medium">
                 {message.sender?.profile?.fullName?.charAt(0) ||
                   message.sender?.email?.charAt(0) || '?'}
@@ -195,7 +195,7 @@ const Message = ({ message }) => {
 
         {/* Message bubble */}
         <div className={`relative px-4 py-2 ${isMyMessage
-            ? 'bg-blue-500 text-white rounded-2xl rounded-br-md'
+            ? 'bg-emerald-500 text-white rounded-2xl rounded-br-md'
             : 'bg-gray-200 text-gray-800 rounded-2xl rounded-bl-md'
           } ${message.type === 'IMAGE' ? 'p-1' : ''}`}>
           {/* Message content */}
@@ -221,8 +221,8 @@ const Message = ({ message }) => {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
-              {message.status === 'READ' && (
-                <svg className="w-3 h-3 inline text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              {message.status === 'read' && (
+                <svg className="w-3 h-3 inline text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}

@@ -35,7 +35,7 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
     return (
       <div className="p-6 text-center text-gray-500">
         <div className="py-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
             </svg>
@@ -57,7 +57,7 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
           <div
             key={room.chatRoomId}
             className={`relative px-4 py-3 cursor-pointer hover:bg-gray-50 transition-all duration-200 group ${currentRoom?.chatRoomId === room.chatRoomId
-                ? 'bg-blue-50 border-r-4 border-blue-500'
+                ? 'bg-emerald-50 border-r-4 border-emerald-500'
                 : ''
               }`}
             onClick={() => handleRoomClick(room)}
@@ -78,7 +78,7 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
                     />
                   ) : null}
                   <div
-                    className={`w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center ${room.otherUser?.profile?.profileImageUrl ? 'hidden' : 'flex'
+                    className={`w-full h-full bg-gradient-to-br from-emerald-400 to-purple-500 flex items-center justify-center ${room.otherUser?.profile?.profileImageUrl ? 'hidden' : 'flex'
                       }`}
                   >
                     <span className="font-semibold text-lg text-white">
@@ -165,7 +165,7 @@ const ChatRoomList = ({ rooms, onRoomSelect, onDeleteRoom, currentRoom }) => {
                   </p>
 
                   {room.unreadCount > 0 && (
-                    <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${hasRecentUnread ? 'bg-blue-500' : 'bg-gray-400'
+                    <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${hasRecentUnread ? 'bg-emerald-500' : 'bg-gray-400'
                       }`}>
                       <span className="text-white text-xs font-bold">
                         {room.unreadCount > 9 ? '9+' : room.unreadCount}

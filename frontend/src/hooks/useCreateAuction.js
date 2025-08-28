@@ -10,6 +10,7 @@ export const useCreateAuction = () => {
 
     // Auction form state
     const [title, setTitle] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [startingPrice, setStartingPrice] = useState('');
@@ -21,6 +22,7 @@ export const useCreateAuction = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [loadingProducts, setLoadingProducts] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
 
     // Load available products
@@ -70,6 +72,48 @@ export const useCreateAuction = () => {
             )
         );
     }, [removeProduct]);
+
+    // Handle image upload
+    const handleImageUpload = useCallback(async (file) => {
+        if (!file) return null;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            setError('Only image files (JPEG, PNG, WebP, GIF) are allowed');
+            return null;
+        }
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            setError('File size must be less than 5MB');
+            return null;
+        }
+
+        setUploading(true);
+        setError("");
+
+        try {
+            const response = await auctionService.uploadImage(file, file.name);
+            const uploadedImageUrl = response.imageUrl;
+            setImageUrl(uploadedImageUrl);
+            showToastNotification('Image uploaded successfully!', 'success');
+            return uploadedImageUrl;
+        } catch (err) {
+            console.error('Image upload error:', err);
+            setError(err.message || 'Image upload failed');
+            showToastNotification(err.message || 'Image upload failed', 'error');
+            return null;
+        } finally {
+            setUploading(false);
+        }
+    }, [showToastNotification]);
+
+    // Remove image
+    const removeImage = useCallback(() => {
+        setImageUrl('');
+    }, []);
 
     // Validate form
     const validateForm = useCallback(() => {
@@ -127,6 +171,7 @@ export const useCreateAuction = () => {
 
             const auctionData = {
                 title: title.trim(),
+                imageUrl: imageUrl || undefined, // Only include if image was uploaded
                 startTime,
                 endTime,
                 startingPrice: startingPrice.toString(),
@@ -143,6 +188,7 @@ export const useCreateAuction = () => {
 
             // Reset form
             setTitle('');
+            setImageUrl('');
             setStartTime('');
             setEndTime('');
             setStartingPrice('');
@@ -176,6 +222,7 @@ export const useCreateAuction = () => {
     // Reset form
     const resetForm = useCallback(() => {
         setTitle('');
+        setImageUrl('');
         setStartTime('');
         setEndTime('');
         setStartingPrice('');
@@ -188,6 +235,8 @@ export const useCreateAuction = () => {
         // Form data
         title,
         setTitle,
+        imageUrl,
+        setImageUrl,
         startTime,
         setStartTime,
         endTime,
@@ -203,6 +252,7 @@ export const useCreateAuction = () => {
         loading,
         submitting,
         loadingProducts,
+        uploading,
         error,
 
         // Actions
@@ -210,6 +260,8 @@ export const useCreateAuction = () => {
         addProduct,
         removeProduct,
         updateProductQuantity,
+        handleImageUpload,
+        removeImage,
         handleSubmit,
         resetForm,
     };

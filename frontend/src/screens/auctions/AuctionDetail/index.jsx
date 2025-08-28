@@ -2,12 +2,14 @@ import { Layout } from "@/components/layout/Layout.jsx";
 import { Container, Title, Caption, PrimaryButton, LoadingSpinner, AuctionCommentSection } from "@/components/ui/index.js";
 import { auctionService } from "@/services/auction.service.js";
 import { bidService } from "@/services/bid.service.js";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {io} from "socket.io-client";
 import {getAccessToken} from "@/utils/token-storage.js";
 import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
+import { useEffect } from "react";
+import { IoHeartOutline, IoHeart } from "react-icons/io5";
 
 const statusBadgeClass = (status) => ({
   PENDING: "text-gray-700 bg-yellow-400",
@@ -56,6 +58,8 @@ const AuctionDetail = () => {
   const [hiddenSubmitted, setHiddenSubmitted] = useState(false);
 
   const socketRef = useRef(null);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   const { days, hours, minutes, seconds, isOver, timeLeftMs } = useCountdown(auction?.endTime);
 
@@ -250,6 +254,63 @@ const AuctionDetail = () => {
     }
   }, [timeLeftMs, auctionId]);
 
+  // Check if auction is in user's watchlist
+  const checkWatchlistStatus = async () => {
+    if (!user || user.role !== "BIDDER") return;
+
+    try {
+      const watchlistData = await auctionService.getWatchlist();
+      const isInList = watchlistData.data?.some(item => item.auctionId === auctionId);
+      setIsInWatchlist(isInList);
+    } catch (error) {
+      console.error("Failed to check watchlist status:", error);
+    }
+  };
+
+  // Add to watchlist
+  const handleAddToWatchlist = async () => {
+    if (!user || user.role !== "BIDDER") {
+      showToastNotification("Please log in as a bidder to use watchlist", "error");
+      return;
+    }
+
+    try {
+      setWatchlistLoading(true);
+      await auctionService.addToWatchlist(auctionId);
+      setIsInWatchlist(true);
+      showToastNotification("Added to watchlist", "success");
+    } catch (error) {
+      console.error("Failed to add to watchlist:", error);
+      showToastNotification(error.message || "Failed to add to watchlist", "error");
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
+
+  // Remove from watchlist
+  const handleRemoveFromWatchlist = async () => {
+    if (!user || user.role !== "BIDDER") return;
+
+    try {
+      setWatchlistLoading(true);
+      await auctionService.removeFromWatchlist(auctionId);
+      setIsInWatchlist(false);
+      showToastNotification("Removed from watchlist", "success");
+    } catch (error) {
+      console.error("Failed to remove from watchlist:", error);
+      showToastNotification(error.message || "Failed to remove from watchlist", "error");
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
+
+  // Check watchlist status when auction loads
+  useEffect(() => {
+    if (auction && user?.role === "BIDDER") {
+      checkWatchlistStatus();
+    }
+  }, [auction, user]);
+
   const handlePlaceBid = async () => {
     if (!canBid) return;
 
@@ -387,11 +448,38 @@ const AuctionDetail = () => {
               </Caption>
             </div>
           </div>
-          <div className="text-right">
-            <Caption className="text-green">Time left</Caption>
-            <Title>
-              {days}d : {hours}h : {minutes}m : {seconds}s
-            </Title>
+          <div className="flex items-center gap-4">
+            {/* Watchlist Button - Only for bidders */}
+            {user?.role === "BIDDER" && (
+              <button
+                onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
+                disabled={watchlistLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isInWatchlist
+                    ? "bg-red-100 text-red-600 hover:bg-red-200"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  } disabled:opacity-50`}
+                title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+              >
+                {watchlistLoading ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : isInWatchlist ? (
+                  <IoHeart className="w-5 h-5" />
+                ) : (
+                  <IoHeartOutline className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">
+                  {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                </span>
+              </button>
+            )}
+
+            {/* Time left */}
+            <div className="text-right">
+              <Caption className="text-green">Time left</Caption>
+              <Title>
+                {days}d : {hours}h : {minutes}m : {seconds}s
+              </Title>
+            </div>
           </div>
         </div>
 
@@ -497,8 +585,8 @@ const AuctionDetail = () => {
         </div>
           </div>
 
-                    {/* Right: Place bid */}
-                    <div className="lg:col-span-1">
+          {/* Right: Place bid */}
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4 sticky top-24">
               <Title level={4} className="mb-2">
                 {isLast10Min ? "Hidden Bids (Last 10 minutes)" : "Place a bid"}

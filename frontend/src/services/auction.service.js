@@ -2,6 +2,7 @@ import axiosClient from "@/utils/axios.js";
 
 const AUCTION_API = {
     CREATE_AUCTION: '/api/auctions',
+    UPLOAD_IMAGE: '/api/auctions/upload',
     GET_AUCTIONS: '/api/auctions',
     GET_AUCTION_BY_ID: '/api/auctions',
     GET_MY_AUCTIONS: '/api/auctions/my-auctions',
@@ -13,6 +14,37 @@ const AUCTION_API = {
 };
 
 export const auctionService = {
+    // Upload auction image
+    uploadImage: async (file, fileName) => {
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            // Only add fileName if it's provided and not empty
+            if (fileName && fileName.trim()) {
+                formData.append('fileName', fileName.trim());
+            }
+
+            const response = await axiosClient.post(
+                AUCTION_API.UPLOAD_IMAGE,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+            return response.data;
+        } catch (err) {
+            const statusCode = err?.status;
+            const { message, code } = err?.response?.data || {};
+            return Promise.reject({
+                statusCode: statusCode || 500,
+                message: message || 'Image upload failed',
+                errorCode: code || 'INTERNAL_SERVER_ERROR',
+            });
+        }
+    },
+
     // Create auction
     createAuction: async (auctionData) => {
         try {
@@ -102,7 +134,7 @@ export const auctionService = {
     // Get user's watchlist
     getWatchlist: async () => {
         try {
-            const response = await axiosClient.post(AUCTION_API.GET_WATCHLIST);
+            const response = await axiosClient.get(AUCTION_API.GET_WATCHLIST);
             return response.data;
         } catch (err) {
             const statusCode = err?.status;
