@@ -21,7 +21,7 @@ export const Header = () => {
                   (list.id !== 7 || user?.role === "SELLER") &&
                   (list.id !== 8 || user?.role === "ADMIN") &&
                   (list.id !== 9 || user?.role === "SELLER") &&
-                  (list.id !== 2 || user?.role === "BIDDER") &&
+                  (list.id !== 3 || user?.role === "BIDDER") &&
                   (
                     <li key={list.id} className="capitalize list-none">
                       <CustomNavLinkList href={list.path} isActive={location.pathname === list.path} className="text-black">

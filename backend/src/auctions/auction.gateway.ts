@@ -202,9 +202,9 @@ export class AuctionGateway
         socketId: client.id,
         timestamp: new Date().toISOString(),
       });
-
+      
       this.server.to(room).emit(WS_EVENTS.USER_JOINED_AUCTION, {
-        message: `User ${client.data.user?.id} joined auction ${auctionId}`,
+        message: `User ${client.data.user?.email} joined auction ${auctionId}`,
         auctionId,
         user: {
           id: client.data.user?.id,
