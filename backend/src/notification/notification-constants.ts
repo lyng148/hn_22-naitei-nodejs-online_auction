@@ -25,15 +25,17 @@ export const SUCCESS_NOTIFICATION_MESSAGES = {
 
 export const NotificationMessages = {
   OUTBID: (title: string, bidAmount: number) =>
-    `You have been outbid in ${title}! New price: ${bidAmount.toLocaleString()}₫`,
+    `You have been outbid in ${title}! New price: ${bidAmount.toLocaleString()}$`,
   AUCTION_ENDED_WINNER: (title: string, price: number) =>
-    `Congratulations! You won the auction ${title} with a price of ${price.toLocaleString()}₫`,
+    `Congratulations! You won the auction ${title} with a price of ${price.toLocaleString()}$`,
   AUCTION_ENDED_LOSER: (title: string, price: number) =>
-    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You lost, please join another auction! Keep trying!`,
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}$. You lost, please join another auction! Keep trying!`,
   AUCTION_ENDED_WATCHER: (title: string, price: number) =>
-    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You were watching this auction, please join another auction!`,
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}$. You were watching this auction, please join another auction!`,
   AUCTION_ENDED_FOLLOWER: (title: string, price: number) =>
-    `The auction ${title} has ended, final price is ${price.toLocaleString()}₫. You were following the owner of this auction, please join another auction!`,
+    `The auction ${title} has ended, final price is ${price.toLocaleString()}$. You were following the owner of this auction, please join another auction!`,
+  AUCTION_ENDED_SELLER: (title: string, price: number) =>
+  `Your auction "${title}" has ended. Final price: ${price.toLocaleString()}$`,
 
   AUCTION_BIDDER_CLOSED: (title: string) =>
     `The auction ${title} has been closed. You participated in this auction, please join another auction!`,
