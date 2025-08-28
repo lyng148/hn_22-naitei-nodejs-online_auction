@@ -1,5 +1,5 @@
 import React from "react";
-import { formatVND, formatDate } from "@/utils/format.js";
+import { formatUSD, formatDate } from "@/utils/format.js";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/constants/orderStatus.js";
 import { 
   IoCloseOutline,
@@ -95,7 +95,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                   <IoReceiptOutline className="w-4 h-4 text-gray-500" />
                   <span className="text-xs font-medium text-gray-700">Total</span>
                 </div>
-                <p className="text-sm font-semibold text-gray-900">{formatVND(order.totalAmount)}</p>
+                <p className="text-sm font-semibold text-gray-900">{formatUSD(order.totalAmount)}</p>
               </div>
             </div>
 
@@ -139,12 +139,12 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
                     <div className="space-y-1">
                       <div>
                         <span className="text-xs text-gray-600">Starting:</span>
-                        <p className="text-xs font-medium">{formatVND(order.auction.startingPrice)}</p>
+                        <p className="text-xs font-medium">{formatUSD(order.auction.startingPrice)}</p>
                       </div>
                       {order.auction.winningBid && (
                         <div>
                           <span className="text-xs text-gray-600">Winning:</span>
-                          <p className="text-xs font-semibold text-green-600">{formatVND(order.auction.winningBid)}</p>
+                          <p className="text-xs font-semibold text-green-600">{formatUSD(order.auction.winningBid)}</p>
                         </div>
                       )}
                     </div>

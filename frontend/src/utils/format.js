@@ -15,6 +15,22 @@ export const formatVND = (amount) => {
 };
 
 /**
+ * Format number as USD currency
+ * @param {number} amount - The amount to format
+ * @returns {string} Formatted USD currency string
+ */
+export const formatUSD = (amount) => {
+  if (!amount && amount !== 0) return '$0';
+  
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+/**
  * Format number with thousand separators
  * @param {number} amount - The amount to format
  * @returns {string} Formatted number string

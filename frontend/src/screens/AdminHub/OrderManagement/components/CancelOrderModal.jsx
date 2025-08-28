@@ -59,9 +59,9 @@ const CancelOrderModal = ({
                   Buyer: {order.user?.profile?.fullName || "N/A"}
                 </div>
                 <div className="text-gray-600">
-                  Amount: {order.totalAmount ? new Intl.NumberFormat('vi-VN', {
+                  Amount: {order.totalAmount ? new Intl.NumberFormat('en-US', {
                     style: 'currency',
-                    currency: 'VND'
+                    currency: 'USD'
                   }).format(order.totalAmount) : "N/A"}
                 </div>
               </div>
