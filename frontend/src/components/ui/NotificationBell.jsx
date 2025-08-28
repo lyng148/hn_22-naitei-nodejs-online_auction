@@ -26,7 +26,13 @@ const getTargetPath = (notification) => {
     case "AUCTION_CANCELED":
     case "AUCTION_READY":
     case "AUCTION_OPEN":
-      return meta.role === "SELLER" ? "/seller-hub/listings/auction" : "/dashboard";
+      if (meta.role === "SELLER") {
+        return "/seller-hub/listings/auction";
+      }
+      if (meta.auctionId) {
+        return `/auctions/${meta.auctionId}`;
+      }
+      return "/auctions/";
     case "COMMENT_REPORT":
       console.log('Comment report navigation:', {
         auctionId: meta.auctionId,

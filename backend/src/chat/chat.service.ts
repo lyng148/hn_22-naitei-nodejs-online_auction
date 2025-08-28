@@ -1,48 +1,46 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import PrismaService from '../common/services/prisma.service';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { MessageStatus, MessageType } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { Socket } from 'socket.io';
-import { CreateMessageDto } from './dtos/create-message.dto';
-import { CreateChatRoomDto } from './dtos/create-chat-room.dto';
-import { ListMessageQueryDto } from './dtos/list-message-query.dto';
-import { MessageType, MessageStatus } from '@prisma/client';
+import { ERROR_USER_NOT_FOUND } from '../common/constants/error.constant';
+import { UploadFileServiceS3 } from '../common/services/file.service';
+import PrismaService from '../common/services/prisma.service';
+import TokenService from '../common/services/token.service';
 import {
-  ERROR_CHAT_ROOM_NOT_FOUND,
-  ERROR_NOT_ROOM_MEMBER,
-  ERROR_FAILED_TO_SEND_MESSAGE,
-  ERROR_INVALID_WEBSOCKET_TOKEN,
-  SUCCESS_MESSAGE_SENT,
-  SUCCESS_MESSAGES_MARKED_READ,
   CHAT_VALIDATION,
   ERROR_CANNOT_CHAT_WITH_SELF,
-  WS_EVENTS,
-  LIMIT_DEFAULT,
-  OFFSET_DEFAULT,
-  SUCCESS_NO_CHAT_ROOMS,
-  SUCCESS_CHAT_ROOMS_RETRIEVED,
-  ERROR_FAILED_TO_GET_CHAT_ROOMS,
-  SUCCESS_CHAT_ROOM_CREATED_OR_RETRIEVED,
+  ERROR_CHAT_ROOM_NOT_FOUND,
   ERROR_FAILED_TO_CREATE_CHAT_ROOM,
-  ERROR_NO_ACCESS_TO_CHAT_ROOM,
-  SUCCESS_MESSAGES_RETRIEVED,
-  ERROR_FAILED_TO_GET_MESSAGES,
-  ERROR_FAILED_TO_MARK_READ,
-  SUCCESS_UNREAD_COUNT_RETRIEVED,
-  ERROR_FAILED_TO_GET_UNREAD_COUNT,
-  SUCCESS_CHAT_ROOM_DETAILS_RETRIEVED,
+  ERROR_FAILED_TO_DELETE_CHAT_ROOM,
   ERROR_FAILED_TO_GET_CHAT_ROOM_DETAILS,
-  ERROR_FAILED_TO_GET_OR_CREATE_CHAT_ROOM,
+  ERROR_FAILED_TO_GET_CHAT_ROOMS,
+  ERROR_FAILED_TO_GET_MESSAGES,
   ERROR_FAILED_TO_GET_MESSAGES_WITH_QUERY,
+  ERROR_FAILED_TO_GET_OR_CREATE_CHAT_ROOM,
+  ERROR_FAILED_TO_GET_UNREAD_COUNT,
   ERROR_FAILED_TO_GET_UNREAD_MESSAGES_COUNT,
   ERROR_FAILED_TO_GET_USER_INFO,
-  ERROR_FAILED_TO_DELETE_CHAT_ROOM,
+  ERROR_FAILED_TO_MARK_READ,
+  ERROR_FAILED_TO_SEND_MESSAGE,
+  ERROR_INVALID_WEBSOCKET_TOKEN,
+  ERROR_NO_ACCESS_TO_CHAT_ROOM,
+  ERROR_NOT_ROOM_MEMBER,
+  LIMIT_DEFAULT,
+  OFFSET_DEFAULT,
+  SUCCESS_CHAT_ROOM_CREATED_OR_RETRIEVED,
   SUCCESS_CHAT_ROOM_DELETED,
+  SUCCESS_CHAT_ROOM_DETAILS_RETRIEVED,
+  SUCCESS_CHAT_ROOMS_RETRIEVED,
+  SUCCESS_MESSAGE_SENT,
+  SUCCESS_MESSAGES_MARKED_READ,
+  SUCCESS_MESSAGES_RETRIEVED,
+  SUCCESS_NO_CHAT_ROOMS,
+  SUCCESS_UNREAD_COUNT_RETRIEVED,
+  WS_EVENTS,
 } from './chat-constants';
-import { ERROR_USER_NOT_FOUND } from '../common/constants/error.constant';
-import TokenService from '../common/services/token.service';
-import e from 'express';
-import { randomUUID } from 'crypto';
-import { UploadFileServiceS3 } from '../common/services/file.service';
+import { CreateChatRoomDto } from './dtos/create-chat-room.dto';
+import { CreateMessageDto } from './dtos/create-message.dto';
+import { ListMessageQueryDto } from './dtos/list-message-query.dto';
 
 @Injectable()
 export class ChatService {
@@ -290,6 +288,15 @@ export class ChatService {
 
   async handleSendMessage(chatRoomId: string, createMessageDto: CreateMessageDto, currentUserId: string) {
     try {
+      const user = await this.prisma.user.findUnique({ where: { userId: currentUserId } })
+
+      if (!user) {
+        throw new BadRequestException('User Not Found');
+      }
+      if (user.isBanned) {
+        throw new BadRequestException('Your account has been banned and cannot chat.');
+      }
+
       const hasAccess = await this.validateUserRoomAccess(chatRoomId, currentUserId);
       if (!hasAccess) {
         throw new ForbiddenException({
@@ -518,66 +525,66 @@ export class ChatService {
   }
 
   async handleUploadFileAndSendMessage(
-  file: Express.Multer.File,
-  chatRoomId: string,
-  userId: string,
-  content?: string
-) {
-  if (!file) {
-    throw new BadRequestException('No file provided');
-  }
-
-  const hasAccess = await this.validateUserRoomAccess(chatRoomId, userId);
-  if (!hasAccess) {
-    throw new ForbiddenException({
-      success: false,
-      message: ERROR_NOT_ROOM_MEMBER.message,
-    });
-  }
-
-  const validationResult = this.validateUploadedFile(file);
-  if (!validationResult.isValid) {
-    throw new BadRequestException(validationResult.error);
-  }
-
-  try {
-    const fileName = `${userId}-${randomUUID()}-${file.originalname}`;
-    const fileUrl = await this.uploadFileService.uploadFileToPublicBucket(
-      `chat-files/${userId}`,
-      {
-        file,
-        file_name: fileName,
-      },
-    );
-
-    const messageType = this.getMessageTypeFromFile(file.mimetype);
-
-    const messageData: CreateMessageDto = {
-      content: content || this.getDefaultMessageContent(messageType, file.originalname),
-      type: messageType,
-      fileUrl,
-    };
-
-    const result = await this.handleSendMessage(chatRoomId, messageData, userId);
-
-    return {
-      ...result,
-      fileInfo: {
-        fileName: file.originalname,
-        fileSize: file.size,
-        fileType: file.mimetype,
-        fileUrl,
-        uploadedAt: new Date().toISOString(),
-      },
-    };
-
-  } catch (error) {
-    if (error instanceof ForbiddenException || error instanceof BadRequestException) {
-      throw error;
+    file: Express.Multer.File,
+    chatRoomId: string,
+    userId: string,
+    content?: string
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
     }
-    throw new BadRequestException(`Failed to upload file and send message: ${error}`);
+
+    const hasAccess = await this.validateUserRoomAccess(chatRoomId, userId);
+    if (!hasAccess) {
+      throw new ForbiddenException({
+        success: false,
+        message: ERROR_NOT_ROOM_MEMBER.message,
+      });
+    }
+
+    const validationResult = this.validateUploadedFile(file);
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.error);
+    }
+
+    try {
+      const fileName = `${userId}-${randomUUID()}-${file.originalname}`;
+      const fileUrl = await this.uploadFileService.uploadFileToPublicBucket(
+        `chat-files/${userId}`,
+        {
+          file,
+          file_name: fileName,
+        },
+      );
+
+      const messageType = this.getMessageTypeFromFile(file.mimetype);
+
+      const messageData: CreateMessageDto = {
+        content: content || this.getDefaultMessageContent(messageType, file.originalname),
+        type: messageType,
+        fileUrl,
+      };
+
+      const result = await this.handleSendMessage(chatRoomId, messageData, userId);
+
+      return {
+        ...result,
+        fileInfo: {
+          fileName: file.originalname,
+          fileSize: file.size,
+          fileType: file.mimetype,
+          fileUrl,
+          uploadedAt: new Date().toISOString(),
+        },
+      };
+
+    } catch (error) {
+      if (error instanceof ForbiddenException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to upload file and send message: ${error}`);
+    }
   }
-}
 
   private validateUploadedFile(file: Express.Multer.File): { isValid: boolean; error?: string } {
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
