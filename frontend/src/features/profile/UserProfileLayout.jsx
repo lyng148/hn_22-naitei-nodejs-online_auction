@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { UserAccountInfo } from "@/features/profile/UserAccountInfo";
 import OrderListForBidder from "@/features/profile/OrderListForBidder";
 import ShippingListForBidder from "@/features/profile/ShippingListForBidder";
@@ -11,6 +11,7 @@ import {
   IoCardOutline, 
   IoCarOutline 
 } from "react-icons/io5";
+import {useSearchParams} from "react-router-dom";
 
 const ProfileTabs = {
   ACCOUNT: 'Account',
@@ -29,8 +30,17 @@ const TabIcons = {
 };
 
 export const UserProfileLayout = () => {
-  const [activeTab, setActiveTab] = useState(ProfileTabs.ACCOUNT);
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || ProfileTabs.ACCOUNT;
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { user } = useUser();
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && Object.values(ProfileTabs).includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const tabComponents = {
     [ProfileTabs.ACCOUNT]: <UserAccountInfo />,
