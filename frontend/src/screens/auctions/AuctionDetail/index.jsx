@@ -10,6 +10,7 @@ import { useUser } from "@/contexts/UserContext.jsx";
 import { useNotification } from "@/contexts/NotificationContext.jsx";
 import { useEffect } from "react";
 import { IoHeartOutline, IoHeart } from "react-icons/io5";
+import AuctionWinnerPopup from "@/features/auctions/AuctionWinnerPopup.jsx";
 
 const statusBadgeClass = (status) => ({
   PENDING: "text-gray-700 bg-yellow-400",
@@ -56,6 +57,7 @@ const AuctionDetail = () => {
   const [fetchError, setFetchError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [hiddenSubmitted, setHiddenSubmitted] = useState(false);
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
 
   const socketRef = useRef(null);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
@@ -214,6 +216,9 @@ const AuctionDetail = () => {
       console.log(data.winner);
       setWinner(data.winner);
       showToastNotification(`Auction ${data.auctionId} ended. Winner: ${data.winner?.email}`, "info");
+      if (user && data.winner && user.id === data.winner.userId) {
+        setShowWinnerPopup(true);
+      }
     });
 
     // Sự kiện khi rời auction / disconnect
@@ -707,6 +712,11 @@ const AuctionDetail = () => {
           <AuctionCommentSection auctionId={auctionId} highlightCommentId={highlightCommentId} />
         </div>
       </Container>
+      <AuctionWinnerPopup
+        isOpen={showWinnerPopup}
+        onClose={() => setShowWinnerPopup(false)}
+        price={formatMoney(auction.currentPrice)}
+      />
     </Layout>
   );
 };
